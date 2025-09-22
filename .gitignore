@@ -1,0 +1,10 @@
+*.log
+*.tmp
+*.key
+*.pem
+*.tfstate
+*.tfstate.*
+.terraform/
+.DS_Store
+.vscode/
+.idea/
