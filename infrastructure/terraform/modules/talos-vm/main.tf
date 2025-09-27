@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+  }
+}
+
 variable "vm_name" { type = string }
 variable "vm_id" { type = number }
 variable "target_node" { type = string }
@@ -16,59 +24,64 @@ variable "gpu_passthrough" {
   default = false
 }
 
-resource "proxmox_vm_qemu" "talos_node" {
+resource "proxmox_virtual_environment_vm" "talos_node" {
   name        = var.vm_name
-  vmid        = var.vm_id
-  target_node = var.target_node
+  vm_id       = var.vm_id
+  node_name   = var.target_node
   
-  # Use Talos ISO
-  iso = "${var.iso_storage}:iso/talos-amd64.iso"
+  cpu {
+    cores = var.cores
+    type  = "host"
+  }
   
-  cores   = var.cores
-  sockets = 1
-  memory  = var.memory
+  memory {
+    dedicated = var.memory
+  }
   
-  agent = 0
+  disk {
+    datastore_id = var.storage
+    interface    = "scsi0"
+    size         = var.disk
+    file_format  = "raw"
+  }
   
-  # Disk
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size    = var.disk
-          storage = var.storage
-        }
+  cdrom {
+    enabled   = true
+    file_id   = "${var.iso_storage}:iso/talos-amd64.iso"
+  }
+  
+  network_device {
+    bridge = var.network_bridge
+    model  = "virtio"
+  }
+  
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.ip_address}/24"
+        gateway = var.gateway
       }
     }
-  }
-  
-  # Network
-  network {
-    model  = "virtio"
-    bridge = var.network_bridge
-  }
-  
-  # Cloud-init for IP (Talos will override)
-  ipconfig0 = "ip=${var.ip_address}/24,gw=${var.gateway}"
-  nameserver = join(" ", var.dns)
-  
-  # GPU Passthrough (if enabled)
-  dynamic "hostpci0" {
-    for_each = var.gpu_passthrough ? [1] : []
-    content {
-      host    = "00:02.0"  # Intel iGPU - adjust PCI ID for your system
-      pcie    = 1
-      rombar  = 1
+    dns {
+      servers = var.dns
     }
   }
   
-  # Boot order
-  boot = "order=scsi0"
+  dynamic "hostpci" {
+    for_each = var.gpu_passthrough ? [1] : []
+    content {
+      device  = "hostpci0"
+      id      = "00:02.0"
+      pcie    = true
+      rombar  = true
+    }
+  }
   
-  lifecycle {
-    ignore_changes = [
-      network,
-      iso,
-    ]
+  operating_system {
+    type = "l26"
+  }
+  
+  agent {
+    enabled = false
   }
 }

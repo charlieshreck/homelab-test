@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "bpg/proxmox"
+    }
+  }
+}
+
 variable "vm_name" { type = string }
 variable "vm_id" { type = number }
 variable "target_node" { type = string }
