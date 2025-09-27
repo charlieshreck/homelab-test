@@ -17,8 +17,6 @@ variable "gateway" { type = string }
 variable "dns" { type = list(string) }
 variable "network_bridge" { type = string }
 variable "storage" { type = string }
-variable "iso_storage" { type = string }
-variable "talos_version" { type = string }
 variable "gpu_passthrough" { 
   type    = bool
   default = false
