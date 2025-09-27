@@ -17,15 +17,11 @@ variable "gateway" { type = string }
 variable "dns" { type = list(string) }
 variable "network_bridge" { type = string }
 variable "storage" { type = string }
-variable "gpu_passthrough" { 
-  type    = bool
-  default = false
-}
 
-resource "proxmox_virtual_environment_vm" "talos_node" {
-  name        = var.vm_name
-  vm_id       = var.vm_id
-  node_name   = var.target_node
+resource "proxmox_virtual_environment_vm" "truenas" {
+  name      = var.vm_name
+  vm_id     = var.vm_id
+  node_name = var.target_node
   
   cpu {
     cores = var.cores
@@ -44,13 +40,14 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   }
   
   cdrom {
-    enabled   = true
-    file_id   = "${var.iso_storage}:iso/talos-amd64.iso"
+    enabled = true
+    file_id = "local:iso/truenas-scale.iso"
   }
   
   network_device {
-    bridge = var.network_bridge
-    model  = "virtio"
+    bridge  = var.network_bridge
+    model   = "virtio"
+    vlan_id = 20
   }
   
   initialization {
@@ -65,21 +62,11 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     }
   }
   
-  dynamic "hostpci" {
-    for_each = var.gpu_passthrough ? [1] : []
-    content {
-      device  = "hostpci0"
-      id      = "0000:00:02.0"
-      pcie    = true
-      rombar  = true
-    }
-  }
-  
   operating_system {
     type = "l26"
   }
   
   agent {
-    enabled = false
+    enabled = true
   }
 }
