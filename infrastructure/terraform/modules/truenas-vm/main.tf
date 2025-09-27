@@ -9,51 +9,71 @@ variable "gateway" { type = string }
 variable "dns" { type = list(string) }
 variable "network_bridge" { type = string }
 variable "storage" { type = string }
+variable "iso_storage" { type = string }
+variable "talos_version" { type = string }
+variable "gpu_passthrough" { 
+  type    = bool
+  default = false
+}
 
-resource "proxmox_vm_qemu" "truenas" {
+resource "proxmox_virtual_environment_vm" "talos_node" {
   name        = var.vm_name
-  vmid        = var.vm_id
-  target_node = var.target_node
+  vm_id       = var.vm_id
+  node_name   = var.target_node
   
-  # You'll need to upload TrueNAS ISO manually
-  iso = "local:iso/truenas-scale.iso"
+  cpu {
+    cores = var.cores
+    type  = "host"
+  }
   
-  cores   = var.cores
-  sockets = 1
-  memory  = var.memory
+  memory {
+    dedicated = var.memory
+  }
   
-  agent = 1
+  disk {
+    datastore_id = var.storage
+    interface    = "scsi0"
+    size         = var.disk
+    file_format  = "raw"
+  }
   
-  # System disk
-  disks {
-    scsi {
-      scsi0 {
-        disk {
-          size    = var.disk
-          storage = var.storage
-        }
+  cdrom {
+    enabled   = true
+    file_id   = "${var.iso_storage}:iso/talos-amd64.iso"
+  }
+  
+  network_device {
+    bridge = var.network_bridge
+    model  = "virtio"
+  }
+  
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.ip_address}/24"
+        gateway = var.gateway
       }
+    }
+    dns {
+      servers = var.dns
     }
   }
   
-  # Network on separate bridge/VLAN
-  network {
-    model  = "virtio"
-    bridge = var.network_bridge
-    tag    = 20  # VLAN 20 for TrueNAS network
+  dynamic "hostpci" {
+    for_each = var.gpu_passthrough ? [1] : []
+    content {
+      device  = "hostpci0"
+      id      = "0000:00:02.0"
+      pcie    = true
+      rombar  = true
+    }
   }
   
-  ipconfig0  = "ip=${var.ip_address}/24,gw=${var.gateway}"
-  nameserver = join(" ", var.dns)
+  operating_system {
+    type = "l26"
+  }
   
-  # USB passthrough will be configured manually in Proxmox
-  
-  boot = "order=scsi0"
-  
-  lifecycle {
-    ignore_changes = [
-      network,
-      iso,
-    ]
+  agent {
+    enabled = false
   }
 }
