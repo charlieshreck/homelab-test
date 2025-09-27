@@ -1,10 +1,8 @@
-*.log
-*.tmp
-*.key
-*.pem
 *.tfstate
-*.tfstate.*
+*.tfstate.backup
 .terraform/
-.DS_Store
-.vscode/
-.idea/
+.terraform.lock.hcl
+*.tfvars.secret
+kubeconfig
+talosconfig
+.env
