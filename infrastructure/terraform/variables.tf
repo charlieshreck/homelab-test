@@ -4,14 +4,14 @@ variable "proxmox_host" {
   default     = "10.30.0.10"
 }
 
-variable "proxmox_user" {
-  description = "Proxmox username"
+variable "proxmox_token_id" {
+  description = "Proxmox API token ID"
   type        = string
-  default     = "root@pam"
+  default     = "root@pam!terraform"
 }
 
-variable "proxmox_password" {
-  description = "Proxmox password"
+variable "proxmox_token_secret" {
+  description = "Proxmox API token secret"
   type        = string
   sensitive   = true
 }

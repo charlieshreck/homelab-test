@@ -1,8 +1,7 @@
 # Proxmox Connection
 proxmox_host     = "10.30.0.10"  # Change to your Proxmox IP
-proxmox_user     = "root@pam"
-proxmox_password = "H4ckwh1z"  # Store in secrets/env for production
 proxmox_node     = "Carrick"
+proxmox_token_secret = "f228164a-aa29-447a-ba30-e2867cb2855d"
 
 # Networks
 prod_network              = "10.30.0.0/24"
