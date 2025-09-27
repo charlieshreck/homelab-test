@@ -1,0 +1,54 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infrastructure/**'
+      - 'cluster-bootstrap/**'
+  workflow_dispatch:
+
+env:
+  TF_VAR_proxmox_password: ${{ secrets.PROXMOX_PASSWORD }}
+
+jobs:
+  terraform:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: infrastructure/terraform
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Save Outputs
+        run: terraform output -json > ../../outputs.json
+
+  bootstrap:
+    needs: terraform
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bootstrap Cluster
+        working-directory: cluster-bootstrap/scripts
+        run: |
+          chmod +x bootstrap-cluster.sh
+          ./bootstrap-cluster.sh
+
+      - name: Save Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          talosctl --nodes 10.30.0.11 kubeconfig ~/.kube/config

@@ -1,0 +1,45 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+  type: worker
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.31.0
+    extraArgs:
+      rotate-server-certificates: true
+  network:
+    hostname: talos-worker-01  # Will be overridden per node
+    interfaces:
+      - interface: eth0
+        dhcp: false
+        addresses:
+          - 10.30.0.21/24  # Will be overridden per node
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 10.30.0.1
+    nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+  install:
+    disk: /dev/sda
+    image: ghcr.io/siderolabs/installer:v1.11.2
+    wipe: true
+  features:
+    rbac: true
+    stableHostname: true
+cluster:
+  clusterName: homelab-test
+  controlPlane:
+    endpoint: https://10.30.0.11:6443
+  network:
+    cni:
+      name: custom
+      urls:
+        - https://raw.githubusercontent.com/cilium/cilium/1.16.3/install/kubernetes/quick-install.yaml
+  discovery:
+    enabled: true
+    registries:
+      kubernetes:
+        disabled: false
+      service:
+        disabled: false
