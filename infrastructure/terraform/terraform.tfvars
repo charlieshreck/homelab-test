@@ -1,7 +1,8 @@
 # Proxmox Connection
-proxmox_host     = "10.30.0.10"  # Change to your Proxmox IP
-proxmox_node     = "Carrick"
+proxmox_host         = "10.30.0.10"
+proxmox_token_id     = "root@pam!terraform"
 proxmox_token_secret = "f228164a-aa29-447a-ba30-e2867cb2855d"
+proxmox_node         = "Carrick"
 
 # Networks
 prod_network              = "10.30.0.0/24"
