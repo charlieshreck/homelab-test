@@ -21,18 +21,12 @@ terraform {
   }
 }
 
-# Proxmox Provider
+# Proxmox Provider - Using password authentication
 provider "proxmox" {
-  endpoint = "https://${var.proxmox_host}:8006/api2/json"
-  username = "root@pam"
+  endpoint = "https://${var.proxmox_host}:8006"
+  username = var.proxmox_user
   password = var.proxmox_password
   insecure = true
-  
-  ssh {
-    agent    = false
-    username = "root"
-    password = var.proxmox_password
-  }
 }
 
 # Talos Provider
@@ -65,7 +59,7 @@ module "control_plane" {
   gateway        = var.network_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
-  storage        = var.proxmox_vm_storage
+  storage        = var.proxmox_storage  # Using Kerrier for VMs
   iso_storage    = var.proxmox_iso_storage
   talos_version  = var.talos_version
   gpu_passthrough = false
@@ -86,15 +80,14 @@ module "workers" {
   gateway        = var.network_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
-  storage        = var.proxmox_vm_storage
+  storage        = var.proxmox_storage  # Using Kerrier for VMs
   iso_storage    = var.proxmox_iso_storage
-  talos_version  = var.talos_version
   gpu_passthrough = var.workers[count.index].gpu
   
   # Additional disk for Longhorn storage
   additional_disks = [{
     size         = var.workers[count.index].longhorn_disk
-    storage      = var.proxmox_longhorn_storage
+    storage      = var.proxmox_longhorn_storage  # Using Restormal for Longhorn
     interface    = "scsi1"
   }]
 }
@@ -128,7 +121,7 @@ module "truenas" {
 data "talos_machine_configuration" "controlplane" {
   cluster_name     = var.cluster_name
   machine_type     = "controlplane"
-  cluster_endpoint = var.cluster_endpoint
+  cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   
   config_patches = [
@@ -178,7 +171,7 @@ data "talos_machine_configuration" "worker" {
   
   cluster_name     = var.cluster_name
   machine_type     = "worker"
-  cluster_endpoint = var.cluster_endpoint
+  cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   
   config_patches = [
