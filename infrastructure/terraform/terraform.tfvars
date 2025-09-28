@@ -41,7 +41,7 @@ control_plane = {
 workers = [
   {
     name          = "talos-worker-01"
-    ip            = "10.30.0.12"
+    ip            = "10.30.0.129"
     cores         = 4
     memory        = 8192
     disk          = 100
@@ -50,7 +50,7 @@ workers = [
   },
   {
     name          = "talos-worker-02"
-    ip            = "10.30.0.13"
+    ip            = "10.30.0.128"
     cores         = 4
     memory        = 8192
     disk          = 100
