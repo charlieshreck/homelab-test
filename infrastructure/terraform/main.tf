@@ -77,7 +77,7 @@ module "workers" {
   memory         = var.workers[count.index].memory
   disk           = var.workers[count.index].disk
   ip_address     = var.workers[count.index].ip
-  gateway        = var.network_gateway
+  gateway        = var.prod_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
   storage        = var.proxmox_storage  # Using Kerrier for VMs
@@ -104,7 +104,7 @@ module "truenas" {
   memory         = var.truenas_vm.memory
   disk           = var.truenas_vm.disk
   ip_address     = var.truenas_vm.ip
-  gateway        = var.network_gateway
+  gateway        = var.prod_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
   storage        = var.proxmox_truenas_storage
@@ -140,7 +140,7 @@ data "talos_machine_configuration" "controlplane" {
               routes = [
                 {
                   network = "0.0.0.0/0"
-                  gateway = var.network_gateway
+                  gateway = var.prod_gateway
                 }
               ]
             }
@@ -190,7 +190,7 @@ data "talos_machine_configuration" "worker" {
               routes = [
                 {
                   network = "0.0.0.0/0"
-                  gateway = var.network_gateway
+                  gateway = var.prod_gateway
                 }
               ]
             }
