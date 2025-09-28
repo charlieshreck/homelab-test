@@ -23,6 +23,14 @@ variable "gpu_passthrough" {
   type    = bool
   default = false
 }
+variable "additional_disks" {
+  type = list(object({
+    size      = number
+    storage   = string
+    interface = string
+  }))
+  default = []
+}
 
 resource "proxmox_virtual_environment_vm" "talos_node" {
   name        = var.vm_name
@@ -38,11 +46,23 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     dedicated = var.memory
   }
   
+  # Primary disk
   disk {
     datastore_id = var.storage
     interface    = "scsi0"
     size         = var.disk
     file_format  = "raw"
+  }
+  
+  # Additional disks for Longhorn storage
+  dynamic "disk" {
+    for_each = var.additional_disks
+    content {
+      datastore_id = disk.value.storage
+      interface    = disk.value.interface
+      size         = disk.value.size
+      file_format  = "raw"
+    }
   }
   
   cdrom {
@@ -56,14 +76,15 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   }
   
   initialization {
+    dns {
+      servers = var.dns
+    }
+    
     ip_config {
       ipv4 {
         address = "${var.ip_address}/24"
         gateway = var.gateway
       }
-    }
-    dns {
-      servers = var.dns
     }
   }
   
@@ -83,5 +104,12 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   
   agent {
     enabled = false
+  }
+  
+  lifecycle {
+    ignore_changes = [
+      cdrom,
+      initialization
+    ]
   }
 }

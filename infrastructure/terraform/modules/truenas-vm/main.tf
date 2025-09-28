@@ -17,11 +17,20 @@ variable "gateway" { type = string }
 variable "dns" { type = list(string) }
 variable "network_bridge" { type = string }
 variable "storage" { type = string }
+variable "iso_storage" { type = string }
+variable "media_network" {
+  type = object({
+    bridge = string
+    ip     = string
+    vlan   = number
+  })
+  default = null
+}
 
-resource "proxmox_virtual_environment_vm" "truenas" {
-  name      = var.vm_name
-  vm_id     = var.vm_id
-  node_name = var.target_node
+resource "proxmox_virtual_environment_vm" "truenas_node" {
+  name        = var.vm_name
+  vm_id       = var.vm_id
+  node_name   = var.target_node
   
   cpu {
     cores = var.cores
@@ -40,25 +49,36 @@ resource "proxmox_virtual_environment_vm" "truenas" {
   }
   
   cdrom {
-    enabled = true
-    file_id = "local:iso/truenas-scale.iso"
+    enabled   = true
+    file_id   = "${var.iso_storage}:iso/truenas-scale.iso"
   }
   
+  # Main network interface
   network_device {
-    bridge  = var.network_bridge
-    model   = "virtio"
-    vlan_id = 20
+    bridge = var.network_bridge
+    model  = "virtio"
+  }
+  
+  # Media network interface
+  dynamic "network_device" {
+    for_each = var.media_network != null ? [1] : []
+    content {
+      bridge  = var.media_network.bridge
+      model   = "virtio"
+      vlan_id = var.media_network.vlan
+    }
   }
   
   initialization {
+    dns {
+      servers = var.dns
+    }
+    
     ip_config {
       ipv4 {
         address = "${var.ip_address}/24"
         gateway = var.gateway
       }
-    }
-    dns {
-      servers = var.dns
     }
   }
   
@@ -67,6 +87,13 @@ resource "proxmox_virtual_environment_vm" "truenas" {
   }
   
   agent {
-    enabled = true
+    enabled = false
+  }
+  
+  lifecycle {
+    ignore_changes = [
+      cdrom,
+      initialization
+    ]
   }
 }

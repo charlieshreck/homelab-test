@@ -1,17 +1,24 @@
+# Provider Configuration
 variable "proxmox_host" {
-  description = "Proxmox host IP"
+  description = "Proxmox host IP or hostname"
   type        = string
-  default     = "10.30.0.10"
+  default     = "10.30.0.100"
 }
 
-variable "proxmox_user" {
-  description = "Proxmox username"
+variable "proxmox_api_token_id" {
+  description = "Proxmox API token ID"
   type        = string
-  default     = "root@pam"
+  default     = "terraform@pam!terraform"
+}
+
+variable "proxmox_api_token_secret" {
+  description = "Proxmox API token secret"
+  type        = string
+  sensitive   = true
 }
 
 variable "proxmox_password" {
-  description = "Proxmox password"
+  description = "Proxmox root password"
   type        = string
   sensitive   = true
 }
@@ -19,44 +26,45 @@ variable "proxmox_password" {
 variable "proxmox_node" {
   description = "Proxmox node name"
   type        = string
-  default     = "Carrick"
+  default     = "proxmox"
+}
+
+# Storage Configuration - Using your actual storage pools
+variable "proxmox_vm_storage" {
+  description = "Proxmox VM storage pool"
+  type        = string
+  default     = "Kerrier"  # 500GB pool for VMs
+}
+
+variable "proxmox_longhorn_storage" {
+  description = "Longhorn storage pool (NVMe)"
+  type        = string
+  default     = "Restormal"  # 950GB NVMe for Longhorn
+}
+
+variable "proxmox_truenas_storage" {
+  description = "TrueNAS storage pool"
+  type        = string
+  default     = "Trelawney"
+}
+
+variable "proxmox_iso_storage" {
+  description = "Proxmox ISO storage"
+  type        = string
+  default     = "local"
 }
 
 # Network Configuration
-variable "prod_network" {
-  description = "Production network CIDR"
-  type        = string
-  default     = "10.30.0.0/24"
-}
-
-variable "prod_gateway" {
-  description = "Production network gateway"
+variable "network_gateway" {
+  description = "Network gateway"
   type        = string
   default     = "10.30.0.1"
 }
 
-variable "proxmox_internal_network" {
-  description = "Proxmox internal network CIDR"
+variable "network_bridge" {
+  description = "Network bridge"
   type        = string
-  default     = "172.10.0.0/24"
-}
-
-variable "proxmox_internal_gateway" {
-  description = "Proxmox internal gateway"
-  type        = string
-  default     = "172.10.0.1"
-}
-
-variable "truenas_network" {
-  description = "TrueNAS network CIDR"
-  type        = string
-  default     = "172.20.0.0/24"
-}
-
-variable "truenas_gateway" {
-  description = "TrueNAS gateway"
-  type        = string
-  default     = "172.20.0.1"
+  default     = "vmbr0"
 }
 
 variable "dns_servers" {
@@ -65,26 +73,14 @@ variable "dns_servers" {
   default     = ["1.1.1.1", "8.8.8.8"]
 }
 
-# Cluster Configuration
-variable "cluster_name" {
-  description = "Kubernetes cluster name"
-  type        = string
-  default     = "homelab-test"
+# VM ID Management - Dynamic allocation
+variable "vm_id_start" {
+  description = "Starting VM ID for dynamic allocation"
+  type        = number
+  default     = 200  # Start from 200 to avoid conflicts
 }
 
-variable "talos_version" {
-  description = "Talos version"
-  type        = string
-  default     = "v1.8.0"
-}
-
-variable "kubernetes_version" {
-  description = "Kubernetes version"
-  type        = string
-  default     = "v1.31.0"
-}
-
-# VM Specifications
+# Control Plane Configuration
 variable "control_plane" {
   description = "Control plane node specs"
   type = object({
@@ -103,81 +99,82 @@ variable "control_plane" {
   }
 }
 
+# Worker Nodes Configuration
 variable "workers" {
-  description = "Worker nodes specs"
+  description = "Worker nodes configuration"
   type = list(object({
-    name   = string
-    ip     = string
-    cores  = number
-    memory = number
-    disk   = number
-    gpu    = bool
+    name         = string
+    ip           = string
+    cores        = number
+    memory       = number
+    disk         = number
+    gpu          = bool
+    longhorn_disk = number
   }))
   default = [
     {
-      name   = "talos-worker-01"
-      ip     = "10.30.0.21"
-      cores  = 4
-      memory = 4096
-      disk   = 400  # 400GB on Restormal (950GB pool) - GPU node
-      gpu    = true  # This worker gets GPU passthrough
+      name         = "talos-worker-01"
+      ip           = "10.30.0.12"
+      cores        = 4
+      memory       = 8192
+      disk         = 100  # 100GB system disk on Kerrier
+      gpu          = true
+      longhorn_disk = 300  # 300GB on Restormal for Longhorn
     },
     {
-      name   = "talos-worker-02"
-      ip     = "10.30.0.22"
-      cores  = 2
-      memory = 4096
-      disk   = 400  # 400GB on Restormal (950GB pool)
-      gpu    = false
+      name         = "talos-worker-02"
+      ip           = "10.30.0.13"
+      cores        = 4
+      memory       = 8192
+      disk         = 100  # 100GB system disk on Kerrier
+      gpu          = false
+      longhorn_disk = 300  # 300GB on Restormal for Longhorn
     }
   ]
 }
 
-variable "truenas" {
-  description = "TrueNAS VM specs"
+# TrueNAS Configuration
+variable "truenas_vm" {
+  description = "TrueNAS VM configuration"
   type = object({
     name   = string
     ip     = string
     cores  = number
     memory = number
     disk   = number
+    media_ip = string
   })
   default = {
     name   = "truenas"
-    ip     = "172.20.0.10"
-    cores  = 2
-    memory = 4096
-    disk   = 32
+    ip     = "10.30.0.20"
+    cores  = 4
+    memory = 16384
+    disk   = 500  # 500GB on Trelawney
+    media_ip = "172.20.0.20"
   }
 }
 
-# Storage
-variable "proxmox_vm_storage" {
-  description = "Proxmox VM storage pool"
+# Talos Configuration
+variable "talos_version" {
+  description = "Talos version"
   type        = string
-  default     = "Kerrier"
+  default     = "v1.8.0"
 }
 
-variable "proxmox_longhorn_storage" {
-  description = "Longhorn storage pool (NVMe)"
+variable "kubernetes_version" {
+  description = "Kubernetes version"
   type        = string
-  default     = "Restormal"
+  default     = "v1.31.0"
 }
 
-variable "proxmox_truenas_storage" {
-  description = "TrueNAS storage pool"
+variable "cluster_name" {
+  description = "Kubernetes cluster name"
   type        = string
-  default     = "Trelawney"
+  default     = "homelab"
 }
 
-variable "proxmox_iso_storage" {
-  description = "Proxmox ISO storage"
+variable "cluster_endpoint" {
+  description = "Kubernetes API endpoint"
   type        = string
-  default     = "local"
-}
-
-variable "network_bridge" {
-  description = "Network bridge name"
-  type        = string
-  default     = "vmbr0"
+  default     = "https://10.30.0.11:6443"
 }
