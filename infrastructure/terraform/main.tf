@@ -261,7 +261,7 @@ resource "talos_machine_bootstrap" "this" {
 }
 
 # Get kubeconfig
-data "talos_cluster_kubeconfig" "this" {
+resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_bootstrap.this]
   
   client_configuration = talos_machine_secrets.this.client_configuration
@@ -275,6 +275,6 @@ resource "local_file" "talosconfig" {
 }
 
 resource "local_file" "kubeconfig" {
-  content  = data.talos_cluster_kubeconfig.this.kubeconfig_raw
+  content  = talos_cluster_kubeconfig.this.kubeconfig_raw
   filename = "${path.module}/generated/kubeconfig"
 }
