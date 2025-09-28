@@ -56,7 +56,7 @@ module "control_plane" {
   memory         = var.control_plane.memory
   disk           = var.control_plane.disk
   ip_address     = var.control_plane.ip
-  gateway        = var.network_gateway
+  gateway        = var.prod_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
   storage        = var.proxmox_storage  # Using Kerrier for VMs
