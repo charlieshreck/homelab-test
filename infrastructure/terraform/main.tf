@@ -143,6 +143,10 @@ data "talos_machine_configuration" "controlplane" {
                   gateway = var.prod_gateway
                 }
               ]
+            },
+            {
+              interface = "eth1"
+              addresses = ["172.10.0.11/24"]
             }
           ]
           nameservers = var.dns_servers
@@ -193,6 +197,10 @@ data "talos_machine_configuration" "worker" {
                   gateway = var.prod_gateway
                 }
               ]
+            },
+            {
+              interface = "eth1"
+              addresses = ["172.10.0.${12 + count.index}/24"]
             }
           ]
           nameservers = var.dns_servers

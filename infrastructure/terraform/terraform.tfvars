@@ -65,6 +65,6 @@ truenas_vm = {
   ip       = "10.30.0.20"
   cores    = 4
   memory   = 16384
-  disk     = 240
+  disk     = 100  # Reduced to fit available space
   media_ip = "172.20.0.20"
 }

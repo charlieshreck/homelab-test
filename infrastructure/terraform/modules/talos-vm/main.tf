@@ -74,6 +74,12 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     model  = "virtio"
   }
   
+  # Internal network interface for cluster communication
+  network_device {
+    bridge = "vmbr1"
+    model  = "virtio"
+  }
+  
   dynamic "hostpci" {
     for_each = var.gpu_passthrough ? [1] : []
     content {
