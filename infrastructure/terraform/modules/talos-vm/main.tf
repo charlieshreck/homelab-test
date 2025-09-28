@@ -79,7 +79,7 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     content {
       device  = "hostpci0"
       id      = "00:02.0"
-      pcie    = true
+      pcie    = false
       rombar  = true
     }
   }
@@ -87,6 +87,8 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   operating_system {
     type = "l26"
   }
+  
+  bios = "seabios"
   
   agent {
     enabled = false
