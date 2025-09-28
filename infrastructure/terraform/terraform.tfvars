@@ -1,7 +1,7 @@
 # Proxmox Connection
 proxmox_host         = "10.30.0.10"
-proxmox_token_id     = "root@pam!terraform"
-proxmox_token_secret = "f228164a-aa29-447a-ba30-e2867cb2855d"
+proxmox_user     = "root@pam"
+proxmox_password = "H4ckwh1z"
 proxmox_node         = "Carrick"
 
 # Networks
@@ -19,6 +19,6 @@ talos_version      = "v1.11.2"
 kubernetes_version = "v1.31.0"
 
 # Storage
-proxmox_storage     = "local-lvm"
+proxmox_storage     = "Kerrier"
 proxmox_iso_storage = "local"
 network_bridge      = "vmbr0"
