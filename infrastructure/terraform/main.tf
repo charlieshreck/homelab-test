@@ -4,7 +4,7 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.66.0"
+      version = "~> 0.84.0"
     }
     talos = {
       source  = "siderolabs/talos"
@@ -82,6 +82,7 @@ module "workers" {
   network_bridge = var.network_bridge
   storage        = var.proxmox_storage  # Using Kerrier for VMs
   iso_storage    = var.proxmox_iso_storage
+  talos_version  = var.talos_version
   gpu_passthrough = var.workers[count.index].gpu
   
   # Additional disk for Longhorn storage
