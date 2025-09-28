@@ -31,7 +31,7 @@ vm_id_start = 200
 # Control Plane
 control_plane = {
   name   = "talos-cp-01"
-  ip     = "10.30.0.11"
+  ip     = "10.30.0.127"
   cores  = 2
   memory = 4096
   disk   = 100
