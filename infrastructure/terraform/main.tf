@@ -278,27 +278,3 @@ resource "local_file" "kubeconfig" {
   content  = data.talos_cluster_kubeconfig.this.kubeconfig_raw
   filename = "${path.module}/generated/kubeconfig"
 }
-
-# Outputs
-output "talos_config" {
-  value     = data.talos_client_configuration.this.talos_config
-  sensitive = true
-}
-
-output "kubeconfig" {
-  value     = data.talos_cluster_kubeconfig.this.kubeconfig_raw
-  sensitive = true
-}
-
-output "cluster_info" {
-  value = {
-    control_plane_ip = var.control_plane.ip
-    worker_ips      = [for w in var.workers : w.ip]
-    truenas_ip      = var.truenas_vm.ip
-    vm_ids = {
-      control_plane = local.vm_ids.control_plane
-      workers       = local.vm_ids.workers
-      truenas       = local.vm_ids.truenas
-    }
-  }
-}
