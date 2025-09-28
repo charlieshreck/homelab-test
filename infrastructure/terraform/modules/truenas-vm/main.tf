@@ -49,7 +49,6 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
   }
   
   cdrom {
-    enabled   = true
     file_id   = "${var.iso_storage}:iso/truenas-scale.iso"
   }
   
@@ -66,19 +65,6 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
       bridge  = var.media_network.bridge
       model   = "virtio"
       vlan_id = var.media_network.vlan
-    }
-  }
-  
-  initialization {
-    dns {
-      servers = var.dns
-    }
-    
-    ip_config {
-      ipv4 {
-        address = "${var.ip_address}/24"
-        gateway = var.gateway
-      }
     }
   }
   

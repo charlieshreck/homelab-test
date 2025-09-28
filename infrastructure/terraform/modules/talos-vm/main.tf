@@ -66,26 +66,12 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   }
   
   cdrom {
-    enabled   = true
     file_id   = "${var.iso_storage}:iso/talos-amd64.iso"
   }
   
   network_device {
     bridge = var.network_bridge
     model  = "virtio"
-  }
-  
-  initialization {
-    dns {
-      servers = var.dns
-    }
-    
-    ip_config {
-      ipv4 {
-        address = "${var.ip_address}/24"
-        gateway = var.gateway
-      }
-    }
   }
   
   dynamic "hostpci" {
