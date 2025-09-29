@@ -31,7 +31,7 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
     file_id   = "${var.iso_storage}:iso/truenas-scale.iso"
   }
   
-  # Main network interface with fixed MAC
+  # Main network interface with fixed MAC for DHCP reservation
   network_device {
     bridge      = var.network_bridge
     model       = "virtio"

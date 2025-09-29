@@ -43,6 +43,7 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     file_id   = "${var.iso_storage}:iso/talos-amd64.iso"
   }
   
+  # Main network interface with fixed MAC for DHCP reservation
   network_device {
     bridge      = var.network_bridge
     model       = "virtio"
@@ -51,23 +52,12 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   
   # Internal network interface for cluster communication
   network_device {
-    bridge = "vmbr1"
-    model  = "virtio"
+    bridge      = "vmbr1"
+    model       = "virtio"
+    mac_address = var.internal_mac_address != "" ? var.internal_mac_address : null
   }
   
-  # Cloud-init for static IP
-  initialization {
-    ip_config {
-      ipv4 {
-        address = "${var.ip_address}/24"
-        gateway = var.gateway
-      }
-    }
-    dns {
-      servers = var.dns
-    }
-  }
-  
+  # GPU passthrough (optional)
   dynamic "hostpci" {
     for_each = var.gpu_passthrough ? [1] : []
     content {
@@ -92,7 +82,6 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     enabled = false
   }
   
-  # Boot arguments to set static IP
   startup {
     order      = 1
     up_delay   = 30
