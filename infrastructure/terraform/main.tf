@@ -237,13 +237,6 @@ data "talos_machine_configuration" "worker" {
           extraArgs = {
             "rotate-certificates" = true
           }
-            {
-              destination = "/var/lib/longhorn"
-              type        = "bind"
-              source      = "/dev/sdb"
-              options     = ["bind", "rshared", "rw"]
-            }
-          ] : []
         }
       }
     })
