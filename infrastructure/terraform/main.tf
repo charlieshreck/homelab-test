@@ -37,11 +37,20 @@ resource "talos_machine_secrets" "this" {}
 
 # Data source to generate dynamic VM IDs
 locals {
-  # Dynamic VM ID assignment starting from base ID
   vm_ids = {
     control_plane = var.vm_id_start
     workers = [for idx, _ in var.workers : var.vm_id_start + idx + 1]
     truenas = var.vm_id_start + length(var.workers) + 1
+  }
+  
+  # Fixed MAC addresses for consistent DHCP reservations
+  mac_addresses = {
+    control_plane = "52:54:00:10:30:50"
+    workers = [
+      "52:54:00:10:30:51",
+      "52:54:00:10:30:52"
+    ]
+    truenas = "52:54:00:10:30:53"
   }
 }
 
@@ -59,10 +68,11 @@ module "control_plane" {
   gateway        = var.prod_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
-  storage        = var.proxmox_storage  # Using Kerrier for VMs
+  storage        = var.proxmox_storage
   iso_storage    = var.proxmox_iso_storage
   talos_version  = var.talos_version
   gpu_passthrough = false
+  mac_address    = local.mac_addresses.control_plane
 }
 
 # Worker VMs Module
@@ -80,15 +90,16 @@ module "workers" {
   gateway        = var.prod_gateway
   dns            = var.dns_servers
   network_bridge = var.network_bridge
-  storage        = var.proxmox_storage  # Using Kerrier for VMs
+  storage        = var.proxmox_storage
   iso_storage    = var.proxmox_iso_storage
   talos_version  = var.talos_version
   gpu_passthrough = var.workers[count.index].gpu
+  mac_address    = local.mac_addresses.workers[count.index]
   
   # Additional disk for Longhorn storage
   additional_disks = [{
     size         = var.workers[count.index].longhorn_disk
-    storage      = var.proxmox_longhorn_storage  # Using Restormal for Longhorn
+    storage      = var.proxmox_longhorn_storage
     interface    = "scsi1"
   }]
 }
@@ -109,20 +120,14 @@ module "truenas" {
   network_bridge = var.network_bridge
   storage        = var.proxmox_truenas_storage
   iso_storage    = var.proxmox_iso_storage
-  
-  # Additional network for media serving
-  media_network = {
-    bridge = "vmbr2"
-    ip     = var.truenas_vm.media_ip
-    vlan   = 20
-  }
+  mac_address    = local.mac_addresses.truenas
 }
 
 # Generate Talos configuration
 data "talos_machine_configuration" "controlplane" {
   cluster_name     = var.cluster_name
   machine_type     = "controlplane"
-  cluster_endpoint = "https://${var.control_plane.ip}:6443"
+  cluster_endpoint = "https://172.10.0.11:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   
   config_patches = [
@@ -136,7 +141,7 @@ data "talos_machine_configuration" "controlplane" {
           interfaces = [
             {
               interface = "eth0"
-              addresses = ["10.30.0.130/24"]
+              addresses = ["${var.control_plane.ip}/24"]
               routes = [
                 {
                   network = "0.0.0.0/0"
@@ -160,11 +165,11 @@ data "talos_machine_configuration" "controlplane" {
       cluster = {
         network = {
           cni = {
-            name = "none"  # We'll install Cilium
+            name = "none"
           }
         }
         proxy = {
-          disabled = true  # Cilium will handle this
+          disabled = true
         }
       }
     })
@@ -176,7 +181,7 @@ data "talos_machine_configuration" "worker" {
   
   cluster_name     = var.cluster_name
   machine_type     = "worker"
-  cluster_endpoint = "https://${var.control_plane.ip}:6443"
+  cluster_endpoint = "https://172.10.0.11:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   
   config_patches = [
@@ -190,7 +195,7 @@ data "talos_machine_configuration" "worker" {
           interfaces = [
             {
               interface = "eth0"
-              addresses = [count.index == 0 ? "10.30.0.129/24" : "10.30.0.128/24"]
+              addresses = ["${var.workers[count.index].ip}/24"]
               routes = [
                 {
                   network = "0.0.0.0/0"
@@ -240,7 +245,7 @@ resource "talos_machine_configuration_apply" "controlplane" {
   node                        = var.control_plane.ip
   
   lifecycle {
-    ignore_changes = [machine_configuration_input]
+    ignore_changes = [machine_configuration_input, node, endpoint]
   }
 }
 
@@ -253,7 +258,7 @@ resource "talos_machine_configuration_apply" "worker" {
   node                        = var.workers[count.index].ip
   
   lifecycle {
-    ignore_changes = [machine_configuration_input]
+    ignore_changes = [machine_configuration_input, node, endpoint]
   }
 }
 

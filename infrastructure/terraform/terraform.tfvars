@@ -31,7 +31,7 @@ vm_id_start = 200
 # Control Plane
 control_plane = {
   name   = "talos-cp-01"
-  ip     = "10.30.0.130"
+  ip     = "10.30.0.50"
   cores  = 2
   memory = 4096
   disk   = 100
@@ -41,7 +41,7 @@ control_plane = {
 workers = [
   {
     name          = "talos-worker-01"
-    ip            = "10.30.0.129"
+    ip            = "10.30.0.51"
     cores         = 4
     memory        = 8192
     disk          = 100
@@ -50,7 +50,7 @@ workers = [
   },
   {
     name          = "talos-worker-02"
-    ip            = "10.30.0.128"
+    ip            = "10.30.0.52"
     cores         = 4
     memory        = 8192
     disk          = 100

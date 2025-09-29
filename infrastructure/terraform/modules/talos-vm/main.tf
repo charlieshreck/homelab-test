@@ -6,32 +6,6 @@ terraform {
   }
 }
 
-variable "vm_name" { type = string }
-variable "vm_id" { type = number }
-variable "target_node" { type = string }
-variable "cores" { type = number }
-variable "memory" { type = number }
-variable "disk" { type = number }
-variable "ip_address" { type = string }
-variable "gateway" { type = string }
-variable "dns" { type = list(string) }
-variable "network_bridge" { type = string }
-variable "storage" { type = string }
-variable "iso_storage" { type = string }
-variable "talos_version" { type = string }
-variable "gpu_passthrough" { 
-  type    = bool
-  default = false
-}
-variable "additional_disks" {
-  type = list(object({
-    size      = number
-    storage   = string
-    interface = string
-  }))
-  default = []
-}
-
 resource "proxmox_virtual_environment_vm" "talos_node" {
   name        = var.vm_name
   vm_id       = var.vm_id
@@ -70,14 +44,28 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   }
   
   network_device {
-    bridge = var.network_bridge
-    model  = "virtio"
+    bridge      = var.network_bridge
+    model       = "virtio"
+    mac_address = var.mac_address != "" ? var.mac_address : null
   }
   
   # Internal network interface for cluster communication
   network_device {
     bridge = "vmbr1"
     model  = "virtio"
+  }
+  
+  # Cloud-init for static IP
+  initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.ip_address}/24"
+        gateway = var.gateway
+      }
+    }
+    dns {
+      servers = var.dns
+    }
   }
   
   dynamic "hostpci" {
@@ -96,14 +84,24 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   
   bios = "seabios"
   
+  serial_device {
+    device = "socket"
+  }
+  
   agent {
     enabled = false
   }
   
+  # Boot arguments to set static IP
+  startup {
+    order      = 1
+    up_delay   = 30
+    down_delay = 30
+  }
+  
   lifecycle {
     ignore_changes = [
-      cdrom,
-      initialization
+      cdrom
     ]
   }
 }
