@@ -46,6 +46,10 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
     enabled = false
   }
   
+  initialization {
+    datastore_id = ""  # Empty to prevent default local-lvm
+  }
+  
   lifecycle {
     ignore_changes = [
       cdrom,

@@ -101,8 +101,7 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   
   lifecycle {
     ignore_changes = [
-      cdrom,
-      initialization
+      cdrom
     ]
   }
 }
