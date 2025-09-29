@@ -48,7 +48,8 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
   
   lifecycle {
     ignore_changes = [
-      cdrom
+      cdrom,
+      initialization
     ]
   }
 }
