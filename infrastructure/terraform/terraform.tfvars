@@ -1,7 +1,7 @@
 # Proxmox Connection
 proxmox_host     = "10.30.0.10"
 proxmox_user     = "root@pam"
-proxmox_password  = "H4ckwh1z"
+proxmox_password = "H4ckwh1z"
 proxmox_node     = "Carrick"
 
 # Networks
@@ -14,12 +14,11 @@ truenas_gateway           = "172.20.0.1"
 dns_servers               = ["1.1.1.1", "8.8.8.8"]
 network_bridge            = "vmbr0"
 
-# Cluster
+# Cluster - LATEST STABLE VERSIONS
 cluster_name       = "homelab-test"
-talos_version      = "v1.8.2"
-kubernetes_version = "v1.31.0"
+talos_version      = "v1.11.2"
 
-# Storage
+# Storage - Longhorn for persistent storage
 proxmox_storage          = "Kerrier"
 proxmox_longhorn_storage = "Restormal"
 proxmox_truenas_storage  = "Trelawney"
@@ -37,7 +36,7 @@ control_plane = {
   disk   = 100
 }
 
-# Workers
+# Workers - Longhorn storage disks
 workers = [
   {
     name          = "talos-worker-01"
@@ -45,7 +44,8 @@ workers = [
     cores         = 4
     memory        = 8192
     disk          = 100
-    gpu           = true
+    gpu           = false
+    gpu_pci_id    = "0000:00:02.0"
     longhorn_disk = 300
   },
   {
@@ -55,6 +55,7 @@ workers = [
     memory        = 8192
     disk          = 100
     gpu           = false
+    gpu_pci_id    = null
     longhorn_disk = 300
   }
 ]
@@ -65,6 +66,14 @@ truenas_vm = {
   ip       = "10.30.0.20"
   cores    = 4
   memory   = 16384
-  disk     = 100  # Reduced to fit available space
+  disk     = 100
   media_ip = "172.20.0.20"
 }
+
+# GitOps Configuration
+gitops_repo_url    = "https://github.com/charlieshreck/homelab-test.git"
+gitops_repo_branch = "main"
+github_token       = "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"
+
+# MetalLB IP Range - adjust for your network
+metallb_ip_range = ["10.30.0.60-10.30.0.80"]

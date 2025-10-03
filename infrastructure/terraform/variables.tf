@@ -107,13 +107,13 @@ variable "cluster_name" {
 variable "talos_version" {
   description = "Talos version"
   type        = string
-  default     = "v1.8.2"
+  default     = "v1.11.2"
 }
 
 variable "kubernetes_version" {
   description = "Kubernetes version"
   type        = string
-  default     = "v1.31.0"
+  default     = "v1.34.1"
 }
 
 # VM ID Management
@@ -135,7 +135,7 @@ variable "control_plane" {
   })
   default = {
     name   = "talos-cp-01"
-    ip     = "10.30.0.11"
+    ip     = "10.30.0.50"
     cores  = 2
     memory = 4096
     disk   = 100
@@ -146,31 +146,34 @@ variable "control_plane" {
 variable "workers" {
   description = "Worker nodes configuration"
   type = list(object({
-    name         = string
-    ip           = string
-    cores        = number
-    memory       = number
-    disk         = number
-    gpu          = bool
+    name          = string
+    ip            = string
+    cores         = number
+    memory        = number
+    disk          = number
+    gpu           = bool
+    gpu_pci_id    = optional(string)
     longhorn_disk = number
   }))
   default = [
     {
-      name         = "talos-worker-01"
-      ip           = "10.30.0.12"
-      cores        = 4
-      memory       = 8192
-      disk         = 100
-      gpu          = true
+      name          = "talos-worker-01"
+      ip            = "10.30.0.51"
+      cores         = 4
+      memory        = 8192
+      disk          = 100
+      gpu           = true
+      gpu_pci_id    = "0000:00:02.0"
       longhorn_disk = 300
     },
     {
-      name         = "talos-worker-02"
-      ip           = "10.30.0.13"
-      cores        = 4
-      memory       = 8192
-      disk         = 100
-      gpu          = false
+      name          = "talos-worker-02"
+      ip            = "10.30.0.52"
+      cores         = 4
+      memory        = 8192
+      disk          = 100
+      gpu           = false
+      gpu_pci_id    = null
       longhorn_disk = 300
     }
   ]
@@ -180,19 +183,46 @@ variable "workers" {
 variable "truenas_vm" {
   description = "TrueNAS VM configuration"
   type = object({
-    name   = string
-    ip     = string
-    cores  = number
-    memory = number
-    disk   = number
+    name     = string
+    ip       = string
+    cores    = number
+    memory   = number
+    disk     = number
     media_ip = string
   })
   default = {
-    name   = "truenas"
-    ip     = "10.30.0.20"
-    cores  = 4
-    memory = 16384
-    disk   = 500
+    name     = "truenas"
+    ip       = "10.30.0.20"
+    cores    = 4
+    memory   = 16384
+    disk     = 500
     media_ip = "172.20.0.20"
   }
+}
+
+# GitOps Configuration
+variable "gitops_repo_url" {
+  description = "Git repository URL for ArgoCD to watch"
+  type        = string
+}
+
+variable "gitops_repo_branch" {
+  description = "Git branch for ArgoCD to watch"
+  type        = string
+  default     = "main"
+}
+
+# Optional: For private repositories
+variable "github_token" {
+  description = "GitHub Personal Access Token for private repos"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# MetalLB Configuration
+variable "metallb_ip_range" {
+  description = "IP address range for MetalLB LoadBalancer services"
+  type        = list(string)
+  default     = ["10.30.0.60-10.30.0.80"]
 }

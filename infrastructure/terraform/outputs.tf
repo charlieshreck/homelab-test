@@ -27,8 +27,8 @@ output "cluster_info" {
   description = "Cluster information"
   value = {
     control_plane_ip = var.control_plane.ip
-    worker_ips      = [for w in var.workers : w.ip]
-    truenas_ip      = var.truenas_vm.ip
+    worker_ips       = [for w in var.workers : w.ip]
+    truenas_ip       = var.truenas_vm.ip
     vm_ids = {
       control_plane = local.vm_ids.control_plane
       workers       = local.vm_ids.workers
@@ -39,5 +39,10 @@ output "cluster_info" {
       longhorn = var.proxmox_longhorn_storage
       truenas  = var.proxmox_truenas_storage
     }
+    versions = {
+      talos      = var.talos_version
+      kubernetes = var.kubernetes_version
+    }
+    metallb_ip_range = var.metallb_ip_range
   }
 }
