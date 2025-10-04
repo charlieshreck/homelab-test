@@ -43,9 +43,17 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   boot_order    = ["ide3", "scsi0"]
 
   cdrom {
-  file_id = "${var.iso_storage}:iso/metal-${var.talos_version}-amd64.iso"
-}
+    enabled   = true
+    file_id   = var.iso_file
+    interface = "ide3"
+  }
 
+  lifecycle {
+    ignore_changes = [
+      cdrom
+    ]
+  }
+}
   network_device {
     bridge      = var.network_bridge
     model       = "virtio"

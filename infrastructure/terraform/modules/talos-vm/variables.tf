@@ -50,6 +50,10 @@ variable "talos_version" {
   type = string 
 }
 
+variable "iso_file" {
+  type = string
+}
+
 variable "gpu_passthrough" {
   type    = bool
   default = false

@@ -4,23 +4,23 @@ terraform {
   required_providers {
     proxmox = {
       source  = "bpg/proxmox"
-      version = "~> 0.84.1"
+      version = "~> 0.84"
     }
     talos = {
       source  = "siderolabs/talos"
-      version = "~> 0.9.0"
+      version = "~> 0.9"
     }
     local = {
       source  = "hashicorp/local"
-      version = "~> 2.5.3"
+      version = "~> 2.5"
     }
     null = {
       source  = "hashicorp/null"
-      version = "~> 3.2.4"
+      version = "~> 3.2"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 3.0.2"
+      version = "~> 3.0"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
@@ -66,6 +66,29 @@ provider "kubernetes" {
   cluster_ca_certificate = try(base64decode(talos_cluster_kubeconfig.this.kubernetes_client_configuration.ca_certificate), "")
 }
 
+# Automatic Talos version and schematic generation
+data "external" "talos_config" {
+  program = ["${path.module}/../scripts/get-latest-talos.sh"]
+}
+
+locals {
+  talos_version       = data.external.talos_config.result.version
+  schematic_id        = data.external.talos_config.result.schematic_id
+  talos_factory_image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
+  talos_iso_name      = "metal-${local.talos_version}-${substr(local.schematic_id, 0, 8)}.iso"
+}
+
+resource "proxmox_virtual_environment_download_file" "talos_iso" {
+  content_type = "iso"
+  datastore_id = var.proxmox_iso_storage
+  node_name    = var.proxmox_node
+  url          = "https://factory.talos.dev/image/${local.schematic_id}/${local.talos_version}/metal-amd64.iso"
+  file_name    = local.talos_iso_name
+  
+  overwrite           = false
+  overwrite_unmanaged = true
+}
+
 resource "talos_machine_secrets" "this" {}
 
 locals {
@@ -108,7 +131,8 @@ module "control_plane" {
   network_bridge       = var.network_bridge
   storage              = var.proxmox_storage
   iso_storage          = var.proxmox_iso_storage
-  talos_version        = var.talos_version
+  talos_version        = local.talos_version
+  iso_file             = proxmox_virtual_environment_download_file.talos_iso.id
   gpu_passthrough      = false
   gpu_pci_id           = null
   mac_address          = local.mac_addresses.control_plane
@@ -132,13 +156,13 @@ module "workers" {
   network_bridge       = var.network_bridge
   storage              = var.proxmox_storage
   iso_storage          = var.proxmox_iso_storage
-  talos_version        = var.talos_version
+  talos_version        = local.talos_version
+  iso_file             = proxmox_virtual_environment_download_file.talos_iso.id
   gpu_passthrough      = var.workers[count.index].gpu
   gpu_pci_id           = var.workers[count.index].gpu ? var.workers[count.index].gpu_pci_id : null
   mac_address          = local.mac_addresses.workers[count.index]
   internal_mac_address = local.internal_mac_addresses.workers[count.index]
 
-  # Longhorn storage disk
   additional_disks = [{
     size      = var.workers[count.index].longhorn_disk
     storage   = var.proxmox_longhorn_storage
@@ -169,15 +193,14 @@ data "talos_machine_configuration" "controlplane" {
   machine_type     = "controlplane"
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
-  talos_version    = var.talos_version
+  talos_version    = local.talos_version
 
   config_patches = [
     yamlencode({
       machine = {
         install = {
-          disk = "/dev/sda"
-          image = "factory.talos.dev/installer/0751f1135eff2bc906854a62cc450c94f3dc65428d42110fc7998db8959dd5e5:v1.11.2"
-
+          disk  = "/dev/sda"
+          image = local.talos_factory_image
         }
         network = {
           hostname = var.control_plane.name
@@ -232,23 +255,23 @@ data "talos_machine_configuration" "worker" {
   machine_type     = "worker"
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
-  talos_version    = var.talos_version
+  talos_version    = local.talos_version
 
   config_patches = [
     yamlencode(merge(
       {
         machine = {
           install = {
-            disk = "/dev/sda"
-          image = "factory.talos.dev/installer/0751f1135eff2bc906854a62cc450c94f3dc65428d42110fc7998db8959dd5e5:v1.11.2"
+            disk  = "/dev/sda"
+            image = local.talos_factory_image
           }
-        disks = [
-          {
-            device = "/dev/sdb"
-            partitions = [
-               {
-                 mountpoint = "/var/lib/longhorn"
-               }
+          disks = [
+            {
+              device = "/dev/sdb"
+              partitions = [
+                {
+                  mountpoint = "/var/lib/longhorn"
+                }
               ]
             }
           ]
@@ -365,7 +388,6 @@ resource "null_resource" "wait_for_cluster" {
   }
 }
 
-# Install Cilium CNI
 resource "helm_release" "cilium" {
   depends_on = [null_resource.wait_for_cluster]
 
@@ -419,7 +441,6 @@ resource "null_resource" "wait_for_cilium" {
   }
 }
 
-# Install MetalLB for LoadBalancer services
 resource "helm_release" "metallb" {
   depends_on = [null_resource.wait_for_cilium]
 
@@ -434,7 +455,6 @@ resource "helm_release" "metallb" {
   wait    = false
 }
 
-# Wait for MetalLB to be ready
 resource "null_resource" "wait_for_metallb" {
   depends_on = [helm_release.metallb]
 
@@ -448,7 +468,6 @@ resource "null_resource" "wait_for_metallb" {
   }
 }
 
-# MetalLB IP Address Pool
 resource "kubectl_manifest" "metallb_ippool" {
   depends_on = [null_resource.wait_for_metallb]
 
@@ -465,7 +484,6 @@ resource "kubectl_manifest" "metallb_ippool" {
   })
 }
 
-# MetalLB L2 Advertisement
 resource "kubectl_manifest" "metallb_l2advert" {
   depends_on = [kubectl_manifest.metallb_ippool]
 
@@ -482,7 +500,6 @@ resource "kubectl_manifest" "metallb_l2advert" {
   })
 }
 
-# Install Longhorn with Talos-specific configuration
 resource "kubernetes_namespace" "longhorn_system" {
   depends_on = [null_resource.wait_for_cilium]
   
@@ -512,18 +529,23 @@ resource "helm_release" "longhorn" {
 
   values = [
     yamlencode({
-
       kubernetesDistro = "k8s"
+      
+      service = {
+        ui = {
+          type = "LoadBalancer"
+        }
+      }
 
       defaultSettings = {
         defaultDataPath = "/var/lib/longhorn"
       }
       
       csi = {
-        kubeletRootDir = "/var/lib/kubelet"
-        attacherReplicaCount = 3
+        kubeletRootDir          = "/var/lib/kubelet"
+        attacherReplicaCount    = 3
         provisionerReplicaCount = 3
-        resizerReplicaCount = 3
+        resizerReplicaCount     = 3
         snapshotterReplicaCount = 3
       }
 
@@ -554,9 +576,12 @@ resource "helm_release" "longhorn" {
       value = "false"
     }
   ]
+  
+  lifecycle {
+    ignore_changes = [values]
+  }
 }
 
-# Install Cert Manager
 resource "helm_release" "cert_manager" {
   depends_on = [null_resource.wait_for_cilium]
 
@@ -575,7 +600,6 @@ resource "helm_release" "cert_manager" {
   ]
 }
 
-# Install ArgoCD
 resource "helm_release" "argocd" {
   depends_on = [helm_release.longhorn]
 
@@ -585,6 +609,19 @@ resource "helm_release" "argocd" {
   version          = "8.5.8"
   namespace        = "argocd"
   create_namespace = true
+  timeout          = 1200
+
+  values = [
+    yamlencode({
+      global = {
+        securityContext = {
+          capabilities = {
+            add = ["NET_BIND_SERVICE"]
+          }
+        }
+      }
+    })
+  ]
 
   set = [
     {
@@ -614,7 +651,6 @@ resource "kubectl_manifest" "argocd_repo_secret" {
     }
   })
 }
-
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
   depends_on = [helm_release.argocd]
