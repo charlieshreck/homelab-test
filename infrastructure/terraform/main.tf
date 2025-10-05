@@ -452,10 +452,77 @@ resource "kubectl_manifest" "argocd_repo_secret" {
   })
 }
 
-# Deploy App-of-Apps pattern
+
+# Create InfisicalSecret with ArgoCD label
+resource "kubectl_manifest" "argocd_github_secret" {
+  depends_on = [helm_release.argocd, helm_release.infisical]
+
+  yaml_body = yamlencode({
+    apiVersion = "secrets.infisical.com/v1alpha1"
+    kind       = "InfisicalSecret"
+    metadata = {
+      name      = "argocd-repo-secret"
+      namespace = "argocd"
+      # Labels pass through to managed secret
+      labels = {
+        "argocd.argoproj.io/secret-type" = "repository"
+      }
+    }
+    spec = {
+      hostAPI = "https://app.infisical.com/api"
+      authentication = {
+        serviceToken = {
+          secretsScope = {
+            secretsPath = "/infrastructure"
+            envSlug     = "prod"
+          }
+          serviceTokenSecretReference = {
+            secretName      = "infisical-service-token"
+            secretNamespace = "infisical-operator-system"
+          }
+        }
+      }
+      managedSecretReference = {
+        secretName     = "private-repo"
+        secretType     = "Opaque"
+        creationPolicy = "Owner"
+      }
+    }
+  })
+}
+
+# Wait for secret creation, then patch with ArgoCD fields
+resource "time_sleep" "wait_for_argocd_secret" {
+  depends_on      = [kubectl_manifest.argocd_github_secret]
+  create_duration = "20s"
+}
+
+resource "null_resource" "patch_argocd_fields" {
+  depends_on = [time_sleep.wait_for_argocd_secret]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+      
+      kubectl patch secret private-repo -n argocd --type merge -p '{
+        "stringData": {
+          "type": "git",
+          "url": "${var.gitops_repo_url}",
+          "username": "git"
+        }
+      }'
+    EOT
+  }
+
+  triggers = {
+    repo_url = var.gitops_repo_url
+  }
+}
+
+# Deploy app-of-apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
-  depends_on = [helm_release.argocd]
+  depends_on = [null_resource.patch_argocd_fields]
 
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
