@@ -16,12 +16,12 @@ spec:
           service:
             type: LoadBalancer
             annotations:
-              metallb.universe.tf/loadBalancerIPs: 10.30.0.100
+              metallb.universe.tf/loadBalancerIPs: "10.30.0.100"
           ports:
             web:
               port: 8000
               redirectTo:
-                port: websecure
+                name: websecure
             websecure:
               port: 8443
               tls:
