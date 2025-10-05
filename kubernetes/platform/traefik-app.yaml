@@ -13,6 +13,11 @@ spec:
       targetRevision: 37.1.2
       helm:
         valuesObject:
+          image:
+            registry: docker.io
+            repository: traefik
+            tag: "v3.5.3"
+            pullPolicy: IfNotPresent
           service:
             type: LoadBalancer
             annotations:
