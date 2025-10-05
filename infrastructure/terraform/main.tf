@@ -157,8 +157,7 @@ resource "null_resource" "wait_for_cluster" {
 }
 
 # ==============================================================================
-# Platform Layer: CNI, Load Balancer, Storage, Secrets
-# These are infrastructure components that ArgoCD depends on
+# Platform Layer: CNI, Load Balancer, Storage
 # ==============================================================================
 
 # Install Cilium CNI
@@ -276,7 +275,6 @@ resource "kubectl_manifest" "metallb_l2advert" {
 }
 
 # Install Longhorn for persistent storage
-# Kept in Terraform due to Talos-specific disk configuration dependencies
 resource "kubernetes_namespace" "longhorn_system" {
   depends_on = [null_resource.wait_for_cilium]
   
@@ -369,22 +367,11 @@ resource "helm_release" "longhorn" {
 }
 
 # ==============================================================================
-# Secrets Management: Vault + External Secrets Operator
-# Deployed before ArgoCD so secrets are available for all applications
-# ==============================================================================
-
-# Vault deployment is in vault.tf
-# External Secrets Operator is in external-secrets.tf
-
-# ==============================================================================
 # GitOps Controller: ArgoCD
-# ArgoCD manages all application-layer resources from this point forward
 # ==============================================================================
 
 resource "helm_release" "argocd" {
-  depends_on = [
-    helm_release.longhorn,
-  ]
+  depends_on = [helm_release.longhorn]
 
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -411,12 +398,8 @@ resource "helm_release" "argocd" {
             "metallb.universe.tf/loadBalancerIPs" = "10.30.0.80"
           }
         }
-        
-        # Enable insecure mode for internal access behind Traefik
         extraArgs = ["--insecure"]
-        
         config = {
-          # Add SOPS/Vault integration if needed
           configManagementPlugins = ""
         }
       }
@@ -430,30 +413,10 @@ resource "helm_release" "argocd" {
   ]
 }
 
-# Configure ArgoCD repository credentials if GitHub token provided
-resource "kubectl_manifest" "argocd_repo_secret" {
-  count      = var.github_token != "" ? 1 : 0
-  depends_on = [helm_release.argocd]
+# ==============================================================================
+# ArgoCD Repository Secret via Infisical
+# ==============================================================================
 
-  yaml_body = yamlencode({
-    apiVersion = "v1"
-    kind       = "Secret"
-    metadata = {
-      name      = "private-repo"
-      namespace = "argocd"
-      labels    = { "argocd.argoproj.io/secret-type" = "repository" }
-    }
-    stringData = {
-      type     = "git"
-      url      = var.gitops_repo_url
-      username = "git"
-      password = var.github_token
-    }
-  })
-}
-
-
-# Create InfisicalSecret with ArgoCD label
 resource "kubectl_manifest" "argocd_github_secret" {
   depends_on = [helm_release.argocd, helm_release.infisical]
 
@@ -463,7 +426,6 @@ resource "kubectl_manifest" "argocd_github_secret" {
     metadata = {
       name      = "argocd-repo-secret"
       namespace = "argocd"
-      # Labels pass through to managed secret
       labels = {
         "argocd.argoproj.io/secret-type" = "repository"
       }
@@ -471,34 +433,52 @@ resource "kubectl_manifest" "argocd_github_secret" {
     spec = {
       hostAPI = "https://app.infisical.com/api"
       authentication = {
-        serviceToken = {
-          secretsScope = {
-            secretsPath = "/infrastructure"
-            envSlug     = "prod"
-          }
-          serviceTokenSecretReference = {
-            secretName      = "infisical-service-token"
+        universalAuth = {
+          credentialsRef = {
+            secretName      = "universal-auth-credentials"
             secretNamespace = "infisical-operator-system"
+          }
+          secretsScope = {
+            projectSlug = "homelab-test-5-ig-k"
+            envSlug     = "prod"
+            secretsPath = "/infrastructure"
           }
         }
       }
       managedSecretReference = {
-        secretName     = "private-repo"
-        secretType     = "Opaque"
-        creationPolicy = "Owner"
+        secretName      = "private-repo"
+        secretNamespace = "argocd"
+        secretType      = "Opaque"
+        creationPolicy  = "Owner"
       }
     }
   })
 }
+# Wait for Infisical operator to create the secret
+resource "null_resource" "wait_for_secret_creation" {
+  depends_on = [kubectl_manifest.argocd_github_secret]
 
-# Wait for secret creation, then patch with ArgoCD fields
-resource "time_sleep" "wait_for_argocd_secret" {
-  depends_on      = [kubectl_manifest.argocd_github_secret]
-  create_duration = "20s"
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+      echo "Waiting for Infisical to create secret..."
+      for i in {1..60}; do
+        if kubectl get secret private-repo -n argocd &>/dev/null; then
+          echo "Secret found!"
+          exit 0
+        fi
+        echo "Attempt $i/60..."
+        sleep 2
+      done
+      echo "Timeout waiting for secret"
+      exit 1
+    EOT
+  }
 }
 
+# Patch the secret with ArgoCD-required fields
 resource "null_resource" "patch_argocd_fields" {
-  depends_on = [time_sleep.wait_for_argocd_secret]
+  depends_on = [null_resource.wait_for_secret_creation]
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -519,7 +499,7 @@ resource "null_resource" "patch_argocd_fields" {
   }
 }
 
-# Deploy app-of-apps
+# Deploy App-of-Apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
   depends_on = [null_resource.patch_argocd_fields]

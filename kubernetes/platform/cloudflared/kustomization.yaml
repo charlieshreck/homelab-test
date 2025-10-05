@@ -4,5 +4,4 @@ kind: Kustomization
 namespace: cloudflared
 
 resources:
-  - application.yaml
   - resources/infisical-secret.yaml

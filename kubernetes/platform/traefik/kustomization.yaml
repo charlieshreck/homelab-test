@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: traefik
 
 resources:
-  - application.yaml
   - resources/tlsstore.yaml
   - resources/middlewares.yaml
 

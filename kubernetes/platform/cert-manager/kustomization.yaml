@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: cert-manager
 
 resources:
-  - application.yaml
   - resources/infisical-secret.yaml
   - resources/cluster-issuer.yaml
   - resources/wildcard-certificate.yaml
