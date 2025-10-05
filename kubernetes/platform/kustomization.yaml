@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
   - cert-manager-app.yaml
+  - cert-manager-config-app.yaml
   - traefik-app.yaml
   - cloudflared-app.yaml

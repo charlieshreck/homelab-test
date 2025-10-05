@@ -1,22 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cert-manager
+  name: cert-manager-config
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://charts.jetstack.io
-    chart: cert-manager
-    targetRevision: v1.18.2
-    helm:
-      valuesObject:
-        crds:
-          enabled: true
-        prometheus:
-          enabled: true
+    repoURL: https://github.com/charlieshreck/homelab-test.git
+    targetRevision: main
+    path: kubernetes/platform/cert-manager/resources
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
@@ -26,4 +22,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
