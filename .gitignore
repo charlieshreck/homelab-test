@@ -1,8 +1,21 @@
+# Terraform
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform/
-.terraform.lock.hcl
-*.tfvars.secret
-kubeconfig
-talosconfig
+*.tfvars
+!*.tfvars.example
+generated/
+
+# Secrets
+*.secret
 .env
+*.key
+talosconfig
+kubeconfig
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

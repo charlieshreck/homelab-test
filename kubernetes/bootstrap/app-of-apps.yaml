@@ -3,12 +3,16 @@ kind: Application
 metadata:
   name: platform
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
     repoURL: https://github.com/charlieshreck/homelab-test.git
     targetRevision: main
-    path: k8s-platform/platform-apps
+    path: kubernetes/platform
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
