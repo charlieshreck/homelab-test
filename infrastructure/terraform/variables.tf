@@ -226,3 +226,35 @@ variable "metallb_ip_range" {
   type        = list(string)
   default     = ["10.30.0.60-10.30.0.80"]
 }
+# ==============================================================================
+# Cloudflare Configuration (for cert-manager and Tunnels)
+# ==============================================================================
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token - retrieve from Vault or set via environment"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "cloudflare_email" {
+  description = "Cloudflare account email"
+  type        = string
+  default     = ""
+}
+
+variable "cloudflare_domain" {
+  description = "Primary domain managed in Cloudflare"
+  type        = string
+  default     = "shreck.io"
+}
+
+# ==============================================================================
+# Platform Components Control
+# ==============================================================================
+
+variable "longhorn_managed_by_argocd" {
+  description = "Set to true to skip Terraform deployment of Longhorn"
+  type        = bool
+  default     = false
+}

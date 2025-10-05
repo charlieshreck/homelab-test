@@ -48,12 +48,6 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     interface = "ide3"
   }
 
-  lifecycle {
-    ignore_changes = [
-      cdrom
-    ]
-  }
-}
   network_device {
     bridge      = var.network_bridge
     model       = "virtio"
@@ -94,13 +88,11 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     down_delay = 30
   }
 
-  on_boot = true
-  started = true
-
   lifecycle {
-    ignore_changes = [cdrom, boot_order]
+    ignore_changes = [cdrom]
   }
 }
+
 
 output "vm_id" {
   value = proxmox_virtual_environment_vm.talos_node.vm_id

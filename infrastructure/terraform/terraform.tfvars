@@ -73,7 +73,7 @@ truenas_vm = {
 # GitOps Configuration
 gitops_repo_url    = "https://github.com/charlieshreck/homelab-test.git"
 gitops_repo_branch = "main"
-github_token       = "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"
 
 # MetalLB IP Range - adjust for your network
 metallb_ip_range = ["10.30.0.60-10.30.0.80"]
+# SOPS Configuration
