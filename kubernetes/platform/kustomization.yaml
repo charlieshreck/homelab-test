@@ -6,3 +6,5 @@ resources:
   - cert-manager-config-app.yaml
   - traefik-app.yaml
   - cloudflared-app.yaml
+  - argocd-ingress.yaml
+  - longhorn-ingress.yaml

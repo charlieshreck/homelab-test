@@ -1,6 +1,8 @@
 # This file creates the 'traefik' namespace and then requests the actual
 # wildcard certificate, telling cert-manager to use the 'letsencrypt-prod' issuer
 # and to store the resulting TLS certificate in a secret named 'shreck-io-tls'.
+# We create three identical Certificate resources. cert-manager is smart and will
+# issue one certificate, then copy the resulting secret to each namespace.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -9,7 +11,7 @@ metadata:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io
+  name: wildcard-shreck-io-traefik
   namespace: traefik
 spec:
   secretName: shreck-io-tls
@@ -38,3 +40,50 @@ spec:
   usages:
     - digital signature
     - key encipherment
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-shreck-io-argocd
+  namespace: argocd
+spec:
+  secretName: shreck-io-tls # The secret will be created in the 'argocd' namespace
+  
+  duration: 2160h
+  renewBefore: 360h
+  
+  commonName: shreck.io
+  
+  dnsNames:
+    - shreck.io
+    - "*.shreck.io"
+    - "*.home.shreck.io"
+  
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-shreck-io-longhorn
+  namespace: longhorn-system
+spec:
+  secretName: shreck-io-tls # The secret will be created in the 'longhorn-system' namespace
+  
+  duration: 2160h
+  renewBefore: 360h
+  
+  commonName: shreck.io
+  
+  dnsNames:
+    - shreck.io
+    - "*.shreck.io"
+    - "*.home.shreck.io"
+  
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+

@@ -1,4 +1,3 @@
-# Cloudflare Tunnel Configuration
 replicaCount: 2
 
 image:
@@ -13,16 +12,25 @@ resources:
   limits:
     memory: 128Mi
 
-# Tunnel configuration
 config:
   ingress:
-    - hostname: shreck.io
+    # ArgoCD
+    - hostname: argocd.shreck.io
       service: https://traefik-traefik.traefik.svc.cluster.local:443
       originRequest:
         originServerName: shreck.io
         noTLSVerify: false
         http2Origin: true
     
+    # Longhorn
+    - hostname: longhorn.shreck.io
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+        noTLSVerify: false
+        http2Origin: true
+    
+    # Wildcard catch-all for other *.shreck.io
     - hostname: "*.shreck.io"
       service: https://traefik-traefik.traefik.svc.cluster.local:443
       originRequest:
@@ -30,6 +38,7 @@ config:
         noTLSVerify: false
         http2Origin: true
     
+    # Default 404
     - service: http_status:404
 
 affinity:

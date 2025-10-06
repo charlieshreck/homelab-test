@@ -1,0 +1,39 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-internal
+  namespace: longhorn-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.home.shreck.io`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+      middlewares:
+        - name: internal-chain
+          namespace: traefik
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-external
+  namespace: longhorn-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.shreck.io`)
+      kind: Rule
+      services:
+        - name: longhorn-frontend
+          port: 80
+      middlewares:
+        - name: external-chain
+          namespace: traefik
+  tls:
+    secretName: shreck-io-tls
