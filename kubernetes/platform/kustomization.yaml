@@ -8,3 +8,4 @@ resources:
   - cloudflared-app.yaml
   - argocd-ingress.yaml
   - longhorn-ingress.yaml
+
