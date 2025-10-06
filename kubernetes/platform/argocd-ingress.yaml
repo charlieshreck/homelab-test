@@ -12,7 +12,7 @@ spec:
       kind: Rule
       services:
         - name: argocd-server
-          port: 443
+          port: 80
       middlewares:
         - name: internal-chain
           namespace: traefik
@@ -31,9 +31,7 @@ spec:
       kind: Rule
       services:
         - name: argocd-server
-          port: 443
-          scheme: https
-          serversTransport: insecure
+          port: 80
       middlewares:
         - name: external-chain
           namespace: traefik
