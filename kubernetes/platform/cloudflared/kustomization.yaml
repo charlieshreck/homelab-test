@@ -5,3 +5,4 @@ namespace: cloudflared
 
 resources:
   - resources/infisical-secret.yaml
+  - resources/deployment.yaml
