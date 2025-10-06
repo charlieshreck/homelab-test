@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transmission
+  namespace: media
+  labels:
+    app: transmission
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: transmission
+  template:
+    metadata:
+      labels:
+        app: transmission
+    spec:
+      containers:
+      - name: transmission
+        image: linuxserver/transmission:latest
+        ports:
+        - name: web
+          containerPort: 9091
+        - name: peer-tcp
+          containerPort: 51413
+          protocol: TCP
+        - name: peer-udp
+          containerPort: 51413
+          protocol: UDP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "Europe/London"
+        - name: USER
+          value: "admin"
+        - name: PASS
+          value: "admin"  # Change this or use a Secret
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: downloads
+          mountPath: /downloads
+        - name: watch
+          mountPath: /watch
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: transmission-config
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: transmission-downloads
+      - name: watch
+        persistentVolumeClaim:
+          claimName: transmission-watch
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-config
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-downloads
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 500Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-watch
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+  - name: web
+    port: 9091
+    targetPort: 9091
+  - name: peer-tcp
+    port: 51413
+    targetPort: 51413
+    protocol: TCP
+  - name: peer-udp
+    port: 51413
+    targetPort: 51413
+    protocol: UDP
+  selector:
+    app: transmission

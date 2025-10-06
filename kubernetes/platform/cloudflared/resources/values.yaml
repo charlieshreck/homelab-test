@@ -1,0 +1,59 @@
+# Cloudflare Tunnel Configuration
+replicaCount: 2
+
+image:
+  repository: cloudflare/cloudflared
+  tag: latest
+  pullPolicy: Always
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+# Tunnel configuration
+config:
+  ingress:
+    - hostname: shreck.io
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+        noTLSVerify: false
+        http2Origin: true
+    
+    - hostname: "*.shreck.io"
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+        noTLSVerify: false
+        http2Origin: true
+    
+    # Media stack routes
+    - hostname: transmission.shreck.io
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+    
+    - hostname: sonarr.shreck.io
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+    
+    - hostname: radarr.shreck.io
+      service: https://traefik-traefik.traefik.svc.cluster.local:443
+      originRequest:
+        originServerName: shreck.io
+    
+    - service: http_status:404
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: cloudflared
+          topologyKey: kubernetes.io/hostname
