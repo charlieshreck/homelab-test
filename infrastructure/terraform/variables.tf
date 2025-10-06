@@ -1,131 +1,106 @@
+# ==============================================================================
 # Provider Configuration
+# ==============================================================================
+
 variable "proxmox_host" {
-  description = "Proxmox host IP or hostname"
+  description = "The FQDN or IP address of the Proxmox host."
   type        = string
-  default     = "10.30.0.10"
 }
 
 variable "proxmox_user" {
-  description = "Proxmox user"
+  description = "The Proxmox user, including the realm (e.g., 'root@pam')."
   type        = string
-  default     = "root@pam"
 }
 
 variable "proxmox_password" {
-  description = "Proxmox password"
+  description = "The password for the Proxmox user."
   type        = string
   sensitive   = true
 }
 
 variable "proxmox_node" {
-  description = "Proxmox node name"
+  description = "The specific Proxmox node where VMs will be created (e.g., 'pve')."
   type        = string
-  default     = "Carrick"
 }
 
+# ==============================================================================
 # Network Configuration
-variable "prod_network" {
-  description = "Production network CIDR"
-  type        = string
-  default     = "10.30.0.0/24"
-}
+# ==============================================================================
 
 variable "prod_gateway" {
-  description = "Production network gateway"
+  description = "The gateway IP address for the main production network."
   type        = string
-  default     = "10.30.0.1"
-}
-
-variable "proxmox_internal_network" {
-  description = "Internal network for Proxmox VMs"
-  type        = string
-  default     = "172.10.0.0/24"
-}
-
-variable "proxmox_internal_gateway" {
-  description = "Internal network gateway"
-  type        = string
-  default     = "172.10.0.1"
-}
-
-variable "truenas_network" {
-  description = "TrueNAS media network"
-  type        = string
-  default     = "172.20.0.0/24"
-}
-
-variable "truenas_gateway" {
-  description = "TrueNAS network gateway"
-  type        = string
-  default     = "172.20.0.1"
 }
 
 variable "dns_servers" {
-  description = "DNS servers"
+  description = "A list of DNS servers for the VMs."
   type        = list(string)
   default     = ["1.1.1.1", "8.8.8.8"]
 }
 
 variable "network_bridge" {
-  description = "Network bridge"
+  description = "The name of the Proxmox network bridge for VMs to connect to (e.g., 'vmbr0')."
   type        = string
-  default     = "vmbr0"
 }
 
+# ==============================================================================
 # Storage Configuration
+# ==============================================================================
+
 variable "proxmox_storage" {
-  description = "Main VM storage pool"
+  description = "The name of the main Proxmox storage pool for OS disks."
   type        = string
-  default     = "Kerrier"
 }
 
 variable "proxmox_longhorn_storage" {
-  description = "Longhorn storage pool (NVMe)"
+  description = "The name of the high-performance storage pool dedicated to Longhorn."
   type        = string
-  default     = "Restormal"
 }
 
 variable "proxmox_truenas_storage" {
-  description = "TrueNAS storage pool"
+  description = "The name of the storage pool for the TrueNAS VM's data."
   type        = string
-  default     = "Trelawney"
 }
 
 variable "proxmox_iso_storage" {
-  description = "ISO storage"
+  description = "The name of the Proxmox storage pool where ISO images are stored."
   type        = string
-  default     = "local"
 }
 
+# ==============================================================================
 # Cluster Configuration
+# ==============================================================================
+
 variable "cluster_name" {
-  description = "Kubernetes cluster name"
+  description = "A name for the Kubernetes cluster."
   type        = string
   default     = "homelab-test"
 }
 
 variable "talos_version" {
-  description = "Talos version"
+  description = "The version of Talos OS to install."
   type        = string
   default     = "v1.11.2"
 }
 
 variable "kubernetes_version" {
-  description = "Kubernetes version"
+  description = "The version of Kubernetes to deploy."
   type        = string
   default     = "v1.34.1"
 }
 
-# VM ID Management
 variable "vm_id_start" {
-  description = "Starting VM ID"
+  description = "The starting ID for Proxmox VMs. Terraform will increment from this number."
   type        = number
   default     = 200
 }
 
-# Control Plane Configuration
+# ==============================================================================
+# VM Definitions
+# ==============================================================================
+
 variable "control_plane" {
-  description = "Control plane node specs"
+  description = "The configuration for the control plane node."
   type = object({
     name   = string
     ip     = string
@@ -133,19 +108,11 @@ variable "control_plane" {
     memory = number
     disk   = number
   })
-  default = {
-    name   = "talos-cp-01"
-    ip     = "10.30.0.50"
-    cores  = 2
-    memory = 4096
-    disk   = 100
-  }
 }
 
-# Worker Nodes Configuration
 variable "workers" {
-  description = "Worker nodes configuration"
-  type = list(object({
+  description = "A map of worker node configurations, keyed by a unique name like 'worker-01'."
+  type = map(object({
     name          = string
     ip            = string
     cores         = number
@@ -155,33 +122,10 @@ variable "workers" {
     gpu_pci_id    = optional(string)
     longhorn_disk = number
   }))
-  default = [
-    {
-      name          = "talos-worker-01"
-      ip            = "10.30.0.51"
-      cores         = 4
-      memory        = 8192
-      disk          = 100
-      gpu           = true
-      gpu_pci_id    = "0000:00:02.0"
-      longhorn_disk = 300
-    },
-    {
-      name          = "talos-worker-02"
-      ip            = "10.30.0.52"
-      cores         = 4
-      memory        = 8192
-      disk          = 100
-      gpu           = false
-      gpu_pci_id    = null
-      longhorn_disk = 300
-    }
-  ]
 }
 
-# TrueNAS Configuration
 variable "truenas_vm" {
-  description = "TrueNAS VM configuration"
+  description = "The configuration for the TrueNAS VM."
   type = object({
     name     = string
     ip       = string
@@ -190,71 +134,60 @@ variable "truenas_vm" {
     disk     = number
     media_ip = string
   })
-  default = {
-    name     = "truenas"
-    ip       = "10.30.0.20"
-    cores    = 4
-    memory   = 16384
-    disk     = 500
-    media_ip = "172.20.0.20"
-  }
 }
 
-# GitOps Configuration
+# ==============================================================================
+# GitOps & Application Configuration
+# ==============================================================================
+
 variable "gitops_repo_url" {
-  description = "Git repository URL for ArgoCD to watch"
+  description = "The Git repository URL for ArgoCD to synchronize with."
   type        = string
 }
 
 variable "gitops_repo_branch" {
-  description = "Git branch for ArgoCD to watch"
+  description = "The Git branch for ArgoCD to watch."
   type        = string
   default     = "main"
 }
 
-# Optional: For private repositories
-variable "github_token" {
-  description = "GitHub Personal Access Token for private repos"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-# MetalLB Configuration
 variable "metallb_ip_range" {
-  description = "IP address range for MetalLB LoadBalancer services"
+  description = "The IP address range for MetalLB to assign to LoadBalancer services."
   type        = list(string)
-  default     = ["10.30.0.60-10.30.0.80"]
 }
-# ==============================================================================
-# Cloudflare Configuration (for cert-manager and Tunnels)
-# ==============================================================================
 
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token - retrieve from Vault or set via environment"
-  type        = string
-  sensitive   = true
-  default     = ""
+variable "longhorn_managed_by_argocd" {
+  description = "Set to true if Longhorn is managed by ArgoCD instead of Terraform."
+  type        = bool
+  default     = false
 }
+
+# ==============================================================================
+# Cloudflare Configuration
+# ==============================================================================
 
 variable "cloudflare_email" {
-  description = "Cloudflare account email"
+  description = "The email address associated with your Cloudflare account."
   type        = string
-  default     = ""
 }
 
 variable "cloudflare_domain" {
-  description = "Primary domain managed in Cloudflare"
+  description = "The root domain you manage in Cloudflare (e.g., 'example.com')."
   type        = string
-  default     = "shreck.io"
 }
 
 # ==============================================================================
-# Platform Components Control
+# Secrets Management - Infisical
 # ==============================================================================
 
-variable "longhorn_managed_by_argocd" {
-  description = "Set to true to skip Terraform deployment of Longhorn"
-  type        = bool
-  default     = false
+variable "infisical_client_id" {
+  description = "Infisical Universal Auth Client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "infisical_client_secret" {
+  description = "Infisical Universal Auth Client Secret"
+  type        = string
+  sensitive   = true
 }

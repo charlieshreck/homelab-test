@@ -1,4 +1,6 @@
----
+# This file creates the 'traefik' namespace and then requests the actual
+# wildcard certificate, telling cert-manager to use the 'letsencrypt-prod' issuer
+# and to store the resulting TLS certificate in a secret named 'shreck-io-tls'.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -13,7 +15,7 @@ spec:
   secretName: shreck-io-tls
   
   duration: 2160h  # 90 days
-  renewBefore: 360h  # 15 days before expiry
+  renewBefore: 360h # 15 days before expiry
   
   commonName: shreck.io
   

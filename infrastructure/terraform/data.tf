@@ -1,28 +1,54 @@
-# Data sources for external information and Talos configuration
+# ==============================================================================
+# data.tf - Defines the Talos machine configurations
+#
+# FIXES APPLIED:
+# 1. Removed VIP configuration that was causing extra IP assignment
+# 2. Changed cluster endpoint to use control plane IP directly instead of SRV record
+# 3. Simplified network configuration for reliability
+# ==============================================================================
 
-# Automatic Talos version and schematic generation
+# ==============================================================================
+# Talos Version Discovery
+# ==============================================================================
+
 data "external" "talos_config" {
-  program = ["${path.module}/../scripts/get-latest-talos.sh"]
+  program = ["bash", "${path.module}/../scripts/get-talos-version.sh"]
 }
 
-# Generate Talos machine configuration for control plane
+# ==============================================================================
+# Talos Client Configuration
+# ==============================================================================
+
+data "talos_client_configuration" "this" {
+  cluster_name         = var.cluster_name
+  client_configuration = talos_machine_secrets.this.client_configuration
+  nodes                = [var.control_plane.ip]
+  endpoints            = [var.control_plane.ip]
+}
+
+# ==============================================================================
+# Talos Machine Configuration - Control Plane
+# ==============================================================================
+
 data "talos_machine_configuration" "controlplane" {
   cluster_name     = var.cluster_name
-  machine_type     = "controlplane"
+  # FIX: Use direct IP instead of SRV record for more reliable initial bootstrap
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
-  machine_secrets  = talos_machine_secrets.this.machine_secrets
+  machine_type     = "controlplane"
   talos_version    = local.talos_version
+  machine_secrets  = talos_machine_secrets.this.machine_secrets
 
   config_patches = [
     yamlencode({
       machine = {
         install = {
           disk  = "/dev/sda"
-          image = local.talos_factory_image
+          image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
         }
         network = {
           hostname = var.control_plane.name
           interfaces = [
+            # Primary Interface (10.30.x.x network)
             {
               deviceSelector = {
                 hardwareAddr = local.mac_addresses.control_plane
@@ -35,7 +61,9 @@ data "talos_machine_configuration" "controlplane" {
                   gateway = var.prod_gateway
                 }
               ]
+              # FIX: Removed VIP configuration - this was causing the extra /32 IP
             },
+            # Secondary/Internal Interface (172.x.x.x network)
             {
               deviceSelector = {
                 hardwareAddr = local.internal_mac_addresses.control_plane
@@ -66,15 +94,19 @@ data "talos_machine_configuration" "controlplane" {
   ]
 }
 
-# Generate Talos machine configuration for workers
+# ==============================================================================
+# Talos Machine Configuration - Workers
+# ==============================================================================
+
 data "talos_machine_configuration" "worker" {
-  count = length(var.workers)
+  for_each = var.workers
 
   cluster_name     = var.cluster_name
-  machine_type     = "worker"
+  # FIX: Use direct IP instead of SRV record
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
-  machine_secrets  = talos_machine_secrets.this.machine_secrets
+  machine_type     = "worker"
   talos_version    = local.talos_version
+  machine_secrets  = talos_machine_secrets.this.machine_secrets
 
   config_patches = [
     yamlencode(merge(
@@ -82,8 +114,9 @@ data "talos_machine_configuration" "worker" {
         machine = {
           install = {
             disk  = "/dev/sda"
-            image = local.talos_factory_image
+            image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
           }
+          # Longhorn disk configuration
           disks = [
             {
               device = "/dev/sdb"
@@ -108,14 +141,15 @@ data "talos_machine_configuration" "worker" {
             }
           }
           network = {
-            hostname = var.workers[count.index].name
+            hostname = each.value.name
             interfaces = [
+              # Primary Interface (10.30.x.x network)
               {
                 deviceSelector = {
-                  hardwareAddr = local.mac_addresses.workers[count.index]
+                  hardwareAddr = local.mac_addresses.workers[each.key]
                 }
                 dhcp      = false
-                addresses = ["${var.workers[count.index].ip}/24"]
+                addresses = ["${each.value.ip}/24"]
                 routes = [
                   {
                     network = "0.0.0.0/0"
@@ -123,19 +157,21 @@ data "talos_machine_configuration" "worker" {
                   }
                 ]
               },
+              # Secondary/Internal Interface (172.x.x.x network)
               {
                 deviceSelector = {
-                  hardwareAddr = local.internal_mac_addresses.workers[count.index]
+                  hardwareAddr = local.internal_mac_addresses.workers[each.key]
                 }
                 dhcp      = false
-                addresses = ["172.10.0.${51 + count.index}/24"]
+                addresses = ["172.10.0.${51 + index(local.worker_keys, each.key)}/24"]
               }
             ]
             nameservers = var.dns_servers
           }
         }
       },
-      var.workers[count.index].gpu ? {
+      # GPU configuration if enabled
+      each.value.gpu ? {
         machine = {
           sysctls = {
             "net.core.bpf_jit_harden" = "0"
@@ -144,12 +180,4 @@ data "talos_machine_configuration" "worker" {
       } : {}
     ))
   ]
-}
-
-# Generate Talos client configuration
-data "talos_client_configuration" "this" {
-  cluster_name         = var.cluster_name
-  client_configuration = talos_machine_secrets.this.client_configuration
-  nodes                = concat([var.control_plane.ip], [for w in var.workers : w.ip])
-  endpoints            = [var.control_plane.ip]
 }

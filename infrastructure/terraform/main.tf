@@ -1,5 +1,9 @@
-# Main orchestration file - focuses on resource creation and dependencies
-# Configuration details moved to: providers.tf, locals.tf, data.tf, variables.tf, outputs.tf
+# ==============================================================================
+# main.tf - V3 with proper certificate handling
+#
+# FIX: Remove explicit endpoint from kubeconfig generation to let Talos
+# set it correctly with proper certificates
+# ==============================================================================
 
 # ==============================================================================
 # ISO Preparation
@@ -11,7 +15,7 @@ resource "proxmox_virtual_environment_download_file" "talos_iso" {
   node_name    = var.proxmox_node
   url          = "https://factory.talos.dev/image/${local.schematic_id}/${local.talos_version}/metal-amd64.iso"
   file_name    = local.talos_iso_name
-  
+
   overwrite           = false
   overwrite_unmanaged = true
 }
@@ -49,16 +53,16 @@ module "control_plane" {
 
 # Deploy worker VMs
 module "workers" {
-  source = "./modules/talos-vm"
-  count  = length(var.workers)
+  source   = "./modules/talos-vm"
+  for_each = var.workers
 
-  vm_name              = var.workers[count.index].name
-  vm_id                = local.vm_ids.workers[count.index]
+  vm_name              = each.value.name
+  vm_id                = local.vm_ids.workers[each.key]
   target_node          = var.proxmox_node
-  cores                = var.workers[count.index].cores
-  memory               = var.workers[count.index].memory
-  disk                 = var.workers[count.index].disk
-  ip_address           = var.workers[count.index].ip
+  cores                = each.value.cores
+  memory               = each.value.memory
+  disk                 = each.value.disk
+  ip_address           = each.value.ip
   gateway              = var.prod_gateway
   dns                  = var.dns_servers
   network_bridge       = var.network_bridge
@@ -66,13 +70,13 @@ module "workers" {
   iso_storage          = var.proxmox_iso_storage
   talos_version        = local.talos_version
   iso_file             = proxmox_virtual_environment_download_file.talos_iso.id
-  gpu_passthrough      = var.workers[count.index].gpu
-  gpu_pci_id           = var.workers[count.index].gpu ? var.workers[count.index].gpu_pci_id : null
-  mac_address          = local.mac_addresses.workers[count.index]
-  internal_mac_address = local.internal_mac_addresses.workers[count.index]
+  gpu_passthrough      = each.value.gpu
+  gpu_pci_id           = each.value.gpu ? each.value.gpu_pci_id : null
+  mac_address          = local.mac_addresses.workers[each.key]
+  internal_mac_address = local.internal_mac_addresses.workers[each.key]
 
   additional_disks = [{
-    size      = var.workers[count.index].longhorn_disk
+    size      = each.value.longhorn_disk
     storage   = var.proxmox_longhorn_storage
     interface = "scsi1"
   }]
@@ -101,19 +105,28 @@ module "truenas" {
 resource "talos_machine_configuration_apply" "controlplane" {
   depends_on = [module.control_plane]
 
-  client_configuration        = talos_machine_secrets.this.client_configuration
+  client_configuration      = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.controlplane.machine_configuration
-  node                        = var.control_plane.ip
+  node                      = var.control_plane.ip
+}
+
+# Wait for control plane to be ready before applying worker configs
+resource "time_sleep" "wait_for_controlplane" {
+  depends_on      = [talos_machine_configuration_apply.controlplane]
+  create_duration = "30s"
 }
 
 # Apply Talos configuration to workers
 resource "talos_machine_configuration_apply" "worker" {
-  depends_on = [module.workers]
-  count      = length(var.workers)
+  depends_on = [
+    module.workers,
+    time_sleep.wait_for_controlplane
+  ]
+  for_each = var.workers
 
-  client_configuration        = talos_machine_secrets.this.client_configuration
-  machine_configuration_input = data.talos_machine_configuration.worker[count.index].machine_configuration
-  node                        = var.workers[count.index].ip
+  client_configuration      = talos_machine_secrets.this.client_configuration
+  machine_configuration_input = data.talos_machine_configuration.worker[each.key].machine_configuration
+  node                      = each.value.ip
 }
 
 # Bootstrap the cluster
@@ -127,7 +140,14 @@ resource "talos_machine_bootstrap" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
 }
 
-# Generate kubeconfig
+# Save talosconfig first
+resource "local_file" "talosconfig" {
+  content         = data.talos_client_configuration.this.talos_config
+  filename        = "${path.module}/generated/talosconfig"
+  file_permission = "0600"
+}
+
+# Generate kubeconfig immediately after bootstrap
 resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_bootstrap.this]
 
@@ -135,11 +155,19 @@ resource "talos_cluster_kubeconfig" "this" {
   node                 = var.control_plane.ip
 }
 
-# Wait for cluster to be healthy
+resource "local_file" "kubeconfig" {
+  depends_on = [talos_cluster_kubeconfig.this]
+
+  content         = talos_cluster_kubeconfig.this.kubeconfig_raw
+  filename        = "${path.module}/generated/kubeconfig"
+  file_permission = "0600"
+}
+
+# Simple working wait - just check /healthz endpoint
 resource "null_resource" "wait_for_cluster" {
   depends_on = [
     talos_machine_bootstrap.this,
-    talos_cluster_kubeconfig.this
+    local_file.kubeconfig
   ]
 
   provisioner "local-exec" {
@@ -160,7 +188,7 @@ resource "null_resource" "wait_for_cluster" {
 # Platform Layer: CNI, Load Balancer, Storage
 # ==============================================================================
 
-# Install Cilium CNI
+# Install Cilium CNI - let Helm wait for it
 resource "helm_release" "cilium" {
   depends_on = [null_resource.wait_for_cluster]
 
@@ -169,10 +197,7 @@ resource "helm_release" "cilium" {
   chart      = "cilium"
   version    = "1.18.2"
   namespace  = "kube-system"
-
-  timeout       = 900
-  wait          = true
-  wait_for_jobs = true
+  timeout    = 900
 
   values = [yamlencode({
     ipam = {
@@ -202,21 +227,38 @@ resource "helm_release" "cilium" {
   })]
 }
 
+# Wait for Cilium to be fully operational
 resource "null_resource" "wait_for_cilium" {
   depends_on = [helm_release.cilium]
 
   provisioner "local-exec" {
     command = <<-EOT
       export KUBECONFIG=${path.module}/generated/kubeconfig
-      kubectl wait --for=condition=ready pod -l k8s-app=cilium -n kube-system --timeout=600s
-      kubectl wait --for=condition=ready nodes --all --timeout=600s
+      
+      echo "Waiting for Cilium pods to appear..."
+      for i in {1..60}; do
+        POD_COUNT=$(kubectl get pods -n kube-system -l k8s-app=cilium --no-headers 2>/dev/null | wc -l)
+        if [ "$POD_COUNT" -gt 0 ]; then
+          echo "Found $POD_COUNT Cilium pods, waiting for ready..."
+          kubectl wait --for=condition=ready pod \
+            -l k8s-app=cilium \
+            -n kube-system \
+            --timeout=600s
+          echo "✅ Cilium operational"
+          exit 0
+        fi
+        echo "Attempt $i/60: No Cilium pods yet..."
+        sleep 5
+      done
+      
+      echo "❌ Cilium pods never appeared"
+      exit 1
     EOT
   }
 }
 
-# Install MetalLB for LoadBalancer services
 resource "helm_release" "metallb" {
-  depends_on = [null_resource.wait_for_cilium]
+  depends_on = [helm_release.cilium]
 
   name             = "metallb"
   repository       = "https://metallb.github.io/metallb"
@@ -224,20 +266,25 @@ resource "helm_release" "metallb" {
   version          = "0.15.2"
   namespace        = "metallb-system"
   create_namespace = true
-
-  timeout = 600
-  wait    = false
+  timeout          = 600
+  wait             = false
 }
 
+# Wait for MetalLB controller to be ready before applying config, which ensures the webhook is available.
 resource "null_resource" "wait_for_metallb" {
   depends_on = [helm_release.metallb]
 
   provisioner "local-exec" {
     command = <<-EOT
       export KUBECONFIG=${path.module}/generated/kubeconfig
-      echo "Waiting for MetalLB pods to be ready..."
-      kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=metallb -n metallb-system --timeout=300s
-      sleep 10
+      
+      echo "Waiting for MetalLB controller to be ready..."
+      # The controller pod runs the validation webhook, so we must wait for it.
+      kubectl wait --for=condition=ready pod \
+        -l app.kubernetes.io/name=metallb,app.kubernetes.io/component=controller \
+        -n metallb-system \
+        --timeout=600s
+      echo "✅ MetalLB controller is ready."
     EOT
   }
 }
@@ -277,7 +324,7 @@ resource "kubectl_manifest" "metallb_l2advert" {
 # Install Longhorn for persistent storage
 resource "kubernetes_namespace" "longhorn_system" {
   depends_on = [null_resource.wait_for_cilium]
-  
+
   metadata {
     name = "longhorn-system"
     labels = {
@@ -290,12 +337,12 @@ resource "kubernetes_namespace" "longhorn_system" {
 
 resource "helm_release" "longhorn" {
   count = var.longhorn_managed_by_argocd ? 0 : 1
-  
+
   depends_on = [
     kubernetes_namespace.longhorn_system,
-    null_resource.wait_for_metallb
+    helm_release.metallb
   ]
-  
+
   name             = "longhorn"
   repository       = "https://charts.longhorn.io"
   chart            = "longhorn"
@@ -303,11 +350,12 @@ resource "helm_release" "longhorn" {
   namespace        = "longhorn-system"
   create_namespace = false
   timeout          = 1200
+  wait             = false
 
   values = [
     yamlencode({
       kubernetesDistro = "k8s"
-      
+
       service = {
         ui = {
           type = "LoadBalancer"
@@ -318,17 +366,17 @@ resource "helm_release" "longhorn" {
       }
 
       defaultSettings = {
-        defaultDataPath = "/var/lib/longhorn"
-        defaultReplicaCount = "2"
+        defaultDataPath                 = "/var/lib/longhorn"
+        defaultReplicaCount             = "2"
         storageMinimalAvailablePercentage = "10"
       }
-      
+
       persistence = {
-        defaultClass = true
+        defaultClass             = true
         defaultClassReplicaCount = 2
-        reclaimPolicy = "Retain"
+        reclaimPolicy            = "Retain"
       }
-      
+
       csi = {
         kubeletRootDir          = "/var/lib/kubelet"
         attacherReplicaCount    = "3"
@@ -357,7 +405,7 @@ resource "helm_release" "longhorn" {
       }
     })
   ]
-  
+
   set = [
     {
       name  = "enablePSP"
@@ -380,6 +428,7 @@ resource "helm_release" "argocd" {
   namespace        = "argocd"
   create_namespace = true
   timeout          = 1200
+  wait             = false
 
   values = [
     yamlencode({
@@ -390,7 +439,7 @@ resource "helm_release" "argocd" {
           }
         }
       }
-      
+
       server = {
         service = {
           type = "LoadBalancer"
@@ -403,7 +452,7 @@ resource "helm_release" "argocd" {
           configManagementPlugins = ""
         }
       }
-      
+
       configs = {
         params = {
           "server.insecure" = true
@@ -415,6 +464,7 @@ resource "helm_release" "argocd" {
 
 # ==============================================================================
 # ArgoCD Repository Secret via Infisical
+# NOTE: Infisical operator is configured in infisical.tf
 # ==============================================================================
 
 resource "kubectl_manifest" "argocd_github_secret" {
@@ -454,55 +504,54 @@ resource "kubectl_manifest" "argocd_github_secret" {
     }
   })
 }
-# Wait for Infisical operator to create the secret
-resource "null_resource" "wait_for_secret_creation" {
+
+# Combine waiting and patching into a single atomic operation to prevent race conditions
+resource "null_resource" "wait_and_patch_secret" {
   depends_on = [kubectl_manifest.argocd_github_secret]
 
   provisioner "local-exec" {
     command = <<-EOT
       export KUBECONFIG=${path.module}/generated/kubeconfig
-      echo "Waiting for Infisical to create secret..."
+      
+      echo "Waiting for Infisical to create 'private-repo' secret..."
       for i in {1..60}; do
+        # Check if the secret exists
         if kubectl get secret private-repo -n argocd &>/dev/null; then
-          echo "Secret found!"
-          exit 0
+          echo "✅ Secret found! Patching with ArgoCD fields..."
+          
+          # Immediately patch the secret
+          kubectl patch secret private-repo -n argocd --type merge -p '{
+            "stringData": {
+              "type": "git",
+              "url": "${var.gitops_repo_url}",
+              "username": "git"
+            }
+          }'
+          
+          echo "✅ Patch successful!"
+          exit 0 # Exit the loop and the script successfully
         fi
-        echo "Attempt $i/60..."
+        
+        echo "Attempt $i/60: Secret not found yet. Retrying in 2 seconds..."
         sleep 2
       done
-      echo "Timeout waiting for secret"
-      exit 1
-    EOT
-  }
-}
-
-# Patch the secret with ArgoCD-required fields
-resource "null_resource" "patch_argocd_fields" {
-  depends_on = [null_resource.wait_for_secret_creation]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      export KUBECONFIG=${path.module}/generated/kubeconfig
       
-      kubectl patch secret private-repo -n argocd --type merge -p '{
-        "stringData": {
-          "type": "git",
-          "url": "${var.gitops_repo_url}",
-          "username": "git"
-        }
-      }'
+      echo "❌ Timeout: Timed out waiting for secret 'private-repo' to be created."
+      exit 1
     EOT
   }
 
   triggers = {
+    # Re-run this logic if the repo URL changes
     repo_url = var.gitops_repo_url
   }
 }
 
+
 # Deploy App-of-Apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
-  depends_on = [null_resource.patch_argocd_fields]
+  depends_on = [null_resource.wait_and_patch_secret]
 
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
@@ -533,18 +582,3 @@ resource "kubectl_manifest" "argocd_app_of_apps" {
   })
 }
 
-# ==============================================================================
-# Output Files
-# ==============================================================================
-
-resource "local_file" "talosconfig" {
-  content         = data.talos_client_configuration.this.talos_config
-  filename        = "${path.module}/generated/talosconfig"
-  file_permission = "0600"
-}
-
-resource "local_file" "kubeconfig" {
-  content         = talos_cluster_kubeconfig.this.kubeconfig_raw
-  filename        = "${path.module}/generated/kubeconfig"
-  file_permission = "0600"
-}
