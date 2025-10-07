@@ -369,6 +369,7 @@ resource "helm_release" "longhorn" {
         defaultDataPath                 = "/var/lib/longhorn"
         defaultReplicaCount             = "2"
         storageMinimalAvailablePercentage = "10"
+        storageNetwork                  = "172.10.0.0/24"
       }
 
       persistence = {
