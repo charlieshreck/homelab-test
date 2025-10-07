@@ -31,8 +31,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: tv
-          mountPath: /tv
         - name: downloads
           mountPath: /downloads
         resources:
@@ -46,9 +44,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: sonarr-config
-      - name: tv
-        persistentVolumeClaim:
-          claimName: sonarr-tv
       - name: downloads
         persistentVolumeClaim:
           claimName: transmission-downloads
@@ -78,17 +73,4 @@ spec:
   storageClassName: longhorn
   resources:
     requests:
-      storage: 5Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: sonarr-tv
-  namespace: media
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 2Ti
+      storage: 2Gi

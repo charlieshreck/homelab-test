@@ -31,8 +31,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: movies
-          mountPath: /movies
         - name: downloads
           mountPath: /downloads
         resources:
@@ -46,9 +44,6 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: radarr-config
-      - name: movies
-        persistentVolumeClaim:
-          claimName: radarr-movies
       - name: downloads
         persistentVolumeClaim:
           claimName: transmission-downloads
@@ -78,17 +73,4 @@ spec:
   storageClassName: longhorn
   resources:
     requests:
-      storage: 5Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: radarr-movies
-  namespace: media
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 2Ti
+      storage: 2Gi
