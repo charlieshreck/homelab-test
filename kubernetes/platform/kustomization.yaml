@@ -10,3 +10,4 @@ resources:
   - longhorn-ingress.yaml
   - media-stack-app.yaml
 
+  - applications-app.yaml
