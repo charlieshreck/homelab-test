@@ -3,8 +3,6 @@ kind: Deployment
 metadata:
   name: transmission
   namespace: media
-  labels:
-    app: transmission
 spec:
   replicas: 1
   strategy:
@@ -25,7 +23,6 @@ spec:
           containerPort: 9091
         - name: peer-tcp
           containerPort: 51413
-          protocol: TCP
         - name: peer-udp
           containerPort: 51413
           protocol: UDP
@@ -39,7 +36,7 @@ spec:
         - name: USER
           value: "admin"
         - name: PASS
-          value: "admin"  # Change this or use a Secret
+          value: "changeme"
         volumeMounts:
         - name: config
           mountPath: /config
@@ -64,6 +61,28 @@ spec:
       - name: watch
         persistentVolumeClaim:
           claimName: transmission-watch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+  - name: web
+    port: 9091
+    targetPort: 9091
+  - name: peer-tcp
+    port: 51413
+    targetPort: 51413
+    protocol: TCP
+  - name: peer-udp
+    port: 51413
+    targetPort: 51413
+    protocol: UDP
+  selector:
+    app: transmission
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -103,25 +122,3 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: transmission
-  namespace: media
-spec:
-  type: ClusterIP
-  ports:
-  - name: web
-    port: 9091
-    targetPort: 9091
-  - name: peer-tcp
-    port: 51413
-    targetPort: 51413
-    protocol: TCP
-  - name: peer-udp
-    port: 51413
-    targetPort: 51413
-    protocol: UDP
-  selector:
-    app: transmission

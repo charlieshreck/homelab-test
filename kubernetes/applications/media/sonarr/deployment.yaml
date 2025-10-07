@@ -1,28 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: radarr
+  name: sonarr
   namespace: media
-  labels:
-    app: radarr
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: radarr
+      app: sonarr
   template:
     metadata:
       labels:
-        app: radarr
+        app: sonarr
     spec:
       containers:
-      - name: radarr
-        image: linuxserver/radarr:latest
+      - name: sonarr
+        image: linuxserver/sonarr:latest
         ports:
         - name: http
-          containerPort: 7878
+          containerPort: 8989
         env:
         - name: PUID
           value: "1000"
@@ -33,8 +31,8 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: movies
-          mountPath: /movies
+        - name: tv
+          mountPath: /tv
         - name: downloads
           mountPath: /downloads
         resources:
@@ -47,18 +45,32 @@ spec:
       volumes:
       - name: config
         persistentVolumeClaim:
-          claimName: radarr-config
-      - name: movies
+          claimName: sonarr-config
+      - name: tv
         persistentVolumeClaim:
-          claimName: radarr-movies
+          claimName: sonarr-tv
       - name: downloads
         persistentVolumeClaim:
           claimName: transmission-downloads
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8989
+    targetPort: 8989
+  selector:
+    app: sonarr
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: radarr-config
+  name: sonarr-config
   namespace: media
 spec:
   accessModes:
@@ -71,7 +83,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: radarr-movies
+  name: sonarr-tv
   namespace: media
 spec:
   accessModes:
@@ -80,17 +92,3 @@ spec:
   resources:
     requests:
       storage: 2Ti
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: radarr
-  namespace: media
-spec:
-  type: ClusterIP
-  ports:
-  - name: http
-    port: 7878
-    targetPort: 7878
-  selector:
-    app: radarr
