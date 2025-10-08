@@ -4,6 +4,8 @@ kind: IngressRoute
 metadata:
   name: longhorn-internal
   namespace: longhorn-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   entryPoints:
     - websecure
@@ -23,6 +25,8 @@ kind: IngressRoute
 metadata:
   name: longhorn-external
   namespace: longhorn-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   entryPoints:
     - websecure

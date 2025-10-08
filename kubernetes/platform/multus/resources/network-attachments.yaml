@@ -43,9 +43,9 @@ spec:
         "type": "host-local",
         "ranges": [
           [{
-            "subnet": "172.10.1.0/24",
-            "rangeStart": "172.10.1.100",
-            "rangeEnd": "172.10.1.200"
+            "subnet": "172.20.0.0/24",
+            "rangeStart": "172.20.0.100",
+            "rangeEnd": "172.20.0.200"
           }]
         ]
       }
@@ -69,9 +69,9 @@ spec:
         "type": "host-local",
         "ranges": [
           [{
-            "subnet": "172.10.2.0/24",
-            "rangeStart": "172.10.2.100",
-            "rangeEnd": "172.10.2.200"
+            "subnet": "172.30.0.0/24",
+            "rangeStart": "172.30.0.100",
+            "rangeEnd": "172.30.0.200"
           }]
         ]
       }
