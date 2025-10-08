@@ -62,14 +62,14 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
 
 # eth2 - Longhorn storage network
   network_device {
-    bridge      = "vmbr1"
+    bridge      = "vmbr2"
     model       = "virtio"
     mac_address = var.longhorn_mac_address != "" ? var.longhorn_mac_address : null
   }
 
   # eth3 - TrueNAS/media network
   network_device {
-    bridge      = "vmbr1"
+    bridge      = "vmbr3"
     model       = "virtio"
     mac_address = var.media_mac_address != "" ? var.media_mac_address : null
   }

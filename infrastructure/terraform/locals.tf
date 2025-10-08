@@ -43,7 +43,7 @@ locals {
     truenas = "52:54:00:ac:0a:14"
   }
 
-  # Longhorn storage network MAC addresses (eth2 - 172.10.1.x)
+  # Longhorn storage network MAC addresses (eth2 - 172.20.0.x)
   longhorn_mac_addresses = {
     control_plane = "52:54:00:ac:0b:32"
     workers = { 
@@ -53,7 +53,7 @@ locals {
     truenas = "52:54:00:ac:0b:14"
   }
 
-  # Media network MAC addresses (eth3 - 172.10.2.x)
+  # Media network MAC addresses (eth3 - 172.30.0.x)
   media_mac_addresses = {
     control_plane = "52:54:00:ac:0c:32"
     workers = { 
