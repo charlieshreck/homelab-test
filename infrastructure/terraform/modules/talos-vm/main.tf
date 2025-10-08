@@ -43,7 +43,7 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
   boot_order    = ["ide3", "scsi0"]
 
   cdrom {
-    enabled   = true
+ #   enabled   = true
     file_id   = var.iso_file
     interface = "ide3"
   }
@@ -58,6 +58,20 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     bridge      = "vmbr1"
     model       = "virtio"
     mac_address = var.internal_mac_address != "" ? var.internal_mac_address : null
+  }
+
+# eth2 - Longhorn storage network
+  network_device {
+    bridge      = "vmbr1"
+    model       = "virtio"
+    mac_address = var.longhorn_mac_address != "" ? var.longhorn_mac_address : null
+  }
+
+  # eth3 - TrueNAS/media network
+  network_device {
+    bridge      = "vmbr1"
+    model       = "virtio"
+    mac_address = var.media_mac_address != "" ? var.media_mac_address : null
   }
 
   dynamic "hostpci" {

@@ -2,9 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - multus-app.yaml
   - cert-manager-app.yaml
   - cert-manager-config-app.yaml
   - traefik-app.yaml
+  - longhorn-app.yaml
   - cloudflared-app.yaml
   - argocd-ingress.yaml
   - longhorn-ingress.yaml

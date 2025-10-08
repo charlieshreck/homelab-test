@@ -12,6 +12,12 @@ spec:
       app: sonarr
   template:
     metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |
+          [
+            {"name": "longhorn-network", "namespace": "kube-system"},
+            {"name": "media-network", "namespace": "kube-system"}
+          ]
       labels:
         app: sonarr
     spec:

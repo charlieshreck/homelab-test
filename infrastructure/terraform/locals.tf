@@ -23,24 +23,44 @@ locals {
     truenas       = var.vm_id_start + length(var.workers) + 1
   }
 
-  # FIX: MAC address allocation - corrected to use decimal format
-  # Format: 52:54:00:XX:YY:ZZ where the last octet matches the IP's last octet
+ # Primary network MAC addresses (eth0 - 10.30.0.x)
   mac_addresses = {
-    control_plane = "52:54:00:10:30:50" # 10.30.0.50
+    control_plane = "52:54:00:10:30:50"
     workers = { 
       for idx, key in local.worker_keys : key => 
-      format("52:54:00:10:30:%02d", 51 + idx) # %02d for decimal, not %02x for hex
+      format("52:54:00:10:30:%02d", 51 + idx)
     }
-    truenas = "52:54:00:10:30:14" # 10.30.0.20 = 0x14 in hex, but we use decimal for consistency
+    truenas = "52:54:00:10:30:14"
   }
 
-  # Internal network MAC addresses
+  # Internal network MAC addresses (eth1 - 172.10.0.x)
   internal_mac_addresses = {
-    control_plane = "52:54:00:ac:0a:32" # ac:0a:32 = 172.10.50 in hex
+    control_plane = "52:54:00:ac:0a:32"
     workers = { 
       for idx, key in local.worker_keys : key => 
-      format("52:54:00:ac:0a:%02x", 51 + idx) # Convert to hex for 172.10.0.51+
+      format("52:54:00:ac:0a:%02x", 51 + idx)
     }
+    truenas = "52:54:00:ac:0a:14"
+  }
+
+  # Longhorn storage network MAC addresses (eth2 - 172.10.1.x)
+  longhorn_mac_addresses = {
+    control_plane = "52:54:00:ac:0b:32"
+    workers = { 
+      for idx, key in local.worker_keys : key => 
+      format("52:54:00:ac:0b:%02x", 51 + idx)
+    }
+    truenas = "52:54:00:ac:0b:14"
+  }
+
+  # Media network MAC addresses (eth3 - 172.10.2.x)
+  media_mac_addresses = {
+    control_plane = "52:54:00:ac:0c:32"
+    workers = { 
+      for idx, key in local.worker_keys : key => 
+      format("52:54:00:ac:0c:%02x", 51 + idx)
+    }
+    truenas = "52:54:00:ac:0c:14"
   }
 
   # Common tags/labels

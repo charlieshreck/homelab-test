@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kube-system
+
+resources:
+  - resources/crd.yaml
+  - resources/serviceaccount.yaml
+  - resources/clusterrole.yaml
+  - resources/clusterrolebinding.yaml
+  - resources/configmap.yaml
+  - resources/cni-plugins-daemonset.yaml
+  - resources/multus-daemonset.yaml
+  - resources/network-attachments.yaml
+
+commonAnnotations:
+  app.kubernetes.io/part-of: multus

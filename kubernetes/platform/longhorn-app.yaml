@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.longhorn.io
+    chart: longhorn
+    targetRevision: 1.10.0
+    helm:
+      valuesObject:
+        kubernetesDistro: k8s
+        
+        service:
+          ui:
+            type: LoadBalancer
+            annotations:
+              metallb.universe.tf/loadBalancerIPs: "10.30.0.70"
+        
+        defaultSettings:
+          defaultDataPath: "/var/lib/longhorn"
+          defaultReplicaCount: "2"
+          storageMinimalAvailablePercentage: "10"
+          storageNetwork: "kube-system/longhorn-network"
+        
+        persistence:
+          defaultClass: true
+          defaultClassReplicaCount: 2
+          reclaimPolicy: Retain
+        
+        csi:
+          kubeletRootDir: "/var/lib/kubelet"
+          attacherReplicaCount: "3"
+          provisionerReplicaCount: "3"
+          resizerReplicaCount: "3"
+          snapshotterReplicaCount: "3"
+        
+        longhornManager:
+          tolerations:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: "Exists"
+              effect: "NoSchedule"
+          podAnnotations:
+            k8s.v1.cni.cncf.io/networks: "kube-system/longhorn-network"
+        
+        longhornDriver:
+          tolerations:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: "Exists"
+              effect: "NoSchedule"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 5m

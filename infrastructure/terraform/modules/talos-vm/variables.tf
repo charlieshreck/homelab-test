@@ -85,3 +85,15 @@ variable "internal_mac_address" {
   default     = ""
   description = "Fixed MAC address for internal network interface"
 }
+
+variable "longhorn_mac_address" {
+  type        = string
+  default     = ""
+  description = "Fixed MAC address for Longhorn storage network interface"
+}
+
+variable "media_mac_address" {
+  type        = string
+  default     = ""
+  description = "Fixed MAC address for media network interface"
+}

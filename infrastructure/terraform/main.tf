@@ -1,8 +1,5 @@
 # ==============================================================================
-# main.tf - V3 with proper certificate handling
-#
-# FIX: Remove explicit endpoint from kubeconfig generation to let Talos
-# set it correctly with proper certificates
+# main.tf - V3 with Multus CNI and Longhorn via argocd
 # ==============================================================================
 
 # ==============================================================================
@@ -48,6 +45,8 @@ module "control_plane" {
   gpu_pci_id           = null
   mac_address          = local.mac_addresses.control_plane
   internal_mac_address = local.internal_mac_addresses.control_plane
+  longhorn_mac_address = local.longhorn_mac_addresses.control_plane
+  media_mac_address    = local.media_mac_addresses.control_plane
   additional_disks     = []
 }
 
@@ -74,6 +73,8 @@ module "workers" {
   gpu_pci_id           = each.value.gpu ? each.value.gpu_pci_id : null
   mac_address          = local.mac_addresses.workers[each.key]
   internal_mac_address = local.internal_mac_addresses.workers[each.key]
+  longhorn_mac_address = local.longhorn_mac_addresses.workers[each.key]
+  media_mac_address    = local.media_mac_addresses.workers[each.key]
 
   additional_disks = [{
     size      = each.value.longhorn_disk
@@ -99,15 +100,18 @@ module "truenas" {
   storage        = var.proxmox_truenas_storage
   iso_storage    = var.proxmox_iso_storage
   mac_address    = local.mac_addresses.truenas
+  cluster_mac_address  = local.internal_mac_addresses.truenas
+  longhorn_mac_address = local.longhorn_mac_addresses.truenas
+  media_mac_address    = local.media_mac_addresses.truenas
 }
 
 # Apply Talos configuration to control plane
 resource "talos_machine_configuration_apply" "controlplane" {
   depends_on = [module.control_plane]
 
-  client_configuration      = talos_machine_secrets.this.client_configuration
+  client_configuration        = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.controlplane.machine_configuration
-  node                      = var.control_plane.ip
+  node                        = var.control_plane.ip
 }
 
 # Wait for control plane to be ready before applying worker configs
@@ -124,9 +128,9 @@ resource "talos_machine_configuration_apply" "worker" {
   ]
   for_each = var.workers
 
-  client_configuration      = talos_machine_secrets.this.client_configuration
+  client_configuration        = talos_machine_secrets.this.client_configuration
   machine_configuration_input = data.talos_machine_configuration.worker[each.key].machine_configuration
-  node                      = each.value.ip
+  node                        = each.value.ip
 }
 
 # Bootstrap the cluster
@@ -140,14 +144,14 @@ resource "talos_machine_bootstrap" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
 }
 
-# Save talosconfig first
+# Save talosconfig
 resource "local_file" "talosconfig" {
   content         = data.talos_client_configuration.this.talos_config
   filename        = "${path.module}/generated/talosconfig"
   file_permission = "0600"
 }
 
-# Generate kubeconfig immediately after bootstrap
+# Generate kubeconfig
 resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_bootstrap.this]
 
@@ -163,7 +167,7 @@ resource "local_file" "kubeconfig" {
   file_permission = "0600"
 }
 
-# Simple working wait - just check /healthz endpoint
+# Wait for cluster API
 resource "null_resource" "wait_for_cluster" {
   depends_on = [
     talos_machine_bootstrap.this,
@@ -188,7 +192,7 @@ resource "null_resource" "wait_for_cluster" {
 # Platform Layer: CNI, Load Balancer, Storage
 # ==============================================================================
 
-# Install Cilium CNI - let Helm wait for it
+# Install Cilium CNI
 resource "helm_release" "cilium" {
   depends_on = [null_resource.wait_for_cluster]
 
@@ -257,8 +261,9 @@ resource "null_resource" "wait_for_cilium" {
   }
 }
 
+# Install MetalLB
 resource "helm_release" "metallb" {
-  depends_on = [helm_release.cilium]
+  depends_on = [null_resource.wait_for_cilium]
 
   name             = "metallb"
   repository       = "https://metallb.github.io/metallb"
@@ -270,7 +275,7 @@ resource "helm_release" "metallb" {
   wait             = false
 }
 
-# Wait for MetalLB controller to be ready before applying config, which ensures the webhook is available.
+# Wait for MetalLB controller
 resource "null_resource" "wait_for_metallb" {
   depends_on = [helm_release.metallb]
 
@@ -279,7 +284,6 @@ resource "null_resource" "wait_for_metallb" {
       export KUBECONFIG=${path.module}/generated/kubeconfig
       
       echo "Waiting for MetalLB controller to be ready..."
-      # The controller pod runs the validation webhook, so we must wait for it.
       kubectl wait --for=condition=ready pod \
         -l app.kubernetes.io/name=metallb,app.kubernetes.io/component=controller \
         -n metallb-system \
@@ -321,106 +325,12 @@ resource "kubectl_manifest" "metallb_l2advert" {
   })
 }
 
-# Install Longhorn for persistent storage
-resource "kubernetes_namespace" "longhorn_system" {
-  depends_on = [null_resource.wait_for_cilium]
-
-  metadata {
-    name = "longhorn-system"
-    labels = {
-      "pod-security.kubernetes.io/enforce" = "privileged"
-      "pod-security.kubernetes.io/audit"   = "privileged"
-      "pod-security.kubernetes.io/warn"    = "privileged"
-    }
-  }
-}
-
-resource "helm_release" "longhorn" {
-  count = var.longhorn_managed_by_argocd ? 0 : 1
-
-  depends_on = [
-    kubernetes_namespace.longhorn_system,
-    helm_release.metallb
-  ]
-
-  name             = "longhorn"
-  repository       = "https://charts.longhorn.io"
-  chart            = "longhorn"
-  version          = "1.10.0"
-  namespace        = "longhorn-system"
-  create_namespace = false
-  timeout          = 1200
-  wait             = false
-
-  values = [
-    yamlencode({
-      kubernetesDistro = "k8s"
-
-      service = {
-        ui = {
-          type = "LoadBalancer"
-          annotations = {
-            "metallb.universe.tf/loadBalancerIPs" = "10.30.0.70"
-          }
-        }
-      }
-
-      defaultSettings = {
-        defaultDataPath                 = "/var/lib/longhorn"
-        defaultReplicaCount             = "2"
-        storageMinimalAvailablePercentage = "10"
-        storageNetwork                  = "172.10.0.0/24"
-      }
-
-      persistence = {
-        defaultClass             = true
-        defaultClassReplicaCount = 2
-        reclaimPolicy            = "Retain"
-      }
-
-      csi = {
-        kubeletRootDir          = "/var/lib/kubelet"
-        attacherReplicaCount    = "3"
-        provisionerReplicaCount = "3"
-        resizerReplicaCount     = "3"
-        snapshotterReplicaCount = "3"
-      }
-
-      longhornManager = {
-        tolerations = [
-          {
-            key      = "node-role.kubernetes.io/control-plane"
-            operator = "Exists"
-            effect   = "NoSchedule"
-          }
-        ]
-      }
-      longhornDriver = {
-        tolerations = [
-          {
-            key      = "node-role.kubernetes.io/control-plane"
-            operator = "Exists"
-            effect   = "NoSchedule"
-          }
-        ]
-      }
-    })
-  ]
-
-  set = [
-    {
-      name  = "enablePSP"
-      value = "false"
-    }
-  ]
-}
-
 # ==============================================================================
 # GitOps Controller: ArgoCD
 # ==============================================================================
 
 resource "helm_release" "argocd" {
-  depends_on = [helm_release.longhorn]
+  depends_on = [null_resource.wait_for_metallb]
 
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -465,7 +375,6 @@ resource "helm_release" "argocd" {
 
 # ==============================================================================
 # ArgoCD Repository Secret via Infisical
-# NOTE: Infisical operator is configured in infisical.tf
 # ==============================================================================
 
 resource "kubectl_manifest" "argocd_github_secret" {
@@ -506,7 +415,7 @@ resource "kubectl_manifest" "argocd_github_secret" {
   })
 }
 
-# Combine waiting and patching into a single atomic operation to prevent race conditions
+# Combine waiting and patching into a single atomic operation
 resource "null_resource" "wait_and_patch_secret" {
   depends_on = [kubectl_manifest.argocd_github_secret]
 
@@ -516,11 +425,9 @@ resource "null_resource" "wait_and_patch_secret" {
       
       echo "Waiting for Infisical to create 'private-repo' secret..."
       for i in {1..60}; do
-        # Check if the secret exists
         if kubectl get secret private-repo -n argocd &>/dev/null; then
           echo "✅ Secret found! Patching with ArgoCD fields..."
           
-          # Immediately patch the secret
           kubectl patch secret private-repo -n argocd --type merge -p '{
             "stringData": {
               "type": "git",
@@ -530,7 +437,7 @@ resource "null_resource" "wait_and_patch_secret" {
           }'
           
           echo "✅ Patch successful!"
-          exit 0 # Exit the loop and the script successfully
+          exit 0
         fi
         
         echo "Attempt $i/60: Secret not found yet. Retrying in 2 seconds..."
@@ -543,11 +450,9 @@ resource "null_resource" "wait_and_patch_secret" {
   }
 
   triggers = {
-    # Re-run this logic if the repo URL changes
     repo_url = var.gitops_repo_url
   }
 }
-
 
 # Deploy App-of-Apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
@@ -582,4 +487,3 @@ resource "kubectl_manifest" "argocd_app_of_apps" {
     }
   })
 }
-
