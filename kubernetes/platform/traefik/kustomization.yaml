@@ -9,3 +9,5 @@ resources:
 
 commonLabels:
   app.kubernetes.io/part-of: traefik
+  - resources/argocd-ingress.yaml
+  - resources/longhorn-ingress.yaml
