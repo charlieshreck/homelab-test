@@ -14,13 +14,7 @@ spec:
     chart: longhorn
     targetRevision: 1.10.0
     helm:
-      skipCrds: false
-      parameters:
-        - name: "preUpgradeHook.enabled"
-          value: "false"
       valuesObject:
-        preUpgradeHook:
-          enabled: false 
         kubernetesDistro: k8s
         
         service:
@@ -69,7 +63,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - SkipHooks=true 
     retry:
       limit: 5
       backoff:
