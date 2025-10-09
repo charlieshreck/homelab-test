@@ -14,15 +14,14 @@ spec:
     chart: longhorn
     targetRevision: 1.10.0
     helm:
+      skipCrds: false
+      parameters:
+        - name: "preUpgradeHook.enabled"
+          value: "false"
       valuesObject:
         preUpgradeHook:
           enabled: false 
         kubernetesDistro: k8s
-
-      skipCrds: false
-      parameters:
-        - name: "preUpgradeHook.enabled"
-        value: "false"
         
         service:
           ui:
