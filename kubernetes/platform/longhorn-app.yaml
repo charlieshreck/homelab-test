@@ -18,6 +18,11 @@ spec:
         preUpgradeHook:
           enabled: false 
         kubernetesDistro: k8s
+
+      skipCrds: false
+      parameters:
+        - name: "preUpgradeHook.enabled"
+        value: "false"
         
         service:
           ui:
