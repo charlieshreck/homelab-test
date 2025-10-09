@@ -6,8 +6,8 @@ namespace: traefik
 resources:
   - resources/tlsstore.yaml
   - resources/middlewares.yaml
+  - resources/argocd-ingress.yaml
+  - resources/longhorn-ingress.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: traefik
-  - resources/argocd-ingress.yaml
-  - resources/longhorn-ingress.yaml
