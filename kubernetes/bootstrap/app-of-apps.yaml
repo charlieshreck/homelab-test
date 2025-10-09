@@ -12,7 +12,8 @@ spec:
     targetRevision: main
     path: kubernetes/platform
     directory:
-      recurse: true
+      recurse: false        # Changed: don't recurse
+      include: '*-app.yaml' # Added: only Application manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
