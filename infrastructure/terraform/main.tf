@@ -275,6 +275,21 @@ resource "helm_release" "metallb" {
   wait             = false
 }
 
+resource "kubernetes_labels" "metallb_namespace_security" {
+  depends_on = [helm_release.metallb]
+  
+  api_version = "v1"
+  kind        = "Namespace"
+  metadata {
+    name = "metallb-system"
+  }
+  labels = {
+    "pod-security.kubernetes.io/enforce" = "privileged"
+    "pod-security.kubernetes.io/audit"   = "privileged"
+    "pod-security.kubernetes.io/warn"    = "privileged"
+  }
+}
+
 # Wait for MetalLB controller
 resource "null_resource" "wait_for_metallb" {
   depends_on = [helm_release.metallb]
