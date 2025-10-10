@@ -11,7 +11,7 @@ spec:
     {
       "cniVersion": "0.3.1",
       "type": "macvlan",
-      "master": "eth1",
+      "master": "ens19",
       "mode": "bridge",
       "ipam": {
         "type": "host-local",
@@ -37,7 +37,7 @@ spec:
     {
       "cniVersion": "0.3.1",
       "type": "macvlan",
-      "master": "eth2",
+      "master": "ens20",
       "mode": "bridge",
       "ipam": {
         "type": "host-local",
@@ -63,7 +63,7 @@ spec:
     {
       "cniVersion": "0.3.1",
       "type": "macvlan",
-      "master": "eth3",
+      "master": "ens21",
       "mode": "bridge",
       "ipam": {
         "type": "host-local",
