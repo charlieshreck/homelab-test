@@ -22,4 +22,4 @@ spec:
               service:
                 name: radarr
                 port:
-                  number: 8989
+                  number: 7878

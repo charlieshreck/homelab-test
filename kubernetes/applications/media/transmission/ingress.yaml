@@ -20,6 +20,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: sonarr
+                name: transmission
                 port:
-                  number: 8989
+                  number: 9091

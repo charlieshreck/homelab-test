@@ -3,7 +3,6 @@ kind: Kustomization
 
 
 resources:
-  - resources/tlsstore.yaml
   - resources/middlewares.yaml
   - resources/argocd-ingress.yaml
   - resources/longhorn-ingress.yaml
