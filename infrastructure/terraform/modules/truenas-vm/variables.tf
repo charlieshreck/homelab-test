@@ -23,5 +23,3 @@ variable "media_network" {
   })
   default = null
 }
-
-}
