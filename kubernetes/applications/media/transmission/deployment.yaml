@@ -12,14 +12,9 @@ spec:
       app: transmission
   template:
     metadata:
-      annotations:
-        k8s.v1.cni.cncf.io/networks: |
-          [
-            {"name": "longhorn-network", "namespace": "kube-system"},
-            {"name": "media-network", "namespace": "kube-system"}
-          ]
       labels:
         app: transmission
+      # REMOVED: Multus network annotations
     spec:
       containers:
       - name: transmission

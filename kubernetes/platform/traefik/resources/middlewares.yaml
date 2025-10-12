@@ -2,17 +2,6 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: redirect-https
-  namespace: default
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
-
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
   name: security-headers
   namespace: traefik
 spec:
@@ -24,8 +13,6 @@ spec:
     stsPreload: true
     stsSeconds: 31536000
     customFrameOptionsValue: "SAMEORIGIN"
-    customResponseHeaders:
-      X-Forwarded-Proto: "https"
 
 ---
 apiVersion: traefik.io/v1alpha1
@@ -43,47 +30,21 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: internal-only
-  namespace: traefik
-spec:
-  ipWhiteList:
-    sourceRange:
-      - 10.30.0.0/24
-      - 10.10.0.0/24
-      - 172.10.0.0/24
-      - 127.0.0.1/32
-
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
   name: compress
   namespace: traefik
 spec:
   compress: {}
 
 ---
+# Default middleware chain for all services
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: external-chain
+  name: default-chain
   namespace: traefik
 spec:
   chain:
     middlewares:
       - name: security-headers
       - name: rate-limit
-      - name: compress
-
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: internal-chain
-  namespace: traefik
-spec:
-  chain:
-    middlewares:
-      - name: internal-only
-      - name: security-headers
       - name: compress

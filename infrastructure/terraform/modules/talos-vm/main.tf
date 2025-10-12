@@ -54,26 +54,6 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     mac_address = var.mac_address != "" ? var.mac_address : null
   }
 
-  network_device {
-    bridge      = "vmbr1"
-    model       = "virtio"
-    mac_address = var.internal_mac_address != "" ? var.internal_mac_address : null
-  }
-
-# eth2 - Longhorn storage network
-  network_device {
-    bridge      = "vmbr2"
-    model       = "virtio"
-    mac_address = var.longhorn_mac_address != "" ? var.longhorn_mac_address : null
-  }
-
-  # eth3 - TrueNAS/media network
-  network_device {
-    bridge      = "vmbr3"
-    model       = "virtio"
-    mac_address = var.media_mac_address != "" ? var.media_mac_address : null
-  }
-
   dynamic "hostpci" {
     for_each = var.gpu_passthrough && var.gpu_pci_id != null ? [1] : []
     content {

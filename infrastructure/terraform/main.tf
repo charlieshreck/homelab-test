@@ -1,5 +1,5 @@
 # ==============================================================================
-# main.tf - V3 with Multus CNI and Longhorn via argocd
+# main.tf - Single NIC Architecture with Standard Kubernetes Ingress
 # ==============================================================================
 
 # ==============================================================================
@@ -27,27 +27,24 @@ resource "talos_machine_secrets" "this" {}
 module "control_plane" {
   source = "./modules/talos-vm"
 
-  vm_name              = var.control_plane.name
-  vm_id                = local.vm_ids.control_plane
-  target_node          = var.proxmox_node
-  cores                = var.control_plane.cores
-  memory               = var.control_plane.memory
-  disk                 = var.control_plane.disk
-  ip_address           = var.control_plane.ip
-  gateway              = var.prod_gateway
-  dns                  = var.dns_servers
-  network_bridge       = var.network_bridge
-  storage              = var.proxmox_storage
-  iso_storage          = var.proxmox_iso_storage
-  talos_version        = local.talos_version
-  iso_file             = proxmox_virtual_environment_download_file.talos_iso.id
-  gpu_passthrough      = false
-  gpu_pci_id           = null
-  mac_address          = local.mac_addresses.control_plane
-  internal_mac_address = local.internal_mac_addresses.control_plane
-  longhorn_mac_address = local.longhorn_mac_addresses.control_plane
-  media_mac_address    = local.media_mac_addresses.control_plane
-  additional_disks     = []
+  vm_name        = var.control_plane.name
+  vm_id          = local.vm_ids.control_plane
+  target_node    = var.proxmox_node
+  cores          = var.control_plane.cores
+  memory         = var.control_plane.memory
+  disk           = var.control_plane.disk
+  ip_address     = var.control_plane.ip
+  gateway        = var.prod_gateway
+  dns            = var.dns_servers
+  network_bridge = var.network_bridge
+  storage        = var.proxmox_storage
+  iso_storage    = var.proxmox_iso_storage
+  talos_version  = local.talos_version
+  iso_file       = proxmox_virtual_environment_download_file.talos_iso.id
+  gpu_passthrough = false
+  gpu_pci_id     = null
+  mac_address    = local.mac_addresses.control_plane
+  additional_disks = []
 }
 
 # Deploy worker VMs
@@ -55,26 +52,23 @@ module "workers" {
   source   = "./modules/talos-vm"
   for_each = var.workers
 
-  vm_name              = each.value.name
-  vm_id                = local.vm_ids.workers[each.key]
-  target_node          = var.proxmox_node
-  cores                = each.value.cores
-  memory               = each.value.memory
-  disk                 = each.value.disk
-  ip_address           = each.value.ip
-  gateway              = var.prod_gateway
-  dns                  = var.dns_servers
-  network_bridge       = var.network_bridge
-  storage              = var.proxmox_storage
-  iso_storage          = var.proxmox_iso_storage
-  talos_version        = local.talos_version
-  iso_file             = proxmox_virtual_environment_download_file.talos_iso.id
-  gpu_passthrough      = each.value.gpu
-  gpu_pci_id           = each.value.gpu ? each.value.gpu_pci_id : null
-  mac_address          = local.mac_addresses.workers[each.key]
-  internal_mac_address = local.internal_mac_addresses.workers[each.key]
-  longhorn_mac_address = local.longhorn_mac_addresses.workers[each.key]
-  media_mac_address    = local.media_mac_addresses.workers[each.key]
+  vm_name        = each.value.name
+  vm_id          = local.vm_ids.workers[each.key]
+  target_node    = var.proxmox_node
+  cores          = each.value.cores
+  memory         = each.value.memory
+  disk           = each.value.disk
+  ip_address     = each.value.ip
+  gateway        = var.prod_gateway
+  dns            = var.dns_servers
+  network_bridge = var.network_bridge
+  storage        = var.proxmox_storage
+  iso_storage    = var.proxmox_iso_storage
+  talos_version  = local.talos_version
+  iso_file       = proxmox_virtual_environment_download_file.talos_iso.id
+  gpu_passthrough = each.value.gpu
+  gpu_pci_id     = each.value.gpu ? each.value.gpu_pci_id : null
+  mac_address    = local.mac_addresses.workers[each.key]
 
   additional_disks = [{
     size      = each.value.longhorn_disk
@@ -100,9 +94,6 @@ module "truenas" {
   storage        = var.proxmox_truenas_storage
   iso_storage    = var.proxmox_iso_storage
   mac_address    = local.mac_addresses.truenas
-  cluster_mac_address  = local.internal_mac_addresses.truenas
-  longhorn_mac_address = local.longhorn_mac_addresses.truenas
-  media_mac_address    = local.media_mac_addresses.truenas
 }
 
 # Apply Talos configuration to control plane
@@ -189,7 +180,7 @@ resource "null_resource" "wait_for_cluster" {
 }
 
 # ==============================================================================
-# Platform Layer: CNI, Load Balancer, Storage
+# Platform Layer: CNI, Load Balancer
 # ==============================================================================
 
 # Install Cilium CNI
@@ -339,6 +330,7 @@ resource "kubectl_manifest" "metallb_l2advert" {
     }
   })
 }
+
 # ==============================================================================
 # GitOps Controller: ArgoCD
 # ==============================================================================

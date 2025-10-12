@@ -1,10 +1,5 @@
 # ==============================================================================
-# data.tf - Defines the Talos machine configurations
-#
-# FIXES APPLIED:
-# 1. Removed VIP configuration that was causing extra IP assignment
-# 2. Changed cluster endpoint to use control plane IP directly instead of SRV record
-# 3. Simplified network configuration for reliability
+# data.tf - Talos machine configurations (Single NIC)
 # ==============================================================================
 
 # ==============================================================================
@@ -32,7 +27,6 @@ data "talos_client_configuration" "this" {
 
 data "talos_machine_configuration" "controlplane" {
   cluster_name     = var.cluster_name
-  # FIX: Use direct IP instead of SRV record for more reliable initial bootstrap
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_type     = "controlplane"
   talos_version    = local.talos_version
@@ -48,7 +42,7 @@ data "talos_machine_configuration" "controlplane" {
         network = {
           hostname = var.control_plane.name
           interfaces = [
-            # Primary Interface (10.30.x.x network)
+            # Primary Interface (10.30.x.x network) - SINGLE NIC
             {
               deviceSelector = {
                 hardwareAddr = local.mac_addresses.control_plane
@@ -61,15 +55,6 @@ data "talos_machine_configuration" "controlplane" {
                   gateway = var.prod_gateway
                 }
               ]
-              # FIX: Removed VIP configuration - this was causing the extra /32 IP
-            },
-            # Secondary/Internal Interface (172.x.x.x network)
-            {
-              deviceSelector = {
-                hardwareAddr = local.internal_mac_addresses.control_plane
-              }
-              dhcp      = false
-              addresses = ["172.10.0.50/24"]
             }
           ]
           nameservers = var.dns_servers
@@ -102,7 +87,6 @@ data "talos_machine_configuration" "worker" {
   for_each = var.workers
 
   cluster_name     = var.cluster_name
-  # FIX: Use direct IP instead of SRV record
   cluster_endpoint = "https://${var.control_plane.ip}:6443"
   machine_type     = "worker"
   talos_version    = local.talos_version
@@ -143,7 +127,7 @@ data "talos_machine_configuration" "worker" {
           network = {
             hostname = each.value.name
             interfaces = [
-              # Primary Interface (10.30.x.x network)
+              # Primary Interface (10.30.x.x network) - SINGLE NIC
               {
                 deviceSelector = {
                   hardwareAddr = local.mac_addresses.workers[each.key]
@@ -156,14 +140,6 @@ data "talos_machine_configuration" "worker" {
                     gateway = var.prod_gateway
                   }
                 ]
-              },
-              # Secondary/Internal Interface (172.x.x.x network)
-              {
-                deviceSelector = {
-                  hardwareAddr = local.internal_mac_addresses.workers[each.key]
-                }
-                dhcp      = false
-                addresses = ["172.10.0.${51 + index(local.worker_keys, each.key)}/24"]
               }
             ]
             nameservers = var.dns_servers

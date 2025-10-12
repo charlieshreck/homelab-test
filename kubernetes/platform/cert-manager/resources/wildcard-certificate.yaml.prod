@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traefik
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-shreck-io
+  namespace: traefik
+spec:
+  secretName: shreck-io-tls
+  duration: 2160h  # 90 days
+  renewBefore: 360h # 15 days
+  commonName: shreck.io
+  dnsNames:
+    - shreck.io
+    - "*.shreck.io"
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+    rotationPolicy: Always

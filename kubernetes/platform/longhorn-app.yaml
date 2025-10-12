@@ -5,7 +5,6 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    argocd.argoproj.io/hook: Skip  # Skip all hooks
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -16,8 +15,6 @@ spec:
     targetRevision: 1.10.0
     helm:
       valuesObject:
-        kubernetesDistro: k8s
-        
         service:
           ui:
             type: LoadBalancer
@@ -28,53 +25,19 @@ spec:
           defaultDataPath: "/var/lib/longhorn"
           defaultReplicaCount: "2"
           storageMinimalAvailablePercentage: "10"
-          storageNetwork: "kube-system/longhorn-network"
+          # Remove storageNetwork setting
         
         persistence:
           defaultClass: true
           defaultClassReplicaCount: 2
-          reclaimPolicy: Retain
-        
-        csi:
-          kubeletRootDir: "/var/lib/kubelet"
-          attacherReplicaCount: "3"
-          provisionerReplicaCount: "3"
-          resizerReplicaCount: "3"
-          snapshotterReplicaCount: "3"
-        
-        longhornManager:
-          tolerations:
-            - key: "node-role.kubernetes.io/control-plane"
-              operator: "Exists"
-              effect: "NoSchedule"
-          podAnnotations:
-            k8s.v1.cni.cncf.io/networks: "kube-system/longhorn-network"
-        
-        longhornDriver:
-          tolerations:
-            - key: "node-role.kubernetes.io/control-plane"
-              operator: "Exists"
-              effect: "NoSchedule"
+  
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
+  
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
-      - Replace=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 5m
-  ignoreDifferences:
-    - group: batch
-      kind: Job
-      name: longhorn-pre-upgrade
-      jsonPointers:
-        - /spec

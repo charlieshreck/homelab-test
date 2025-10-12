@@ -24,20 +24,4 @@ variable "media_network" {
   default = null
 }
 
-variable "cluster_mac_address" {
-  type        = string
-  default     = ""
-  description = "Fixed MAC address for cluster internal network"
-}
-
-variable "longhorn_mac_address" {
-  type        = string
-  default     = ""
-  description = "Fixed MAC address for Longhorn storage network"
-}
-
-variable "media_mac_address" {
-  type        = string
-  default     = ""
-  description = "Fixed MAC address for media network"
 }

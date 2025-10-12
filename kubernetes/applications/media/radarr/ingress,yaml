@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: argocd
-  namespace: argocd
+  name: radarr
+  namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.tls: "true"
@@ -10,16 +10,16 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - argocd.shreck.io
+        - radarr.shreck.io
       secretName: shreck-io-tls
   rules:
-    - host: argocd.shreck.io
+    - host: radarr.shreck.io
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: argocd-server
+                name: radarr
                 port:
-                  number: 80
+                  number: 8989

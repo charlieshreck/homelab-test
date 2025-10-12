@@ -1,17 +1,14 @@
-# This file creates the 'traefik' namespace and then requests the actual
-# wildcard certificate, telling cert-manager to use the 'letsencrypt-prod' issuer
-# and to store the resulting TLS certificate in a secret named 'shreck-io-tls'.
-# We create three identical Certificate resources. cert-manager is smart and will
-# issue one certificate, then copy the resulting secret to each namespace.
+---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: traefik
 ---
+# Staging certificate for testing
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io-traefik
+  name: wildcard-shreck-io-staging
   namespace: traefik
 spec:
   secretName: shreck-io-tls
@@ -24,10 +21,9 @@ spec:
   dnsNames:
     - shreck.io
     - "*.shreck.io"
-    - "*.home.shreck.io"
   
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging  # ← Using staging
     kind: ClusterIssuer
     group: cert-manager.io
   
@@ -40,75 +36,63 @@ spec:
   usages:
     - digital signature
     - key encipherment
+
 ---
+# Duplicate for argocd namespace
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io-argocd
+  name: wildcard-shreck-io-staging
   namespace: argocd
 spec:
-  secretName: shreck-io-tls # The secret will be created in the 'argocd' namespace
-  
+  secretName: shreck-io-tls
   duration: 2160h
   renewBefore: 360h
-  
   commonName: shreck.io
-  
   dnsNames:
     - shreck.io
     - "*.shreck.io"
-    - "*.home.shreck.io"
-  
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
     group: cert-manager.io
+
 ---
+# Duplicate for longhorn-system namespace
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io-longhorn
+  name: wildcard-shreck-io-staging
   namespace: longhorn-system
 spec:
-  secretName: shreck-io-tls # The secret will be created in the 'longhorn-system' namespace
-  
+  secretName: shreck-io-tls
   duration: 2160h
   renewBefore: 360h
-  
   commonName: shreck.io
-  
   dnsNames:
     - shreck.io
     - "*.shreck.io"
-    - "*.home.shreck.io"
-  
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
     group: cert-manager.io
 
-
 ---
+# Duplicate for media namespace
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io-media
+  name: wildcard-shreck-io-staging
   namespace: media
 spec:
   secretName: shreck-io-tls
-  
   duration: 2160h
   renewBefore: 360h
-  
   commonName: shreck.io
-  
   dnsNames:
     - shreck.io
     - "*.shreck.io"
-    - "*.home.shreck.io"
-  
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
     group: cert-manager.io
-

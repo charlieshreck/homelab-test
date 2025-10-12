@@ -37,28 +37,6 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
     model       = "virtio"
     mac_address = var.mac_address != "" ? var.mac_address : null
   }
-  
-# eth1 - Cluster internal network
-  network_device {
-    bridge      = "vmbr1"
-    model       = "virtio"
-    mac_address = var.cluster_mac_address != "" ? var.cluster_mac_address : null
-  }
-
-  # eth2 - Longhorn storage network
-  network_device {
-    bridge      = "vmbr2"
-    model       = "virtio"
-    mac_address = var.longhorn_mac_address != "" ? var.longhorn_mac_address : null
-  }
-
-  # eth3 - Media network
-  network_device {
-    bridge      = "vmbr3"
-    model       = "virtio"
-    mac_address = var.media_mac_address != "" ? var.media_mac_address : null
-  }
-
   operating_system {
     type = "l26"
   }
