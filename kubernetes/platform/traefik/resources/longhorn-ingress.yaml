@@ -3,7 +3,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: longhorn-internal
-  namespace: longhorn-system
+  namespace: longhorn-system  # ← Changed from traefik
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -14,6 +14,7 @@ spec:
       kind: Rule
       services:
         - name: longhorn-frontend
+          namespace: longhorn-system  # ← Add this
           port: 80
       middlewares:
         - name: internal-chain
@@ -24,7 +25,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: longhorn-external
-  namespace: longhorn-system
+  namespace: longhorn-system  # ← Changed from traefik
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -35,6 +36,7 @@ spec:
       kind: Rule
       services:
         - name: longhorn-frontend
+          namespace: longhorn-system  # ← Add this
           port: 80
       middlewares:
         - name: external-chain
