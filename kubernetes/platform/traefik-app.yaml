@@ -14,7 +14,7 @@ metadata:
 spec:
   project: default
   
-  sources:
+  source:
     # Traefik Helm Chart
     - repoURL: https://traefik.github.io/charts
       chart: traefik
