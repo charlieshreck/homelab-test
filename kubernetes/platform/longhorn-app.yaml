@@ -14,6 +14,8 @@ spec:
     chart: longhorn
     targetRevision: 1.10.0
     helm:
+      # Skip hooks if causing issues
+      skipCrds: false
       valuesObject:
         service:
           ui:
@@ -25,11 +27,14 @@ spec:
           defaultDataPath: "/var/lib/longhorn"
           defaultReplicaCount: "2"
           storageMinimalAvailablePercentage: "10"
-          # Remove storageNetwork setting
         
         persistence:
           defaultClass: true
           defaultClassReplicaCount: 2
+        
+        # Important: Create ServiceAccount first
+        preUpgradeChecker:
+          jobEnabled: true
   
   destination:
     server: https://kubernetes.default.svc
@@ -41,3 +46,11 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+    # Add retry logic for timing issues
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
