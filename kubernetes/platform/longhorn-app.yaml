@@ -17,6 +17,8 @@ spec:
       # Skip hooks if causing issues
       skipCrds: false
       valuesObject:
+        preUpgradeChecker:
+          jobEnabled: false
         service:
           ui:
             type: LoadBalancer
