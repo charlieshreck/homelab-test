@@ -7,4 +7,4 @@ resources:
   - resources/infisical-secret.yaml
   - resources/cluster-issuer.yaml
   - resources/wildcard-certificate.yaml
-  - reflector.yaml
+  - resources/reflector.yaml

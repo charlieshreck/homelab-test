@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    # Wave 0 is good, it will deploy with other platform apps.
+    # For ingress controllers, -1 is even safer to guarantee it runs first.
+    argocd.argoproj.io/sync-wave: "-1" 
+  finalizers:
+    - resources-finalizer.argocd.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: v25.0.0 # Using a more recent, but pinned version
+    helm:
+      # Using valuesObject is great, no change needed here.
+      valuesObject:
+        installCRDs: false
+        providers:
+          kubernetesIngress:
+            enabled: true
+        service:
+          enabled: true
+          type: LoadBalancer
+          annotations:
+            metallb.universe.tf/loadBalancerIPs: "10.30.0.100"
+        # ... and the rest of your well-configured values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik # It will create this namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      # This is the key that solves the "namespace not found" error
+      - CreateNamespace=true
