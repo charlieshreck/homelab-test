@@ -21,6 +21,7 @@ spec:
       targetRevision: 37.1.2
       helm:
         valuesObject:
+          installCRDs: true
           # Image configuration
           image:
             registry: docker.io
