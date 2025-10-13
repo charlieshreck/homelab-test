@@ -52,7 +52,7 @@ spec:
           annotations:
             metallb.universe.tf/loadBalancerIPs: "10.30.0.100"
         
-        # Port Configuration
+        # Port Configuration - NEW V37 SYNTAX
         ports:
           # HTTP port (redirect to HTTPS)
           web:
@@ -61,8 +61,12 @@ spec:
               default: true
             exposedPort: 80
             protocol: TCP
-            redirectTo:
-              port: websecure  # Automatic HTTPS redirect
+            # NEW SYNTAX for v37+
+            redirections:
+              entryPoint:
+                to: websecure
+                scheme: https
+                permanent: true
           
           # HTTPS port
           websecure:
@@ -76,11 +80,8 @@ spec:
             tls:
               enabled: true
         
-        # Global redirect to HTTPS
+        # Additional arguments (simplified)
         additionalArguments:
-          - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
-          - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
-          - "--entryPoints.web.http.redirections.entryPoint.permanent=true"
           - "--providers.kubernetesingress.ingressclass=traefik"
         
         # TLS Configuration
@@ -157,52 +158,3 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-
----
-# ==============================================================================
-# USAGE NOTES
-# ==============================================================================
-#
-# This Traefik configuration uses STANDARD KUBERNETES INGRESS ONLY.
-# All applications must use the native Ingress resource, not IngressRoute.
-#
-# Example Application Ingress:
-#
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: myapp
-#   namespace: default
-# spec:
-#   ingressClassName: traefik
-#   tls:
-#     - hosts:
-#         - myapp.shreck.io
-#       secretName: shreck-io-tls
-#   rules:
-#     - host: myapp.shreck.io
-#       http:
-#         paths:
-#           - path: /
-#             pathType: Prefix
-#             backend:
-#               service:
-#                 name: myapp
-#                 port:
-#                   number: 80
-#
-# Key Points:
-# 1. NO IngressRoute CRDs - use standard Ingress
-# 2. NO Middleware CRDs - handle via annotations if needed
-# 3. NO TLSStore CRDs - certificates referenced in Ingress directly
-# 4. Global HTTPS redirect configured at entrypoint level
-# 5. All hostnames use shreck.io (no .home subdomain)
-# 6. Split-horizon DNS handles internal vs external routing
-#
-# Benefits:
-# - Portable across any Ingress controller
-# - Better IDE/tooling support
-# - Simpler to understand and maintain
-# - Follows Kubernetes standards
-#
-# ==============================================================================
