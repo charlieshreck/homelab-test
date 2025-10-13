@@ -1,5 +1,9 @@
 # ==============================================================================
-# Traefik Application - Kubernetes Ingress Configuration
+# Traefik Application - Standard Kubernetes Ingress Only
+# ==============================================================================
+# This configuration uses ONLY standard Kubernetes Ingress resources.
+# Traefik CRDs (IngressRoute, Middleware, TLSStore) are DISABLED.
+# All routing uses native Kubernetes Ingress API for maximum portability.
 # ==============================================================================
 
 apiVersion: argoproj.io/v1alpha1
@@ -14,139 +18,128 @@ metadata:
 spec:
   project: default
   
-  source:
-    # Traefik Helm Chart
-    - repoURL: https://traefik.github.io/charts
-      chart: traefik
-      targetRevision: 37.1.2
-      helm:
-        valuesObject:
-          installCRDs: true
-          # Image configuration
-          image:
-            registry: docker.io
-            repository: traefik
-            tag: "v3.5.3"
-            pullPolicy: IfNotPresent
-          
-          # Provider Configuration - Enable Kubernetes Ingress
-          providers:
-            kubernetesIngress:
-              enabled: true  # Enable standard Kubernetes Ingress
-              allowExternalNameServices: true
-              allowEmptyServices: false
-              publishedService:
-                enabled: true
-                pathOverride: traefik/traefik  # Update ingress status
-            kubernetesCRD:
-              enabled: true  # Keep CRDs for Middleware, TLSStore, etc.
-              allowCrossNamespace: true  # Allow cross-namespace middleware references
-          
-          # Service Configuration - MetalLB LoadBalancer
-          service:
-            enabled: true
-            type: LoadBalancer
-            annotations:
-              metallb.universe.tf/loadBalancerIPs: "10.30.0.100"
-          
-          # Port Configuration
-          ports:
-            # HTTP port (redirect to HTTPS)
-            web:
-              port: 8000
-              expose:
-                default: true
-              exposedPort: 80
-              protocol: TCP
-              redirectTo:
-                port: websecure  # Automatic HTTPS redirect
-                priority: 10
-            
-            # HTTPS port
-            websecure:
-              port: 8443
-              expose:
-                default: true
-              exposedPort: 443
-              protocol: TCP
-              http3:
-                enabled: false  # Disable HTTP/3 for stability
-              tls:
-                enabled: true
-                options: ""  # Use default TLS options
-          
-          # Global redirect to HTTPS
-          additionalArguments:
-            - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
-            - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
-            - "--entryPoints.web.http.redirections.entryPoint.permanent=true"
-            - "--providers.kubernetesingress.ingressclass=traefik"
-          
-          # TLS Configuration
-          tlsOptions:
-            default:
-              minVersion: VersionTLS12
-              sniStrict: false
-              cipherSuites:
-                - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-                - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-                - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
-          
-          # Resource limits
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 1000m
-              memory: 512Mi
-          
-          # Security context
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-              add:
-                - NET_BIND_SERVICE
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            runAsUser: 65532
-            runAsGroup: 65532
-          
-          # Pod configuration
-          deployment:
-            replicas: 2
-            podAnnotations:
-              prometheus.io/scrape: "true"
-              prometheus.io/port: "9000"
-          
-          # Logs
-          logs:
-            general:
-              level: INFO
-            access:
+  source:  # Single source - Helm chart only
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 37.1.2
+    helm:
+      valuesObject:
+        # DO NOT install CRDs - we're using standard Ingress only
+        installCRDs: false
+        
+        # Image configuration
+        image:
+          registry: docker.io
+          repository: traefik
+          tag: "v3.5.3"
+          pullPolicy: IfNotPresent
+        
+        # Provider Configuration - ONLY Kubernetes Ingress (no CRDs)
+        providers:
+          kubernetesIngress:
+            enabled: true  # ✅ Standard Kubernetes Ingress
+            allowExternalNameServices: true
+            allowEmptyServices: false
+            publishedService:
               enabled: true
-              format: json
+          kubernetesCRD:
+            enabled: false  # ❌ DISABLED - using standard Ingress only
+        
+        # Service Configuration - MetalLB LoadBalancer
+        service:
+          enabled: true
+          type: LoadBalancer
+          annotations:
+            metallb.universe.tf/loadBalancerIPs: "10.30.0.100"
+        
+        # Port Configuration
+        ports:
+          # HTTP port (redirect to HTTPS)
+          web:
+            port: 8000
+            expose:
+              default: true
+            exposedPort: 80
+            protocol: TCP
+            redirectTo:
+              port: websecure  # Automatic HTTPS redirect
           
-          # Metrics
-          metrics:
-            prometheus:
-              entryPoint: metrics
-              addServicesLabels: true
-          
-          # IngressClass configuration
-          ingressClass:
+          # HTTPS port
+          websecure:
+            port: 8443
+            expose:
+              default: true
+            exposedPort: 443
+            protocol: TCP
+            http3:
+              enabled: false  # Disable HTTP/3 for stability
+            tls:
+              enabled: true
+        
+        # Global redirect to HTTPS
+        additionalArguments:
+          - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+          - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+          - "--entryPoints.web.http.redirections.entryPoint.permanent=true"
+          - "--providers.kubernetesingress.ingressclass=traefik"
+        
+        # TLS Configuration
+        tlsOptions:
+          default:
+            minVersion: VersionTLS12
+            sniStrict: false
+            cipherSuites:
+              - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+              - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+              - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        
+        # Resource limits
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        
+        # Security context
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65532
+          runAsGroup: 65532
+        
+        # Pod configuration
+        deployment:
+          replicas: 2
+          podAnnotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "9000"
+        
+        # Logs
+        logs:
+          general:
+            level: INFO
+          access:
             enabled: true
-            isDefaultClass: true
-            name: traefik
-          
-          # Service topology (prefer local)
-          topologyAwareHintsEnabled: true
-    
-    # Custom resources (Middleware, TLSStore)
-    - repoURL: https://github.com/charlieshreck/homelab-test.git
-      targetRevision: main
-      path: kubernetes/platform/traefik
+            format: json
+        
+        # Metrics
+        metrics:
+          prometheus:
+            entryPoint: metrics
+            addServicesLabels: true
+        
+        # IngressClass configuration
+        ingressClass:
+          enabled: true
+          isDefaultClass: true
+          name: traefik
   
   destination:
     server: https://kubernetes.default.svc
@@ -158,7 +151,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
     retry:
       limit: 3
       backoff:
@@ -168,128 +160,19 @@ spec:
 
 ---
 # ==============================================================================
-# TLSStore - Default certificate for all Ingress
-# ==============================================================================
-apiVersion: traefik.io/v1alpha1
-kind: TLSStore
-metadata:
-  name: default
-  namespace: traefik
-spec:
-  defaultCertificate:
-    secretName: shreck-io-tls
-
----
-# ==============================================================================
-# Middleware - Security Headers
-# ==============================================================================
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: security-headers
-  namespace: traefik
-spec:
-  headers:
-    browserXssFilter: true
-    contentTypeNosniff: true
-    forceSTSHeader: true
-    stsIncludeSubdomains: true
-    stsPreload: true
-    stsSeconds: 31536000
-    customFrameOptionsValue: "SAMEORIGIN"
-    customResponseHeaders:
-      X-Forwarded-Proto: "https"
-
----
-# ==============================================================================
-# Middleware - Rate Limiting
-# ==============================================================================
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: rate-limit
-  namespace: traefik
-spec:
-  rateLimit:
-    average: 100
-    burst: 50
-    period: 1m
-
----
-# ==============================================================================
-# Middleware - Compression
-# ==============================================================================
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: compress
-  namespace: traefik
-spec:
-  compress: {}
-
----
-# ==============================================================================
-# Middleware - Default Chain
-# ==============================================================================
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: default-chain
-  namespace: traefik
-spec:
-  chain:
-    middlewares:
-      - name: security-headers
-        namespace: traefik
-      - name: rate-limit
-        namespace: traefik
-      - name: compress
-        namespace: traefik
-
----
-# ==============================================================================
-# Notes
+# USAGE NOTES
 # ==============================================================================
 #
-# Key Configuration Changes from IngressRoute:
-# 
-# 1. Kubernetes Ingress Provider Enabled
-#    - providers.kubernetesIngress.enabled: true
-#    - Allows use of standard Ingress resources
-# 
-# 2. CRD Provider Still Active
-#    - providers.kubernetesCRD.enabled: true
-#    - Required for Middleware, TLSStore, etc.
-# 
-# 3. IngressClass Created
-#    - Standard Kubernetes resource
-#    - Replaces annotation-based class selection
-# 
-# 4. TLSStore for Default Certificate
-#    - Automatically applies wildcard cert
-#    - No need to specify TLS in each Ingress
-# 
-# 5. Global HTTPS Redirect
-#    - All HTTP traffic redirects to HTTPS
-#    - Configured at entrypoint level
-# 
-# Migration Path:
-# 
-# 1. Deploy this updated Traefik configuration
-# 2. Create Ingress resources for each application
-# 3. Remove old IngressRoute resources
-# 4. Verify traffic routing works
-# 5. Clean up unused IngressRoute CRDs (optional)
-# 
-# Example Ingress Usage:
-# 
+# This Traefik configuration uses STANDARD KUBERNETES INGRESS ONLY.
+# All applications must use the native Ingress resource, not IngressRoute.
+#
+# Example Application Ingress:
+#
 # apiVersion: networking.k8s.io/v1
 # kind: Ingress
 # metadata:
 #   name: myapp
 #   namespace: default
-#   annotations:
-#     traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
 # spec:
 #   ingressClassName: traefik
 #   tls:
@@ -307,3 +190,19 @@ spec:
 #                 name: myapp
 #                 port:
 #                   number: 80
+#
+# Key Points:
+# 1. NO IngressRoute CRDs - use standard Ingress
+# 2. NO Middleware CRDs - handle via annotations if needed
+# 3. NO TLSStore CRDs - certificates referenced in Ingress directly
+# 4. Global HTTPS redirect configured at entrypoint level
+# 5. All hostnames use shreck.io (no .home subdomain)
+# 6. Split-horizon DNS handles internal vs external routing
+#
+# Benefits:
+# - Portable across any Ingress controller
+# - Better IDE/tooling support
+# - Simpler to understand and maintain
+# - Follows Kubernetes standards
+#
+# ==============================================================================
