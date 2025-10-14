@@ -1,8 +1,5 @@
 # ==============================================================================
-# Longhorn Values - Resource-Limited Configuration
-# ==============================================================================
-# This configuration prevents worker node OOM crashes by limiting resource usage
-# during Longhorn installation and operation.
+# Longhorn Values - Ultra-Low Memory Configuration for 8GB Workers
 # ==============================================================================
 
 # ==============================================================================
@@ -14,145 +11,120 @@ service:
     loadBalancerIP: "10.30.0.70"
 
 # ==============================================================================
-# Resource Limits - CRITICAL for 8GB workers
+# Resource Limits - AGGRESSIVE reduction for OOM prevention
 # ==============================================================================
-# These limits prevent OOM crashes during installation surges
 
 # Longhorn Manager (runs on every node)
 longhornManager:
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi      # Reduced from default 256Mi
+      memory: 96Mi
     limits:
       cpu: 500m
-      memory: 512Mi      # Prevents runaway memory usage
+      memory: 384Mi
 
 # Longhorn Driver (CSI driver)
 longhornDriver:
   resources:
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 48Mi
     limits:
       cpu: 200m
-      memory: 256Mi
+      memory: 192Mi
 
 # Longhorn UI
 longhornUI:
   resources:
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 48Mi
     limits:
       cpu: 200m
-      memory: 256Mi
+      memory: 192Mi
 
 # Instance Manager (biggest memory consumer)
 instanceManager:
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi      # Reduced from default 256Mi
+      memory: 96Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 384Mi
 
 # ==============================================================================
-# CSI Components - All reduced to prevent surge
+# CSI Components - Minimal allocation
 # ==============================================================================
 csi:
-  # CSI Attacher
   attacher:
     resources:
       requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 48Mi
       limits:
         cpu: 200m
-        memory: 256Mi
+        memory: 192Mi
   
-  # CSI Provisioner
   provisioner:
     resources:
       requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 48Mi
       limits:
         cpu: 200m
-        memory: 256Mi
+        memory: 192Mi
   
-  # CSI Resizer
   resizer:
     resources:
       requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 48Mi
       limits:
         cpu: 200m
-        memory: 256Mi
+        memory: 192Mi
   
-  # CSI Snapshotter
   snapshotter:
     resources:
       requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 48Mi
       limits:
         cpu: 200m
-        memory: 256Mi
+        memory: 192Mi
   
-  # CSI Node Driver Registrar
   nodeDriverRegistrar:
     resources:
       requests:
         cpu: 50m
-        memory: 64Mi
+        memory: 48Mi
       limits:
         cpu: 200m
-        memory: 256Mi
+        memory: 192Mi
 
 # ==============================================================================
 # Longhorn Settings
 # ==============================================================================
 defaultSettings:
-  # Storage path on each node
   defaultDataPath: "/var/lib/longhorn"
-  
-  # Number of replicas per volume
   defaultReplicaCount: "2"
-  
-  # Minimum available storage percentage before warning
   storageMinimalAvailablePercentage: "10"
-  
-  # CRITICAL: Limit concurrent rebuilds to prevent resource spikes
   concurrentReplicaRebuildPerNodeLimit: "1"
-  
-  # Disable automatic salvage to prevent cascading failures
   autoSalvage: "false"
-  
-  # Increase timeout to prevent premature failures during high load
   replicaReplenishmentWaitInterval: "300"
-  
-  # Disable automatic deletion of failed replicas
-  # (Gives you time to investigate before cleanup)
   autoDeletePodWhenVolumeDetachedUnexpectedly: "false"
 
 # ==============================================================================
 # Persistence Settings
 # ==============================================================================
 persistence:
-  # Make Longhorn the default StorageClass
   defaultClass: true
-  
-  # Default number of replicas for new volumes
   defaultClassReplicaCount: 2
-  
-  # Reclaim policy: Delete volumes when PVC is deleted
   reclaimPolicy: Delete
 
 # ==============================================================================
-# Pre-Upgrade Checker - Disabled to prevent issues
+# Pre-Upgrade Checker
 # ==============================================================================
 preUpgradeChecker:
   jobEnabled: false
@@ -160,14 +132,11 @@ preUpgradeChecker:
 # ==============================================================================
 # Additional Stability Settings
 # ==============================================================================
-
-# Tolerations - allow Longhorn to run on all nodes
 tolerations:
   - key: "node-role.kubernetes.io/control-plane"
     operator: "Exists"
     effect: "NoSchedule"
 
-# Priority class - ensure Longhorn stays running
 priorityClass:
   create: true
   name: longhorn-critical
@@ -179,12 +148,10 @@ priorityClass:
 # Memory Budget per Worker (8GB total):
 # - System:             ~800Mi
 # - Cilium:             ~200Mi
-# - Longhorn (total):   ~576Mi
-#   - Manager:          128Mi
-#   - Instance Mgr:     128Mi
-#   - CSI components:   320Mi
+# - Longhorn (total):   ~432Mi  (REDUCED from 576Mi)
+#   - Manager:          96Mi
+#   - Instance Mgr:     96Mi
+#   - CSI components:   240Mi
 # - Apps (Sonarr/etc):  ~768Mi
-# - Available:          ~5.6GB for workloads
-#
-# This configuration ensures stable operation without OOM crashes.
+# - Available:          ~5.8GB for workloads
 # ==============================================================================
