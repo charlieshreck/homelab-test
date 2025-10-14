@@ -4,7 +4,6 @@ metadata:
   name: radarr
   namespace: media
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik

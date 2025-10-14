@@ -134,6 +134,7 @@ variable "truenas_vm" {
     disk     = number
     media_ip = string
   })
+  default = null
 }
 
 # ==============================================================================

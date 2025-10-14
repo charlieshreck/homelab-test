@@ -4,7 +4,6 @@ metadata:
   name: longhorn
   namespace: longhorn-system
   annotations:
-    traefik.ingress.kubernetes.io/router.middlewares: traefik-default-chain@kubernetescrd
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik

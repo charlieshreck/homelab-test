@@ -34,16 +34,16 @@ output "cluster_info" {
   value = {
     control_plane_ip = var.control_plane.ip
     worker_ips       = [for w in var.workers : w.ip]
-    truenas_ip       = var.truenas_vm.ip
+#    truenas_ip       = var.truenas_vm.ip
     vm_ids = {
       control_plane = local.vm_ids.control_plane
       workers       = local.vm_ids.workers
-      truenas       = local.vm_ids.truenas
+#      truenas       = local.vm_ids.truenas
     }
     storage_pools = {
       vms      = var.proxmox_storage
       longhorn = var.proxmox_longhorn_storage
-      truenas  = var.proxmox_truenas_storage
+#      truenas  = var.proxmox_truenas_storage
     }
     versions = {
       talos      = var.talos_version
