@@ -5,3 +5,4 @@ namespace: longhorn-system
 
 resources:
   - resources/ingress.yaml
+  - resources/values.yaml

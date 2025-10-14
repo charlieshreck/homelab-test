@@ -299,6 +299,13 @@ resource "null_resource" "wait_for_metallb" {
   }
 }
 
+resource "time_sleep" "metallb_buffer" {
+  depends_on = [null_resource.wait_for_metallb]
+  
+  create_duration = "30s"
+}
+
+
 resource "kubectl_manifest" "metallb_ippool" {
   depends_on = [null_resource.wait_for_metallb]
 
@@ -360,9 +367,7 @@ resource "helm_release" "argocd" {
       server = {
         service = {
           type = "LoadBalancer"
-          annotations = {
-            "metallb.universe.tf/loadBalancerIPs" = "10.30.0.80"
-          }
+          loadBalancerIP: "10.30.0.80"
         }
         extraArgs = ["--insecure"]
         config = {
