@@ -34,6 +34,8 @@ spec:
           mountPath: /config
         - name: downloads
           mountPath: /downloads
+        - name: movies
+          mountPath: /movies
         resources:
           requests:
             cpu: 100m
@@ -47,7 +49,14 @@ spec:
           claimName: radarr-config
       - name: downloads
         persistentVolumeClaim:
+          claimName: nfs-downloads
+      - name: downloads
+        persistentVolumeClaim:
           claimName: transmission-downloads
+      - name: movies
+        persistentVolumeClaim:
+          claimName: nfs-film
+
 ---
 apiVersion: v1
 kind: Service

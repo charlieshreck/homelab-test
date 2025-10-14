@@ -56,7 +56,7 @@ spec:
           claimName: transmission-config
       - name: downloads
         persistentVolumeClaim:
-          claimName: transmission-downloads
+          claimName: nfs-downloads
 ---
 apiVersion: v1
 kind: Service

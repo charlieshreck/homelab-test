@@ -34,6 +34,8 @@ spec:
           mountPath: /config
         - name: downloads
           mountPath: /downloads
+        - name: tv
+          mountPath: /tv
         resources:
           requests:
             cpu: 100m
@@ -47,7 +49,11 @@ spec:
           claimName: sonarr-config
       - name: downloads
         persistentVolumeClaim:
-          claimName: transmission-downloads
+          claimName: nfs-downloads
+      - name: tv
+        persistentVolumeClaim:
+          claimName: nfs-tv
+
 ---
 apiVersion: v1
 kind: Service
