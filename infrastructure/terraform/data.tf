@@ -1,5 +1,5 @@
 # ==============================================================================
-# data.tf - Talos machine configurations (Single NIC)
+# data.tf - Talos machine configurations (Single NIC) - FIXED LONGHORN DISK
 # ==============================================================================
 
 # ==============================================================================
@@ -80,7 +80,7 @@ data "talos_machine_configuration" "controlplane" {
 }
 
 # ==============================================================================
-# Talos Machine Configuration - Workers
+# Talos Machine Configuration - Workers (FIXED LONGHORN DISK)
 # ==============================================================================
 
 data "talos_machine_configuration" "worker" {
@@ -100,17 +100,31 @@ data "talos_machine_configuration" "worker" {
             disk  = "/dev/sda"
             image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
           }
-          # Longhorn disk configuration
+          # FIXED: Longhorn disk configuration with proper filesystem
           disks = [
             {
               device = "/dev/sdb"
               partitions = [
                 {
                   mountpoint = "/var/lib/longhorn"
+                  size       = 0  # Use entire disk
                 }
               ]
             }
           ]
+
+          # CRITICAL: Add these kernel modules for Longhorn
+          kernel = {
+            modules = [
+              {
+                name = "iscsi_tcp"
+              }
+            ]
+          }
+          
+          # CRITICAL: Add systemDiskEncryption config to ensure formatting
+          systemDiskEncryption = null  # Explicitly disable encryption
+          
           kubelet = {
             extraMounts = [
               {
@@ -124,6 +138,14 @@ data "talos_machine_configuration" "worker" {
               "rotate-certificates" = "true"
             }
           }
+          
+          # Add sysctls for iSCSI
+          sysctls = {
+            "vm.overcommit_memory" = "1"
+            "vm.panic_on_oom"      = "0"
+          }
+
+
           network = {
             hostname = each.value.name
             interfaces = [
