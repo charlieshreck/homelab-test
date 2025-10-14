@@ -4,34 +4,25 @@ metadata:
   name: longhorn
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://charts.longhorn.io
-    chart: longhorn
-    targetRevision: 1.10.0
-    helm:
-      valuesObject:
-        service:
-          ui:
-            type: LoadBalancer
-            loadBalancerIP: "10.30.0.70"
-        
-        defaultSettings:
-          defaultDataPath: "/var/lib/longhorn"
-          defaultReplicaCount: "2"
-          storageMinimalAvailablePercentage: "10"
-        
-        persistence:
-          defaultClass: true
-          defaultClassReplicaCount: 2
-        
-        # Disable the problematic pre-upgrade job
-        preUpgradeChecker:
-          jobEnabled: false
+  
+  sources:
+    # Helm chart
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.10.0
+      helm:
+        valueFiles:
+          - $values/kubernetes/platform/longhorn/values.yaml
+    
+    # Git repo with values
+    - repoURL: https://github.com/charlieshreck/homelab-test.git
+      targetRevision: main
+      ref: values
   
   destination:
     server: https://kubernetes.default.svc
@@ -50,10 +41,10 @@ spec:
         factor: 2
         maxDuration: 5m
   
-  # Ignore the job if it exists
+  # Ignore the pre-upgrade job if it exists
   ignoreDifferences:
-  - group: batch
-    kind: Job
-    name: longhorn-pre-upgrade
-    jsonPointers:
-    - /status
+    - group: batch
+      kind: Job
+      name: longhorn-pre-upgrade
+      jsonPointers:
+        - /status
