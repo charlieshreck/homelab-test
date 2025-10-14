@@ -17,5 +17,5 @@ spec:
     - shreck.io
     - "*.shreck.io"
   issuerRef:
-    name: letsencrypt-prod
+    name: letsencrypt-staging
     kind: ClusterIssuer
