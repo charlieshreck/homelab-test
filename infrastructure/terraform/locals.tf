@@ -16,7 +16,7 @@ locals {
   vm_ids = {
     control_plane = var.vm_id_start
     workers       = { for idx, key in local.worker_keys : key => var.vm_id_start + idx + 1 }
-    truenas       = var.vm_id_start + length(var.workers) + 1
+#    truenas       = var.vm_id_start + length(var.workers) + 1
   }
 
   # Primary network MAC addresses only (eth0 - 10.30.0.x)
@@ -26,7 +26,7 @@ locals {
       for idx, key in local.worker_keys : key => 
       format("52:54:00:10:30:%02d", 51 + idx)
     }
-    truenas = "52:54:00:10:30:14"
+#    truenas = "52:54:00:10:30:14"
   }
 
   # Common tags/labels

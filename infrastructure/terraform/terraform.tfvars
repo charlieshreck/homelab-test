@@ -49,14 +49,14 @@ workers = {
   }
 }
 # TrueNAS
-truenas_vm = {
-  name     = "truenas"
-  ip       = "10.30.0.20"
-  cores    = 4
-  memory   = 16384
+#truenas_vm = {
+#  name     = "truenas"
+#  ip       = "10.30.0.20"
+#  cores    = 4
+#  memory   = 16384
   disk     = 100
-  media_ip = "172.20.0.20"
-}
+#  media_ip = "172.20.0.20"
+#}
 # GitOps Configuration
 gitops_repo_url    = "https://github.com/charlieshreck/homelab-test.git"
 gitops_repo_branch = "main"

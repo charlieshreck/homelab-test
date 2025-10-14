@@ -78,23 +78,23 @@ module "workers" {
 }
 
 # Deploy TrueNAS VM
-module "truenas" {
-  source = "./modules/truenas-vm"
-
-  vm_name        = var.truenas_vm.name
-  vm_id          = local.vm_ids.truenas
-  target_node    = var.proxmox_node
-  cores          = var.truenas_vm.cores
-  memory         = var.truenas_vm.memory
-  disk           = var.truenas_vm.disk
-  ip_address     = var.truenas_vm.ip
-  gateway        = var.prod_gateway
-  dns            = var.dns_servers
-  network_bridge = var.network_bridge
-  storage        = var.proxmox_truenas_storage
-  iso_storage    = var.proxmox_iso_storage
-  mac_address    = local.mac_addresses.truenas
-}
+#module "truenas" {
+#  source = "./modules/truenas-vm"
+#
+#  vm_name        = var.truenas_vm.name
+#  vm_id          = local.vm_ids.truenas
+#  target_node    = var.proxmox_node
+#  cores          = var.truenas_vm.cores
+#  memory         = var.truenas_vm.memory
+#  disk           = var.truenas_vm.disk
+#  ip_address     = var.truenas_vm.ip
+#  gateway        = var.prod_gateway
+#  dns            = var.dns_servers
+#  network_bridge = var.network_bridge
+#  storage        = var.proxmox_truenas_storage
+#  iso_storage    = var.proxmox_iso_storage
+#  mac_address    = local.mac_addresses.truenas
+#}
 
 # Apply Talos configuration to control plane
 resource "talos_machine_configuration_apply" "controlplane" {

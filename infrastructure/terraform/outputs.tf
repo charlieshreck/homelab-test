@@ -24,10 +24,10 @@ output "worker_ips" {
   value       = [for w in var.workers : w.ip]
 }
 
-output "truenas_ip" {
-  description = "TrueNAS IP address"
-  value       = var.truenas_vm.ip
-}
+#output "truenas_ip" {
+#  description = "TrueNAS IP address"
+#  value       = var.truenas_vm.ip
+#}
 
 output "cluster_info" {
   description = "Cluster information"
