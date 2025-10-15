@@ -85,11 +85,11 @@ spec:
       - name: tv
         nfs:
           server: 10.30.0.120  # Your TrueNAS IP
-          path: /mnt/pool/tv
+          path: /mnt/k8s/tv
       - name: movies
         nfs:
           server: 10.30.0.120  # Your TrueNAS IP
-          path: /mnt/pool/movies
+          path: /mnt/k8s/movies
 ---
 apiVersion: v1
 kind: Service
