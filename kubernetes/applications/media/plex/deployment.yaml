@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      containers:
+      - name: plex
+        image: linuxserver/plex:latest
+        ports:
+        - name: plex
+          containerPort: 32400
+          protocol: TCP
+        - name: dlna-tcp
+          containerPort: 32469
+          protocol: TCP
+        - name: dlna-udp
+          containerPort: 1900
+          protocol: UDP
+        - name: discovery
+          containerPort: 5353
+          protocol: UDP
+        - name: roku
+          containerPort: 8324
+          protocol: TCP
+        - name: gdm-1
+          containerPort: 32410
+          protocol: UDP
+        - name: gdm-2
+          containerPort: 32412
+          protocol: UDP
+        - name: gdm-3
+          containerPort: 32413
+          protocol: UDP
+        - name: gdm-4
+          containerPort: 32414
+          protocol: UDP
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "Europe/London"
+        - name: VERSION
+          value: "docker"
+        - name: PLEX_CLAIM
+          valueFrom:
+            secretKeyRef:
+              name: plex-secrets
+              key: PLEX_CLAIM
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: transcode
+          mountPath: /transcode
+        - name: tv
+          mountPath: /tv
+        - name: movies
+          mountPath: /movies
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 4000m
+            memory: 4Gi
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: plex-config
+      - name: transcode
+        emptyDir: {}
+      - name: tv
+        nfs:
+          server: 10.30.0.120  # Your TrueNAS IP
+          path: /mnt/pool/tv
+      - name: movies
+        nfs:
+          server: 10.30.0.120  # Your TrueNAS IP
+          path: /mnt/pool/movies
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: media
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.30.0.101  # MetalLB will assign this
+  ports:
+  - name: plex
+    port: 32400
+    targetPort: 32400
+    protocol: TCP
+  - name: dlna-tcp
+    port: 32469
+    targetPort: 32469
+    protocol: TCP
+  - name: dlna-udp
+    port: 1900
+    targetPort: 1900
+    protocol: UDP
+  - name: discovery
+    port: 5353
+    targetPort: 5353
+    protocol: UDP
+  - name: roku
+    port: 8324
+    targetPort: 8324
+    protocol: TCP
+  - name: gdm-1
+    port: 32410
+    targetPort: 32410
+    protocol: UDP
+  - name: gdm-2
+    port: 32412
+    targetPort: 32412
+    protocol: UDP
+  - name: gdm-3
+    port: 32413
+    targetPort: 32413
+    protocol: UDP
+  - name: gdm-4
+    port: 32414
+    targetPort: 32414
+    protocol: UDP
+  selector:
+    app: plex
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config
+  namespace: media
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 20Gi

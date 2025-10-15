@@ -1,0 +1,23 @@
+apiVersion: secrets.infisical.com/v1alpha1
+kind: InfisicalSecret
+metadata:
+  name: plex-secrets
+  namespace: media
+spec:
+  hostAPI: https://app.infisical.com/api
+  
+  authentication:
+    universalAuth:
+      credentialsRef:
+        secretName: "universal-auth-credentials"
+        secretNamespace: "infisical-operator-system"
+      secretsScope:
+        projectSlug: "homelab-test-5-ig-k"
+        envSlug: "prod"
+        secretsPath: "/kubernetes"
+        
+  managedSecretReference:
+    secretName: plex-secrets
+    secretNamespace: media
+    secretType: Opaque
+    creationPolicy: Owner
