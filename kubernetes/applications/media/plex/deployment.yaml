@@ -98,7 +98,7 @@ metadata:
   namespace: media
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.30.0.101  # MetalLB will assign this
+  loadBalancerIP: 10.30.0.95  # MetalLB will assign this
   ports:
   - name: plex
     port: 32400
