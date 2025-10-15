@@ -5,3 +5,4 @@ resources:
   - transmission-app.yaml
   - sonarr-app.yaml
   - radarr-app.yaml
+  - prowlarr-app.yaml
