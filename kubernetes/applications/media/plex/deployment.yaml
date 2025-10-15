@@ -65,10 +65,8 @@ spec:
           mountPath: /config
         - name: transcode
           mountPath: /transcode
-        - name: tv
-          mountPath: /tv
-        - name: movies
-          mountPath: /movies
+        - name: media
+          mountPath: /media
         resources:
           requests:
             cpu: 500m
@@ -82,14 +80,10 @@ spec:
           claimName: plex-config
       - name: transcode
         emptyDir: {}
-      - name: tv
+      - name: media
         nfs:
-          server: 10.30.0.120  # Your TrueNAS IP
-          path: /mnt/k8s/tv
-      - name: movies
-        nfs:
-          server: 10.30.0.120  # Your TrueNAS IP
-          path: /mnt/k8s/movies
+          server: 10.30.0.120
+          path: /mnt/k8s
 ---
 apiVersion: v1
 kind: Service
