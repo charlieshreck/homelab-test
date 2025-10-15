@@ -6,3 +6,4 @@ resources:
   - sonarr-app.yaml
   - radarr-app.yaml
   - prowlarr-app.yaml
+  - overseer-app.yaml
