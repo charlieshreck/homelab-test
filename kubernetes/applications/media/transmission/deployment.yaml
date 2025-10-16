@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         app: transmission
-      # REMOVED: Multus network annotations
     spec:
       containers:
       - name: transmission
@@ -41,8 +40,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: downloads
+        - name: media
           mountPath: /downloads
+          subPath: downloads
         resources:
           requests:
             cpu: 100m
@@ -54,9 +54,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: transmission-config
-      - name: downloads
-        persistentVolumeClaim:
-          claimName: nfs-downloads
+      - name: media
+        nfs:
+          server: 10.30.0.120
+          path: /mnt/Truro/k8s
 ---
 apiVersion: v1
 kind: Service
@@ -69,14 +70,6 @@ spec:
   - name: web
     port: 9091
     targetPort: 9091
-  - name: peer-tcp
-    port: 51413
-    targetPort: 51413
-    protocol: TCP
-  - name: peer-udp
-    port: 51413
-    targetPort: 51413
-    protocol: UDP
   selector:
     app: transmission
 ---
@@ -92,16 +85,3 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: transmission-downloads
-  namespace: media
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 4Gi

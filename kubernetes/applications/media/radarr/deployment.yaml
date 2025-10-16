@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         app: radarr
-      # REMOVED: Multus network annotations
     spec:
       containers:
       - name: radarr
@@ -32,10 +31,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: downloads
+        - name: media
           mountPath: /downloads
-        - name: movies
+          subPath: downloads
+        - name: media
           mountPath: /movies
+          subPath: film
         resources:
           requests:
             cpu: 100m
@@ -47,16 +48,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: radarr-config
-      - name: downloads
-        persistentVolumeClaim:
-          claimName: nfs-downloads
-      - name: downloads
-        persistentVolumeClaim:
-          claimName: transmission-downloads
-      - name: movies
-        persistentVolumeClaim:
-          claimName: nfs-film
-
+      - name: media
+        nfs:
+          server: 10.30.0.120
+          path: /mnt/Truro/k8s
 ---
 apiVersion: v1
 kind: Service

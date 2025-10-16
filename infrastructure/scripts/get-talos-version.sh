@@ -18,6 +18,8 @@ customization:
       - siderolabs/i915-ucode
       - siderolabs/iscsi-tools
       - siderolabs/util-linux-tools
+      - siderolabs/nfs-client       
+
 SCHEMATIC
 )
     

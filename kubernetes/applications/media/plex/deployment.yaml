@@ -21,31 +21,6 @@ spec:
         ports:
         - name: plex
           containerPort: 32400
-          protocol: TCP
-        - name: dlna-tcp
-          containerPort: 32469
-          protocol: TCP
-        - name: dlna-udp
-          containerPort: 1900
-          protocol: UDP
-        - name: discovery
-          containerPort: 5353
-          protocol: UDP
-        - name: roku
-          containerPort: 8324
-          protocol: TCP
-        - name: gdm-1
-          containerPort: 32410
-          protocol: UDP
-        - name: gdm-2
-          containerPort: 32412
-          protocol: UDP
-        - name: gdm-3
-          containerPort: 32413
-          protocol: UDP
-        - name: gdm-4
-          containerPort: 32414
-          protocol: UDP
         env:
         - name: PUID
           value: "1000"
@@ -66,7 +41,14 @@ spec:
         - name: transcode
           mountPath: /transcode
         - name: media
-          mountPath: /media
+          mountPath: /tv
+          subPath: tv
+        - name: media
+          mountPath: /movies
+          subPath: film
+        - name: media
+          mountPath: /downloads
+          subPath: downloads
         resources:
           requests:
             cpu: 500m
@@ -83,7 +65,7 @@ spec:
       - name: media
         nfs:
           server: 10.30.0.120
-          path: /mnt/k8s
+          path: /mnt/Truro/k8s
 ---
 apiVersion: v1
 kind: Service
@@ -92,44 +74,11 @@ metadata:
   namespace: media
 spec:
   type: LoadBalancer
-  loadBalancerIP: 10.30.0.95  # MetalLB will assign this
+  loadBalancerIP: 10.30.0.95
   ports:
   - name: plex
     port: 32400
     targetPort: 32400
-    protocol: TCP
-  - name: dlna-tcp
-    port: 32469
-    targetPort: 32469
-    protocol: TCP
-  - name: dlna-udp
-    port: 1900
-    targetPort: 1900
-    protocol: UDP
-  - name: discovery
-    port: 5353
-    targetPort: 5353
-    protocol: UDP
-  - name: roku
-    port: 8324
-    targetPort: 8324
-    protocol: TCP
-  - name: gdm-1
-    port: 32410
-    targetPort: 32410
-    protocol: UDP
-  - name: gdm-2
-    port: 32412
-    targetPort: 32412
-    protocol: UDP
-  - name: gdm-3
-    port: 32413
-    targetPort: 32413
-    protocol: UDP
-  - name: gdm-4
-    port: 32414
-    targetPort: 32414
-    protocol: UDP
   selector:
     app: plex
 ---

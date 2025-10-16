@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         app: sonarr
-      # REMOVED: Multus network annotations
     spec:
       containers:
       - name: sonarr
@@ -32,10 +31,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: downloads
+        - name: media
           mountPath: /downloads
-        - name: tv
+          subPath: downloads
+        - name: media
           mountPath: /tv
+          subPath: tv
         resources:
           requests:
             cpu: 100m
@@ -47,13 +48,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: sonarr-config
-      - name: downloads
-        persistentVolumeClaim:
-          claimName: nfs-downloads
-      - name: tv
-        persistentVolumeClaim:
-          claimName: nfs-tv
-
+      - name: media
+        nfs:
+          server: 10.30.0.120
+          path: /mnt/Truro/k8s
 ---
 apiVersion: v1
 kind: Service
