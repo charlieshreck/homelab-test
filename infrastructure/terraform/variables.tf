@@ -80,7 +80,7 @@ variable "cluster_name" {
 variable "talos_version" {
   description = "The version of Talos OS to install."
   type        = string
-  default     = "v1.11.2"
+  default     = "v1.11.3"
 }
 
 variable "kubernetes_version" {

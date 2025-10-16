@@ -8,7 +8,7 @@ prod_gateway     = "10.30.0.1"
 network_bridge   = "vmbr0"
 # Cluster
 cluster_name       = "homelab-test"
-talos_version      = "v1.11.2"
+talos_version      = "v1.11.3"
 kubernetes_version = "v1.34.1" # ADDED: This was missing
 # Storage
 proxmox_storage          = "Kerrier"
