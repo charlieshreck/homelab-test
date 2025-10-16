@@ -57,10 +57,10 @@ variable "proxmox_longhorn_storage" {
   type        = string
 }
 
-variable "proxmox_truenas_storage" {
-  description = "The name of the storage pool for the TrueNAS VM's data."
-  type        = string
-}
+#variable "proxmox_truenas_storage" {
+#  description = "The name of the storage pool for the TrueNAS VM's data."
+#  type        = string
+#}
 
 variable "proxmox_iso_storage" {
   description = "The name of the Proxmox storage pool where ISO images are stored."
@@ -122,6 +122,21 @@ variable "workers" {
     gpu_pci_id    = optional(string)
     longhorn_disk = number
   }))
+}
+
+variable "storage_nodes" {
+  description = "A map of storage node configurations for Longhorn."
+  type = map(object({
+    name          = string
+    ip            = string
+    cores         = number
+    memory        = number
+    disk          = number
+    gpu           = bool
+    gpu_pci_id    = optional(string)
+    longhorn_disk = number
+  }))
+  default = {}
 }
 
 variable "truenas_vm" {

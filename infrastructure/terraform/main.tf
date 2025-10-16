@@ -71,11 +71,67 @@ module "workers" {
   mac_address    = local.mac_addresses.workers[each.key]
 
   additional_disks = [{
+  size      = each.value.longhorn_disk
+  storage   = var.proxmox_longhorn_storage
+  interface = "scsi1"
+}]
+}
+
+# Deploy Storage Nodes
+module "storage_nodes" {
+  source   = "./modules/talos-vm"
+  for_each = var.storage_nodes
+
+  vm_name        = each.value.name
+  vm_id          = local.vm_ids.storage[each.key]
+  target_node    = var.proxmox_node
+  cores          = each.value.cores
+  memory         = each.value.memory
+  disk           = each.value.disk
+  ip_address     = each.value.ip
+  gateway        = var.prod_gateway
+  dns            = var.dns_servers
+  network_bridge = var.network_bridge
+  storage        = var.proxmox_storage
+  iso_storage    = var.proxmox_iso_storage
+  talos_version  = local.talos_version
+  iso_file       = proxmox_virtual_environment_download_file.talos_iso.id
+  gpu_passthrough = false
+  gpu_pci_id     = null
+  mac_address    = local.mac_addresses.storage[each.key]
+
+  additional_disks = [{
     size      = each.value.longhorn_disk
     storage   = var.proxmox_longhorn_storage
     interface = "scsi1"
   }]
 }
+
+# Apply Talos to storage nodes
+resource "talos_machine_configuration_apply" "storage_nodes" {
+  depends_on = [module.storage_nodes]
+  for_each   = var.storage_nodes
+
+  client_configuration        = talos_machine_secrets.this.client_configuration
+  machine_configuration_input = data.talos_machine_configuration.storage_node[each.key].machine_configuration
+  node                        = each.value.ip
+}
+
+# Taint storage nodes for Longhorn only
+resource "null_resource" "taint_storage_nodes" {
+  depends_on = [talos_machine_bootstrap.this]
+  for_each   = var.storage_nodes
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+      kubectl label nodes ${each.value.name} node-role.kubernetes.io/storage=true --overwrite 2>/dev/null || true
+      kubectl taint nodes ${each.value.name} longhorn=storage:NoSchedule --overwrite 2>/dev/null || true
+    EOT
+  }
+}
+
+
 
 # Deploy TrueNAS VM
 #module "truenas" {

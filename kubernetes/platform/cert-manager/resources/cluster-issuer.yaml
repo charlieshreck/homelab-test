@@ -18,6 +18,8 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token-secret
               key: CLOUDFLARE_API_TOKEN
+          # Wait for DNS propagation before validation (60 seconds)
+          waitBeforeValidation: 60
         selector:
           dnsZones:
             - shreck.io
@@ -43,6 +45,8 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token-secret
               key: CLOUDFLARE_API_TOKEN
+          # Wait for DNS propagation before validation (60 seconds)
+          waitBeforeValidation: 60
         selector:
           dnsZones:
             - shreck.io

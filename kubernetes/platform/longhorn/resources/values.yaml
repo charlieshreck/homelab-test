@@ -1,20 +1,12 @@
 # ==============================================================================
-# Longhorn Values - Ultra-Low Memory Configuration for 8GB Workers
+# Longhorn Values - Single Worker Test Configuration (Manageable)
 # ==============================================================================
 
-# ==============================================================================
-# Service Configuration
-# ==============================================================================
 service:
   ui:
     type: LoadBalancer
     loadBalancerIP: "10.30.0.70"
 
-# ==============================================================================
-# Resource Limits - AGGRESSIVE reduction for OOM prevention
-# ==============================================================================
-
-# Longhorn Manager (runs on every node)
 longhornManager:
   resources:
     requests:
@@ -24,7 +16,6 @@ longhornManager:
       cpu: 500m
       memory: 384Mi
 
-# Longhorn Driver (CSI driver)
 longhornDriver:
   resources:
     requests:
@@ -34,7 +25,6 @@ longhornDriver:
       cpu: 200m
       memory: 192Mi
 
-# Longhorn UI
 longhornUI:
   resources:
     requests:
@@ -44,7 +34,6 @@ longhornUI:
       cpu: 200m
       memory: 192Mi
 
-# Instance Manager (biggest memory consumer)
 instanceManager:
   resources:
     requests:
@@ -54,9 +43,6 @@ instanceManager:
       cpu: 500m
       memory: 384Mi
 
-# ==============================================================================
-# CSI Components - Minimal allocation
-# ==============================================================================
 csi:
   attacher:
     resources:
@@ -103,55 +89,24 @@ csi:
         cpu: 200m
         memory: 192Mi
 
-# ==============================================================================
-# Longhorn Settings
-# ==============================================================================
 defaultSettings:
   defaultDataPath: "/var/lib/longhorn"
-  defaultReplicaCount: "2"
-  storageMinimalAvailablePercentage: "10"
+  defaultReplicaCount: "1"
+  storageMinimalAvailablePercentage: "15"
   concurrentReplicaRebuildPerNodeLimit: "1"
-  autoSalvage: "false"
+  autoSalvage: "true"
   replicaReplenishmentWaitInterval: "300"
-  autoDeletePodWhenVolumeDetachedUnexpectedly: "false"
+  autoDeletePodWhenVolumeDetachedUnexpectedly: "true"
 
-# ==============================================================================
-# Persistence Settings
-# ==============================================================================
 persistence:
   defaultClass: true
-  defaultClassReplicaCount: 2
+  defaultClassReplicaCount: 1
   reclaimPolicy: Delete
 
-# ==============================================================================
-# Pre-Upgrade Checker
-# ==============================================================================
 preUpgradeChecker:
   jobEnabled: false
-
-# ==============================================================================
-# Additional Stability Settings
-# ==============================================================================
-tolerations:
-  - key: "node-role.kubernetes.io/control-plane"
-    operator: "Exists"
-    effect: "NoSchedule"
 
 priorityClass:
   create: true
   name: longhorn-critical
   value: 1000000
-
-# ==============================================================================
-# NOTES
-# ==============================================================================
-# Memory Budget per Worker (8GB total):
-# - System:             ~800Mi
-# - Cilium:             ~200Mi
-# - Longhorn (total):   ~432Mi  (REDUCED from 576Mi)
-#   - Manager:          96Mi
-#   - Instance Mgr:     96Mi
-#   - CSI components:   240Mi
-# - Apps (Sonarr/etc):  ~768Mi
-# - Available:          ~5.8GB for workloads
-# ==============================================================================
