@@ -4,6 +4,7 @@ metadata:
   name: longhorn
   namespace: longhorn-system
   annotations:
+    argocd.argoproj.io/tracking-id: longhorn-ingress:networking.k8s.io/Ingress:longhorn-system/longhorn
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik
