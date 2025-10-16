@@ -54,7 +54,7 @@ workers = {
 #  ip       = "10.30.0.20"
 #  cores    = 4
 #  memory   = 16384
-  disk     = 100
+#  disk     = 100
 #  media_ip = "172.20.0.20"
 #}
 # GitOps Configuration
