@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mayastor
+---
+# DiskPool for worker-01
+apiVersion: openebs.io/v1beta2
+kind: DiskPool
+metadata:
+  name: pool-worker-01
+  namespace: mayastor
+spec:
+  node: talos-worker-01
+  disks:
+    - /dev/sdb
+---
+# DiskPool for worker-02
+apiVersion: openebs.io/v1beta2
+kind: DiskPool
+metadata:
+  name: pool-worker-02
+  namespace: mayastor
+spec:
+  node: talos-worker-02
+  disks:
+    - /dev/sdb
+---
+# DiskPool for worker-03
+apiVersion: openebs.io/v1beta2
+kind: DiskPool
+metadata:
+  name: pool-worker-03
+  namespace: mayastor
+spec:
+  node: talos-worker-03
+  disks:
+    - /dev/sdb

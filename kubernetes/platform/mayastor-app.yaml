@@ -11,7 +11,7 @@ spec:
   project: default
 
   sources:
-    # Helm chart
+    # Helm chart for Mayastor operator
     - repoURL: https://openebs.github.io/mayastor-extensions
       chart: mayastor
       targetRevision: 2.8.0
@@ -19,10 +19,45 @@ spec:
         valueFiles:
           - $values/kubernetes/platform/mayastor/resources/values.yaml
 
-    # Git repo with values
+    # Git repo with values (for helm chart)
     - repoURL: https://github.com/charlieshreck/homelab-test.git
       targetRevision: main
       ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mayastor
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+---
+# Mayastor Configuration (DiskPools and StorageClasses)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mayastor-config
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after Mayastor operator
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/charlieshreck/homelab-test.git
+    targetRevision: main
+    path: kubernetes/platform/mayastor/resources
 
   destination:
     server: https://kubernetes.default.svc

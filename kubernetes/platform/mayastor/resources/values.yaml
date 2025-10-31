@@ -14,10 +14,7 @@ agents:
 
 # Storage pool configuration
 # Each worker has a dedicated disk /dev/sdb for Mayastor (helford storage - 1TB total, ~300GB per node)
-# Pools will be created via kubectl after deployment:
-# kubectl mayastor create pool pool-worker-01 node-01 /dev/sdb
-# kubectl mayastor create pool pool-worker-02 node-02 /dev/sdb
-# kubectl mayastor create pool pool-worker-03 node-03 /dev/sdb
+# DiskPools are automatically created via diskpools.yaml (deployed by ArgoCD)
 
 # Resource limits appropriate for 9GB RAM per node
 csi:

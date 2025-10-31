@@ -1,0 +1,43 @@
+# Default StorageClass with 3-way replication
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mayastor-3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: io.openebs.csi-mayastor
+parameters:
+  protocol: nvmf
+  repl: "3"  # 3-way replication across all workers
+  ioTimeout: "60"
+  fsType: "ext4"
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+---
+# Single replica StorageClass for testing/non-critical workloads
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mayastor-1
+provisioner: io.openebs.csi-mayastor
+parameters:
+  protocol: nvmf
+  repl: "1"  # Single replica for better space efficiency
+  ioTimeout: "60"
+  fsType: "ext4"
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+---
+# Two-way replication for balance between redundancy and capacity
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mayastor-2
+provisioner: io.openebs.csi-mayastor
+parameters:
+  protocol: nvmf
+  repl: "2"  # 2-way replication
+  ioTimeout: "60"
+  fsType: "ext4"
+allowVolumeExpansion: true
+volumeBindingMode: Immediate

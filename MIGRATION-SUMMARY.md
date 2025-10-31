@@ -3,6 +3,8 @@
 ## Overview
 This document summarizes the migration from a single-worker setup to a 3-worker Mayastor-based homelab running on new hardware.
 
+**⚡ Fully Infrastructure as Code (IaC)**: All Mayastor configuration (DiskPools, StorageClasses) is declaratively defined and automatically deployed by ArgoCD. No manual kubectl commands required!
+
 ## Hardware Configuration
 
 ### New System: "The Fal"
@@ -211,30 +213,31 @@ This will:
 4. Install Cilium CNI with LB support
 5. Deploy ArgoCD
 
-### 2. Mayastor Setup
-After cluster is up:
-```bash
-# Label nodes for Mayastor (done automatically by Terraform)
-kubectl label nodes talos-worker-01 openebs.io/engine=mayastor
-kubectl label nodes talos-worker-02 openebs.io/engine=mayastor
-kubectl label nodes talos-worker-03 openebs.io/engine=mayastor
+### 2. Mayastor Setup (Fully Automated)
+After cluster is up, ArgoCD will automatically:
+1. Deploy Mayastor operator (sync-wave: 1)
+2. Deploy Mayastor configuration (sync-wave: 2):
+   - DiskPools for all 3 workers (/dev/sdb on each)
+   - StorageClasses (mayastor-1, mayastor-2, mayastor-3)
+   - Set mayastor-3 as default StorageClass
 
-# Mayastor will be deployed by ArgoCD
-# Wait for pods to be ready
+**No manual steps required!** Node labels are applied by Terraform, pools and storage classes are created via GitOps.
+
+To verify deployment:
+```bash
+# Wait for Mayastor pods
 kubectl wait --for=condition=ready pod -l app=mayastor -n mayastor --timeout=600s
 
-# Create storage pools (manual step)
-kubectl mayastor create pool pool-worker-01 talos-worker-01 /dev/sdb
-kubectl mayastor create pool pool-worker-02 talos-worker-02 /dev/sdb
-kubectl mayastor create pool pool-worker-03 talos-worker-03 /dev/sdb
+# Check DiskPools (should show all 3 workers)
+kubectl get diskpools -n mayastor
 
-# Create storage class
-kubectl apply -f kubernetes/platform/mayastor/storageclass.yaml
+# Check StorageClasses
+kubectl get sc
 ```
 
 ### 3. Platform Services (ArgoCD)
 ArgoCD will automatically deploy:
-- Mayastor storage
+- Mayastor operator + configuration (fully automated)
 - Traefik ingress
 - Cert-manager
 - External Secrets
@@ -244,28 +247,24 @@ ArgoCD will automatically deploy:
 
 ### Required Manual Steps
 
-1. **Proxmox Network Setup**
+1. **Proxmox Network Setup** (Pre-deployment)
    - Create `vmbr1` bridge for storage network
-   - Assign physical interface or VLAN
-   - Configure 10.11.0.0/24 subnet
+   - Assign physical interface or VLAN to vmbr1
+   - Configure 10.11.0.0/24 subnet routing
 
-2. **Mayastor Storage Pools**
-   - Create pools on each worker (see above)
-   - Verify pool status: `kubectl mayastor get pools`
-
-3. **Plex LXC Container**
+2. **Plex LXC Container** (Post-deployment)
    - Create LXC with GPU passthrough
    - Install Plex Media Server
    - Mount TrueNAS NFS shares
    - Configure AMD 680 GPU for transcoding
 
-4. **TrueNAS Configuration**
-   - Deploy TrueNAS VM (currently commented out)
+3. **TrueNAS Configuration** (Optional)
+   - Deploy TrueNAS VM (currently commented out in Terraform)
    - Configure dual NICs (10.10.0.x and 10.11.0.x)
    - Set up NFS exports on storage network
    - Update application NFS mounts to use 10.11.0.x
 
-5. **DNS/DHCP Updates**
+4. **DNS/DHCP Updates** (Pre-deployment)
    - Update DHCP reservations for new IPs
    - Update DNS records for services
    - Update Cloudflare tunnel endpoints
@@ -281,10 +280,13 @@ kubectl get pods -A
 cilium status
 kubectl get svc -A | grep LoadBalancer
 
-# Verify Mayastor
-kubectl mayastor get nodes
-kubectl mayastor get pools
-kubectl get sc
+# Verify Mayastor deployment
+kubectl get pods -n mayastor
+kubectl get diskpools -n mayastor  # Should show 3 pools (one per worker)
+kubectl get sc                     # Should show mayastor-1, mayastor-2, mayastor-3
+
+# Verify DiskPools are online
+kubectl get diskpools -n mayastor -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.node}{"\t"}{.status.state}{"\n"}{end}'
 
 # Check storage
 kubectl get pvc -A
