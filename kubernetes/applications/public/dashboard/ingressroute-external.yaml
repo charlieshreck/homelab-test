@@ -13,7 +13,7 @@ spec:
     - websecure
   
   routes:
-    - match: Host(`shreck.io`) || Host(`www.shreck.io`)
+    - match: Host(`shreck.co.uk`) || Host(`www.shreck.co.uk`)
       kind: Rule
       services:
         - name: dashboard
@@ -24,7 +24,7 @@ spec:
           namespace: traefik
   
   tls:
-    secretName: shreck-io-tls
+    secretName: shreck-co-uk-tls
     options:
       name: default
       namespace: traefik

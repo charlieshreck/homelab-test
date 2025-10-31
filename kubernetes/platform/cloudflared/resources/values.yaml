@@ -2,19 +2,19 @@ replicaCount: 2
 
 config:
   ingress:
-    # Catch-all for *.shreck.io
-    - hostname: "*.shreck.io"
+    # Catch-all for *.shreck.co.uk
+    - hostname: "*.shreck.co.uk"
       service: https://traefik.traefik.svc.cluster.local:443
       originRequest:
-        originServerName: shreck.io
+        originServerName: shreck.co.uk
         noTLSVerify: false
         http2Origin: true
     
     # Apex domain
-    - hostname: shreck.io
+    - hostname: shreck.co.uk
       service: https://traefik.traefik.svc.cluster.local:443
       originRequest:
-        originServerName: shreck.io
+        originServerName: shreck.co.uk
         noTLSVerify: false
     
     - service: http_status:404

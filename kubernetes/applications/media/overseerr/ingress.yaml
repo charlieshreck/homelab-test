@@ -9,10 +9,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - overseerr.shreck.io
-      secretName: shreck-io-tls
+        - overseerr.shreck.co.uk
+      secretName: shreck-co-uk-tls
   rules:
-    - host: overseerr.shreck.io
+    - host: overseerr.shreck.co.uk
       http:
         paths:
           - path: /

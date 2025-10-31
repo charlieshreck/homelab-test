@@ -92,7 +92,7 @@ cilium_lb_ip_pool = ["10.10.0.50-10.10.0.99"]
 
 # Cloudflare Configuration
 cloudflare_email     = "charlieshreck@gmail.com"
-cloudflare_domain    = "shreck.io"
+cloudflare_domain    = "shreck.co.uk"
 
 # Infisical Configuration
 infisical_client_id     = "26428618-6807-4a12-a461-33242ec1af50"

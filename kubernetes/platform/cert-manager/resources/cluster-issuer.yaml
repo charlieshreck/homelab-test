@@ -20,7 +20,7 @@ spec:
               key: CLOUDFLARE_API_TOKEN
         selector:
           dnsZones:
-            - shreck.io
+            - shreck.co.uk
 
 ---
 # Production issuer (use after testing with staging)
@@ -45,4 +45,4 @@ spec:
               key: CLOUDFLARE_API_TOKEN
         selector:
           dnsZones:
-            - shreck.io
+            - shreck.co.uk

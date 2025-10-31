@@ -2,20 +2,20 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-shreck-io
+  name: wildcard-shreck-co-uk
   namespace: traefik
   annotations:
     reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
     reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
     reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "argocd,longhorn-system,media"
 spec:
-  secretName: shreck-io-tls
+  secretName: shreck-co-uk-tls
   duration: 2160h
   renewBefore: 360h
-  commonName: shreck.io
+  commonName: shreck.co.uk
   dnsNames:
-    - shreck.io
-    - "*.shreck.io"
+    - shreck.co.uk
+    - "*.shreck.co.uk"
   issuerRef:
     name: letsencrypt-staging
     kind: ClusterIssuer

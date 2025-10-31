@@ -10,10 +10,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - longhorn.shreck.io
-      secretName: shreck-io-tls
+        - longhorn.shreck.co.uk
+      secretName: shreck-co-uk-tls
   rules:
-    - host: longhorn.shreck.io
+    - host: longhorn.shreck.co.uk
       http:
         paths:
           - path: /
