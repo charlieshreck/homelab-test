@@ -1,7 +1,7 @@
 # terraform.tfvars - Production setup for "the fal" with 3 workers and Mayastor
 
 # Proxmox Connection - The Fal
-proxmox_host     = "10.10.0.1"
+proxmox_host     = "10.10.0.151"
 proxmox_user     = "root@pam"
 proxmox_password = "H4ckwh1z"
 proxmox_node     = "fal"
@@ -33,7 +33,7 @@ vm_id_start = 200
 # Ryzen 9 6800HX with 32GB total RAM
 control_plane = {
   name   = "talos-cp-01"
-  ip     = "10.10.0.10"
+  ip     = "10.10.0.20"
   cores  = 2
   memory = 4096
   disk   = 30
@@ -45,8 +45,8 @@ control_plane = {
 workers = {
   "worker-01" = {
     name          = "talos-worker-01"
-    ip            = "10.10.0.11"
-    storage_ip    = "10.11.0.11"
+    ip            = "10.10.0.21"
+    storage_ip    = "10.11.0.21"
     cores         = 2
     memory        = 9216
     disk          = 30
@@ -56,8 +56,8 @@ workers = {
   }
   "worker-02" = {
     name          = "talos-worker-02"
-    ip            = "10.10.0.12"
-    storage_ip    = "10.11.0.12"
+    ip            = "10.10.0.22"
+    storage_ip    = "10.11.0.22"
     cores         = 2
     memory        = 9216
     disk          = 30
@@ -67,8 +67,8 @@ workers = {
   }
   "worker-03" = {
     name          = "talos-worker-03"
-    ip            = "10.10.0.13"
-    storage_ip    = "10.11.0.13"
+    ip            = "10.10.0.23"
+    storage_ip    = "10.11.0.23"
     cores         = 2
     memory        = 9216
     disk          = 30
