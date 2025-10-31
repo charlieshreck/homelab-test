@@ -42,14 +42,14 @@ output "cluster_info" {
     }
     storage_pools = {
       vms      = var.proxmox_storage
-      longhorn = var.proxmox_longhorn_storage
+      mayastor = var.proxmox_mayastor_storage
 #      truenas  = var.proxmox_truenas_storage
     }
     versions = {
       talos      = var.talos_version
       kubernetes = var.kubernetes_version
     }
-    metallb_ip_range = var.metallb_ip_range
+    cilium_lb_ip_pool = var.cilium_lb_ip_pool
     kubeconfig_path  = "${path.module}/generated/kubeconfig"
     talosconfig_path = "${path.module}/generated/talosconfig"
   }
