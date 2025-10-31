@@ -1,5 +1,5 @@
 # ==============================================================================
-# data.tf - Talos machine configurations (Single NIC) - FIXED LONGHORN DISK
+# data.tf - Talos machine configurations (Dual NIC for workers) - Mayastor
 # ==============================================================================
 
 # ==============================================================================
@@ -63,9 +63,7 @@ data "talos_machine_configuration" "storage_node" {
           hostname = each.value.name
           interfaces = [
             {
-              deviceSelector = {
-                hardwareAddr = local.mac_addresses.storage[each.key]
-              }
+              interface = "eth0"
               dhcp      = false
               addresses = ["${each.value.ip}/24"]
               routes = [{
@@ -74,15 +72,9 @@ data "talos_machine_configuration" "storage_node" {
               }]
             },
             {
-              deviceSelector = {
-                hardwareAddr = local.storage_mac_addresses.storage[each.key]
-              }
+              interface = "eth1"
               dhcp      = false
               addresses = ["${each.value.storage_ip}/24"]
-              routes = [{
-                network = "10.11.0.0/24"
-                gateway = var.storage_gateway
-              }]
             }
           ]
           nameservers = var.dns_servers
@@ -117,11 +109,9 @@ data "talos_machine_configuration" "controlplane" {
         network = {
           hostname = var.control_plane.name
           interfaces = [
-            # Primary Interface (10.30.x.x network) - SINGLE NIC
+            # Primary Interface (10.10.0.0/24 network) - Management
             {
-              deviceSelector = {
-                hardwareAddr = local.mac_addresses.control_plane
-              }
+              interface = "eth0"
               dhcp      = false
               addresses = ["${var.control_plane.ip}/24"]
               routes = [
@@ -155,7 +145,7 @@ data "talos_machine_configuration" "controlplane" {
 }
 
 # ==============================================================================
-# Talos Machine Configuration - Workers (FIXED LONGHORN DISK)
+# Talos Machine Configuration - Workers (Dual NIC with Mayastor)
 # ==============================================================================
 
 data "talos_machine_configuration" "worker" {
@@ -212,9 +202,7 @@ data "talos_machine_configuration" "worker" {
             interfaces = [
               # Primary Interface (10.10.0.0/24 network) - Management
               {
-                deviceSelector = {
-                  hardwareAddr = local.mac_addresses.workers[each.key]
-                }
+                interface = "eth0"
                 dhcp      = false
                 addresses = ["${each.value.ip}/24"]
                 routes = [
@@ -226,17 +214,9 @@ data "talos_machine_configuration" "worker" {
               },
               # Storage Interface (10.11.0.0/24 network) - Mayastor/TrueNAS
               {
-                deviceSelector = {
-                  hardwareAddr = local.storage_mac_addresses.workers[each.key]
-                }
+                interface = "eth1"
                 dhcp      = false
                 addresses = ["${each.value.storage_ip}/24"]
-                routes = [
-                  {
-                    network = "10.11.0.0/24"
-                    gateway = var.storage_gateway
-                  }
-                ]
               }
             ]
             nameservers = var.dns_servers
