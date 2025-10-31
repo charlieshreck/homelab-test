@@ -31,12 +31,23 @@ resource "proxmox_virtual_environment_vm" "truenas_node" {
     file_id   = "${var.iso_storage}:iso/truenas-scale.iso"
   }
   
-  # Main network interface with fixed MAC for DHCP reservation
+  # Main network interface for management (10.10.0.0/24)
   network_device {
     bridge      = var.network_bridge
     model       = "virtio"
     mac_address = var.mac_address != "" ? var.mac_address : null
   }
+
+  # Storage network interface for NFS/SMB traffic (10.11.0.0/24)
+  dynamic "network_device" {
+    for_each = var.enable_storage_network ? [1] : []
+    content {
+      bridge      = var.storage_bridge
+      model       = "virtio"
+      mac_address = var.storage_mac_address != "" ? var.storage_mac_address : null
+    }
+  }
+
   operating_system {
     type = "l26"
   }

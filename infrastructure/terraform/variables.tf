@@ -43,6 +43,16 @@ variable "network_bridge" {
   type        = string
 }
 
+variable "storage_bridge" {
+  description = "The name of the Proxmox network bridge for storage network (Mayastor/TrueNAS)."
+  type        = string
+}
+
+variable "storage_gateway" {
+  description = "The gateway IP address for the storage network."
+  type        = string
+}
+
 # ==============================================================================
 # Storage Configuration
 # ==============================================================================
@@ -52,8 +62,8 @@ variable "proxmox_storage" {
   type        = string
 }
 
-variable "proxmox_longhorn_storage" {
-  description = "The name of the high-performance storage pool dedicated to Longhorn."
+variable "proxmox_mayastor_storage" {
+  description = "The name of the high-performance storage pool dedicated to Mayastor (helford - 1TB)."
   type        = string
 }
 
@@ -111,30 +121,32 @@ variable "control_plane" {
 }
 
 variable "workers" {
-  description = "A map of worker node configurations, keyed by a unique name like 'worker-01'."
+  description = "A map of worker node configurations with dual NICs for management and storage networks."
   type = map(object({
     name          = string
     ip            = string
+    storage_ip    = string
     cores         = number
     memory        = number
     disk          = number
     gpu           = bool
     gpu_pci_id    = optional(string)
-    longhorn_disk = number
+    mayastor_disk = number
   }))
 }
 
 variable "storage_nodes" {
-  description = "A map of storage node configurations for Longhorn."
+  description = "A map of storage node configurations (deprecated - using workers for Mayastor)."
   type = map(object({
     name          = string
     ip            = string
+    storage_ip    = string
     cores         = number
     memory        = number
     disk          = number
     gpu           = bool
     gpu_pci_id    = optional(string)
-    longhorn_disk = number
+    mayastor_disk = number
   }))
   default = {}
 }
@@ -167,8 +179,8 @@ variable "gitops_repo_branch" {
   default     = "main"
 }
 
-variable "metallb_ip_range" {
-  description = "The IP address range for MetalLB to assign to LoadBalancer services."
+variable "cilium_lb_ip_pool" {
+  description = "The IP address range for Cilium LoadBalancer to assign to LoadBalancer services."
   type        = list(string)
 }
 

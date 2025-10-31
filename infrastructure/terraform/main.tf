@@ -47,7 +47,7 @@ module "control_plane" {
   additional_disks = []
 }
 
-# Deploy worker VMs
+# Deploy worker VMs with dual NICs
 module "workers" {
   source   = "./modules/talos-vm"
   for_each = var.workers
@@ -70,14 +70,20 @@ module "workers" {
   gpu_pci_id     = each.value.gpu ? each.value.gpu_pci_id : null
   mac_address    = local.mac_addresses.workers[each.key]
 
+  # Dual NIC configuration for Mayastor storage network
+  enable_storage_network = true
+  storage_bridge         = var.storage_bridge
+  storage_mac_address    = local.storage_mac_addresses.workers[each.key]
+
+  # Mayastor disk on helford storage (1TB)
   additional_disks = [{
-  size      = each.value.longhorn_disk
-  storage   = var.proxmox_longhorn_storage
-  interface = "scsi1"
-}]
+    size      = each.value.mayastor_disk
+    storage   = var.proxmox_mayastor_storage
+    interface = "scsi1"
+  }]
 }
 
-# Deploy Storage Nodes
+# Deploy Storage Nodes (optional - using workers for Mayastor)
 module "storage_nodes" {
   source   = "./modules/talos-vm"
   for_each = var.storage_nodes
@@ -100,9 +106,15 @@ module "storage_nodes" {
   gpu_pci_id     = null
   mac_address    = local.mac_addresses.storage[each.key]
 
+  # Dual NIC configuration for Mayastor storage network
+  enable_storage_network = true
+  storage_bridge         = var.storage_bridge
+  storage_mac_address    = local.storage_mac_addresses.storage[each.key]
+
+  # Mayastor disk on helford storage (1TB)
   additional_disks = [{
-    size      = each.value.longhorn_disk
-    storage   = var.proxmox_longhorn_storage
+    size      = each.value.mayastor_disk
+    storage   = var.proxmox_mayastor_storage
     interface = "scsi1"
   }]
 }
@@ -117,8 +129,8 @@ resource "talos_machine_configuration_apply" "storage_nodes" {
   node                        = each.value.ip
 }
 
-# Taint storage nodes for Longhorn only
-resource "null_resource" "taint_storage_nodes" {
+# Label storage nodes for Mayastor
+resource "null_resource" "label_storage_nodes" {
   depends_on = [talos_machine_bootstrap.this]
   for_each   = var.storage_nodes
 
@@ -126,7 +138,20 @@ resource "null_resource" "taint_storage_nodes" {
     command = <<-EOT
       export KUBECONFIG=${path.module}/generated/kubeconfig
       kubectl label nodes ${each.value.name} node-role.kubernetes.io/storage=true --overwrite 2>/dev/null || true
-      kubectl taint nodes ${each.value.name} longhorn=storage:NoSchedule --overwrite 2>/dev/null || true
+      kubectl label nodes ${each.value.name} openebs.io/engine=mayastor --overwrite 2>/dev/null || true
+    EOT
+  }
+}
+
+# Label worker nodes for Mayastor
+resource "null_resource" "label_workers_mayastor" {
+  depends_on = [talos_machine_bootstrap.this]
+  for_each   = var.workers
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+      kubectl label nodes ${each.value.name} openebs.io/engine=mayastor --overwrite 2>/dev/null || true
     EOT
   }
 }
@@ -274,6 +299,16 @@ resource "helm_release" "cilium" {
       hostRoot  = "/sys/fs/cgroup"
     }
 
+    # Enable Cilium LoadBalancer (L2 announcements)
+    l2announcements = {
+      enabled = true
+    }
+
+    # Enable external IPs support
+    externalIPs = {
+      enabled = true
+    }
+
     hubble = { enabled = false }
   })]
 }
@@ -308,88 +343,47 @@ resource "null_resource" "wait_for_cilium" {
   }
 }
 
-# Install MetalLB
-resource "helm_release" "metallb" {
+# Configure Cilium LoadBalancer IP Pool
+resource "kubectl_manifest" "cilium_lb_ippool" {
   depends_on = [null_resource.wait_for_cilium]
 
-  name             = "metallb"
-  repository       = "https://metallb.github.io/metallb"
-  chart            = "metallb"
-  version          = "0.15.2"
-  namespace        = "metallb-system"
-  create_namespace = true
-  timeout          = 600
-  wait             = false
-}
-
-resource "kubernetes_labels" "metallb_namespace_security" {
-  depends_on = [helm_release.metallb]
-  
-  api_version = "v1"
-  kind        = "Namespace"
-  metadata {
-    name = "metallb-system"
-  }
-  labels = {
-    "pod-security.kubernetes.io/enforce" = "privileged"
-    "pod-security.kubernetes.io/audit"   = "privileged"
-    "pod-security.kubernetes.io/warn"    = "privileged"
-  }
-}
-
-# Wait for MetalLB controller
-resource "null_resource" "wait_for_metallb" {
-  depends_on = [helm_release.metallb]
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      export KUBECONFIG=${path.module}/generated/kubeconfig
-      
-      echo "Waiting for MetalLB controller to be ready..."
-      kubectl wait --for=condition=ready pod \
-        -l app.kubernetes.io/name=metallb,app.kubernetes.io/component=controller \
-        -n metallb-system \
-        --timeout=600s
-      echo "✅ MetalLB controller is ready."
-    EOT
-  }
-}
-
-resource "time_sleep" "metallb_buffer" {
-  depends_on = [null_resource.wait_for_metallb]
-  
-  create_duration = "30s"
-}
-
-
-resource "kubectl_manifest" "metallb_ippool" {
-  depends_on = [null_resource.wait_for_metallb]
-
   yaml_body = yamlencode({
-    apiVersion = "metallb.io/v1beta1"
-    kind       = "IPAddressPool"
+    apiVersion = "cilium.io/v2alpha1"
+    kind       = "CiliumLoadBalancerIPPool"
     metadata = {
-      name      = "production-pool"
-      namespace = "metallb-system"
+      name = "cilium-lb-pool"
     }
     spec = {
-      addresses = var.metallb_ip_range
+      blocks = [
+        {
+          cidr = var.cilium_lb_ip_pool[0]
+        }
+      ]
     }
   })
 }
 
-resource "kubectl_manifest" "metallb_l2advert" {
-  depends_on = [kubectl_manifest.metallb_ippool]
+# Configure Cilium L2 Announcement Policy
+resource "kubectl_manifest" "cilium_l2_announcement" {
+  depends_on = [kubectl_manifest.cilium_lb_ippool]
 
   yaml_body = yamlencode({
-    apiVersion = "metallb.io/v1beta1"
-    kind       = "L2Advertisement"
+    apiVersion = "cilium.io/v2alpha1"
+    kind       = "CiliumL2AnnouncementPolicy"
     metadata = {
-      name      = "l2-advert"
-      namespace = "metallb-system"
+      name = "l2-announcement-policy"
     }
     spec = {
-      ipAddressPools = ["production-pool"]
+      loadBalancerIPs = true
+      interfaces = ["eth0"]
+      nodeSelector = {
+        matchExpressions = [
+          {
+            key      = "node-role.kubernetes.io/control-plane"
+            operator = "DoesNotExist"
+          }
+        ]
+      }
     }
   })
 }
@@ -399,7 +393,7 @@ resource "kubectl_manifest" "metallb_l2advert" {
 # ==============================================================================
 
 resource "helm_release" "argocd" {
-  depends_on = [null_resource.wait_for_metallb]
+  depends_on = [null_resource.wait_for_cilium]
 
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"

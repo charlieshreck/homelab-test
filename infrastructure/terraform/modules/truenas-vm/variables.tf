@@ -15,6 +15,25 @@ variable "mac_address" {
   default     = ""
   description = "Fixed MAC address for DHCP reservation"
 }
+
+variable "enable_storage_network" {
+  type        = bool
+  default     = false
+  description = "Enable second NIC for storage network (NFS/SMB)"
+}
+
+variable "storage_bridge" {
+  type        = string
+  default     = ""
+  description = "Network bridge for storage network"
+}
+
+variable "storage_mac_address" {
+  type        = string
+  default     = ""
+  description = "Fixed MAC address for storage network interface"
+}
+
 variable "media_network" {
   type = object({
     bridge = string
@@ -22,4 +41,5 @@ variable "media_network" {
     vlan   = number
   })
   default = null
+  description = "Legacy media network configuration (deprecated - use storage_bridge)"
 }

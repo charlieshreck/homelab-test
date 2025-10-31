@@ -79,3 +79,21 @@ variable "mac_address" {
   default     = ""
   description = "Fixed MAC address for DHCP reservation"
 }
+
+variable "enable_storage_network" {
+  type        = bool
+  default     = false
+  description = "Enable second NIC for storage network (Mayastor/TrueNAS)"
+}
+
+variable "storage_bridge" {
+  type        = string
+  default     = ""
+  description = "Network bridge for storage network"
+}
+
+variable "storage_mac_address" {
+  type        = string
+  default     = ""
+  description = "Fixed MAC address for storage network interface"
+}

@@ -54,6 +54,16 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     mac_address = var.mac_address != "" ? var.mac_address : null
   }
 
+  # Optional second NIC for storage network (Mayastor/TrueNAS)
+  dynamic "network_device" {
+    for_each = var.enable_storage_network ? [1] : []
+    content {
+      bridge      = var.storage_bridge
+      model       = "virtio"
+      mac_address = var.storage_mac_address != "" ? var.storage_mac_address : null
+    }
+  }
+
   dynamic "hostpci" {
     for_each = var.gpu_passthrough && var.gpu_pci_id != null ? [1] : []
     content {

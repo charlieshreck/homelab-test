@@ -1,14 +1,19 @@
-# terraform.tfvars - Production setup with optimized disk allocation
+# terraform.tfvars - Production setup for "the fal" with 3 workers and Mayastor
 
-# Proxmox Connection
-proxmox_host     = "10.30.0.10"
+# Proxmox Connection - The Fal
+proxmox_host     = "10.10.0.1"
 proxmox_user     = "root@pam"
 proxmox_password = "H4ckwh1z"
-proxmox_node     = "Carrick"
+proxmox_node     = "fal"
 
 # Networks
-prod_gateway     = "10.30.0.1"
+# Primary network for management and general traffic
+prod_gateway     = "10.10.0.1"
 network_bridge   = "vmbr0"
+
+# Storage network for Mayastor and TrueNAS
+storage_gateway     = "10.11.0.1"
+storage_bridge      = "vmbr1"
 
 # Cluster
 cluster_name       = "homelab-test"
@@ -16,37 +21,64 @@ talos_version      = "v1.11.3"
 kubernetes_version = "v1.34.1"
 
 # Storage
-proxmox_storage          = "Kerrier"
-proxmox_longhorn_storage = "Restormal"
+# 140GB local-lvm for VMs, 1TB helford for Mayastor
+proxmox_storage          = "local-lvm"
+proxmox_mayastor_storage = "helford"
 proxmox_iso_storage      = "local"
 
 # VM ID Management
 vm_id_start = 200
 
 # Control Plane
+# Ryzen 9 6800HX with 32GB total RAM
 control_plane = {
   name   = "talos-cp-01"
-  ip     = "10.30.0.50"
+  ip     = "10.10.0.10"
   cores  = 2
   memory = 4096
-  disk   = 50
+  disk   = 30
 }
 
-# Workers (minimal OS disk)
+# Workers with dual vNICs (management + storage network)
+# Total: 3 workers for Mayastor (minimum requirement)
+# ~9GB RAM per worker from 32GB total (leaving ~5GB for Proxmox + CP)
 workers = {
   "worker-01" = {
-    name       = "talos-worker-01"
-    ip         = "10.30.0.51"
-    cores      = 4
-    memory     = 10240
-    disk       = 30
-    gpu        = false
-    gpu_pci_id = "0000:00:02.0"
-    longhorn_disk = 600
+    name          = "talos-worker-01"
+    ip            = "10.10.0.11"
+    storage_ip    = "10.11.0.11"
+    cores         = 2
+    memory        = 9216
+    disk          = 30
+    gpu           = false
+    gpu_pci_id    = null
+    mayastor_disk = 300
+  }
+  "worker-02" = {
+    name          = "talos-worker-02"
+    ip            = "10.10.0.12"
+    storage_ip    = "10.11.0.12"
+    cores         = 2
+    memory        = 9216
+    disk          = 30
+    gpu           = false
+    gpu_pci_id    = null
+    mayastor_disk = 300
+  }
+  "worker-03" = {
+    name          = "talos-worker-03"
+    ip            = "10.10.0.13"
+    storage_ip    = "10.11.0.13"
+    cores         = 2
+    memory        = 9216
+    disk          = 30
+    gpu           = false
+    gpu_pci_id    = null
+    mayastor_disk = 300
   }
 }
 
-# Storage Nodes (Longhorn-only)
+# Storage Nodes (not needed - using workers for Mayastor)
 storage_nodes = {}
 
 
@@ -54,8 +86,9 @@ storage_nodes = {}
 gitops_repo_url    = "https://github.com/charlieshreck/homelab-test.git"
 gitops_repo_branch = "main"
 
-# MetalLB IP Range
-metallb_ip_range = ["10.30.0.65-10.30.0.100"]
+# Cilium LoadBalancer Configuration
+# Using Cilium's native LB instead of MetalLB
+cilium_lb_ip_pool = ["10.10.0.50-10.10.0.99"]
 
 # Cloudflare Configuration
 cloudflare_email     = "charlieshreck@gmail.com"

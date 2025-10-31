@@ -1,0 +1,42 @@
+# Mayastor configuration for 3-node cluster with dual NICs
+# Storage network: 10.11.0.0/24
+
+# Use huge pages (configured in Talos with vm.nr_hugepages=1024)
+io_engine:
+  hugepages:
+    enabled: true
+
+# Use all 3 worker nodes for Mayastor
+agents:
+  core:
+    nodeSelector:
+      openebs.io/engine: mayastor
+
+# Storage pool configuration
+# Each worker has a dedicated disk /dev/sdb for Mayastor (helford storage - 1TB total, ~300GB per node)
+# Pools will be created via kubectl after deployment:
+# kubectl mayastor create pool pool-worker-01 node-01 /dev/sdb
+# kubectl mayastor create pool pool-worker-02 node-02 /dev/sdb
+# kubectl mayastor create pool pool-worker-03 node-03 /dev/sdb
+
+# Resource limits appropriate for 9GB RAM per node
+csi:
+  node:
+    resources:
+      limits:
+        cpu: "1"
+        memory: "512Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+
+# Enable etcd for Mayastor control plane
+etcd:
+  replicaCount: 3
+  persistence:
+    enabled: true
+    size: 1Gi
+
+# Enable metrics
+metrics:
+  enabled: true

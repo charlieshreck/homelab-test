@@ -1,5 +1,5 @@
 # ==============================================================================
-# locals.tf - Single NIC Architecture with Storage Nodes
+# locals.tf - Dual NIC Architecture for Mayastor and TrueNAS
 # ==============================================================================
 
 locals {
@@ -20,16 +20,29 @@ locals {
     storage       = { for idx, key in local.storage_keys : key => var.vm_id_start + length(var.workers) + idx + 1 }
   }
 
-  # MAC addresses
+  # MAC addresses for management network (10.10.0.0/24 on vmbr0)
   mac_addresses = {
-    control_plane = "52:54:00:10:30:50"
-    workers = { 
-      for idx, key in local.worker_keys : key => 
-      format("52:54:00:10:30:%02d", 51 + idx)
+    control_plane = "52:54:00:10:10:10"
+    workers = {
+      for idx, key in local.worker_keys : key =>
+      format("52:54:00:10:10:%02d", 11 + idx)
     }
     storage = {
       for idx, key in local.storage_keys : key =>
-      format("52:54:00:10:30:%02d", 61 + idx)
+      format("52:54:00:10:10:%02d", 21 + idx)
+    }
+  }
+
+  # MAC addresses for storage network (10.11.0.0/24 on vmbr1)
+  # Used for Mayastor and TrueNAS traffic
+  storage_mac_addresses = {
+    workers = {
+      for idx, key in local.worker_keys : key =>
+      format("52:54:00:10:11:%02d", 11 + idx)
+    }
+    storage = {
+      for idx, key in local.storage_keys : key =>
+      format("52:54:00:10:11:%02d", 21 + idx)
     }
   }
 

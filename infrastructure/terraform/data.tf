@@ -41,44 +41,50 @@ data "talos_machine_configuration" "storage_node" {
           disk  = "/dev/sda"
           image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
         }
+        # Mayastor disk configuration (helford storage - 1TB)
         disks = [{
           device = "/dev/sdb"
-          partitions = [{
-            mountpoint = "/var/lib/longhorn"
-            size       = 0
-          }]
+          # Mayastor uses raw block devices - no partitions
         }]
         kernel = {
-          modules = [{ name = "iscsi_tcp" }]
+          modules = [{ name = "nvme-tcp" }]
         }
         kubelet = {
-          extraMounts = [{
-            destination = "/var/lib/longhorn"
-            type        = "bind"
-            source      = "/var/lib/longhorn"
-            options     = ["bind", "rshared", "rw"]
-          }]
           extraArgs = {
             "rotate-certificates" = "true"
           }
         }
         sysctls = {
+          "vm.nr_hugepages"      = "1024"
           "vm.overcommit_memory" = "1"
           "vm.panic_on_oom"      = "0"
         }
         network = {
           hostname = each.value.name
-          interfaces = [{
-            deviceSelector = {
-              hardwareAddr = local.mac_addresses.storage[each.key]
+          interfaces = [
+            {
+              deviceSelector = {
+                hardwareAddr = local.mac_addresses.storage[each.key]
+              }
+              dhcp      = false
+              addresses = ["${each.value.ip}/24"]
+              routes = [{
+                network = "0.0.0.0/0"
+                gateway = var.prod_gateway
+              }]
+            },
+            {
+              deviceSelector = {
+                hardwareAddr = local.storage_mac_addresses.storage[each.key]
+              }
+              dhcp      = false
+              addresses = ["${each.value.storage_ip}/24"]
+              routes = [{
+                network = "10.11.0.0/24"
+                gateway = var.storage_gateway
+              }]
             }
-            dhcp      = false
-            addresses = ["${each.value.ip}/24"]
-            routes = [{
-              network = "0.0.0.0/0"
-              gateway = var.prod_gateway
-            }]
-          }]
+          ]
           nameservers = var.dns_servers
         }
       }
@@ -169,47 +175,33 @@ data "talos_machine_configuration" "worker" {
             disk  = "/dev/sda"
             image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
           }
-          # FIXED: Longhorn disk configuration with proper filesystem
+          # Mayastor disk configuration (helford storage - 1TB)
+          # Mayastor uses /dev/sdb as a raw block device (no filesystem)
           disks = [
             {
               device = "/dev/sdb"
-              partitions = [
-                {
-                  mountpoint = "/var/lib/longhorn"
-                  size       = 0  # Use entire disk
-                }
-              ]
+              # Mayastor uses raw block devices - no partitions
             }
           ]
 
-          # CRITICAL: Add these kernel modules for Longhorn
+          # Kernel modules for Mayastor (requires nvme-tcp and hugepages)
           kernel = {
             modules = [
               {
-                name = "iscsi_tcp"
+                name = "nvme-tcp"
               }
             ]
           }
-          
-          # CRITICAL: Add systemDiskEncryption config to ensure formatting
-          systemDiskEncryption = null  # Explicitly disable encryption
-          
+
           kubelet = {
-            extraMounts = [
-              {
-                destination = "/var/lib/longhorn"
-                type        = "bind"
-                source      = "/var/lib/longhorn"
-                options     = ["bind", "rshared", "rw"]
-              }
-            ]
             extraArgs = {
               "rotate-certificates" = "true"
             }
           }
-          
-          # Add sysctls for iSCSI
+
+          # Sysctls for Mayastor (requires huge pages)
           sysctls = {
+            "vm.nr_hugepages"      = "1024"
             "vm.overcommit_memory" = "1"
             "vm.panic_on_oom"      = "0"
           }
@@ -218,7 +210,7 @@ data "talos_machine_configuration" "worker" {
           network = {
             hostname = each.value.name
             interfaces = [
-              # Primary Interface (10.30.x.x network) - SINGLE NIC
+              # Primary Interface (10.10.0.0/24 network) - Management
               {
                 deviceSelector = {
                   hardwareAddr = local.mac_addresses.workers[each.key]
@@ -229,6 +221,20 @@ data "talos_machine_configuration" "worker" {
                   {
                     network = "0.0.0.0/0"
                     gateway = var.prod_gateway
+                  }
+                ]
+              },
+              # Storage Interface (10.11.0.0/24 network) - Mayastor/TrueNAS
+              {
+                deviceSelector = {
+                  hardwareAddr = local.storage_mac_addresses.workers[each.key]
+                }
+                dhcp      = false
+                addresses = ["${each.value.storage_ip}/24"]
+                routes = [
+                  {
+                    network = "10.11.0.0/24"
+                    gateway = var.storage_gateway
                   }
                 ]
               }
