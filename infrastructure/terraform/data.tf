@@ -76,7 +76,8 @@ data "talos_machine_configuration" "storage_node" {
               deviceSelector = {
                 hardwareAddr = local.storage_mac_addresses.storage[each.key]
               }
-              dhcp      = true  # Use DHCP with reservation in OPNsense
+              dhcp      = false
+              addresses = ["${each.value.storage_ip}/24"]
             }
           ]
           nameservers = var.dns_servers
@@ -221,7 +222,8 @@ data "talos_machine_configuration" "worker" {
                 deviceSelector = {
                   hardwareAddr = local.storage_mac_addresses.workers[each.key]
                 }
-                dhcp      = true  # Use DHCP with reservation in OPNsense
+                dhcp      = false
+                addresses = ["${each.value.storage_ip}/24"]
               }
             ]
             nameservers = var.dns_servers

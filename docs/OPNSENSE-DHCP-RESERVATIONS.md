@@ -2,9 +2,11 @@
 
 This document provides the MAC address to IP mappings required for DHCP reservations in OPNsense.
 
-## Why DHCP Reservations?
+## Why DHCP Reservations (Management Network Only)?
 
-After multiple attempts with static IP configuration in Talos (interface names, busPath selectors), the most reliable approach is to use MAC address selectors with DHCP enabled, then configure static IP assignments via DHCP reservations in your router (OPNsense).
+After multiple attempts with static IP configuration in Talos (interface names, busPath selectors), the most reliable approach for the **management network** is to use MAC address selectors with DHCP enabled, then configure static IP assignments via DHCP reservations in your router (OPNsense).
+
+**Important:** The storage network (10.11.0.0/24 on vmbr1) is a **private Proxmox bridge** with no router/DHCP server. It's only for VM-to-VM communication. Storage IPs are configured **statically in Talos**, not via DHCP.
 
 ## Management Network (10.10.0.0/24 - vmbr0)
 
@@ -19,10 +21,12 @@ Configure these reservations in OPNsense for the **10.10.0.0/24** network:
 
 ## Storage Network (10.11.0.0/24 - vmbr1)
 
-Configure these reservations in OPNsense for the **10.11.0.0/24** network:
+**No OPNsense configuration needed** - this is a private Proxmox bridge with static IPs configured in Talos.
 
-| Node | MAC Address | Reserved IP | Purpose |
-|------|-------------|-------------|---------|
+The storage network uses these **static IPs** (configured in Talos, not DHCP):
+
+| Node | MAC Address | Static IP | Purpose |
+|------|-------------|-----------|---------|
 | Worker 01 (storage) | `52:54:00:10:11:11` | `10.11.0.21` | Mayastor/TrueNAS |
 | Worker 02 (storage) | `52:54:00:10:11:12` | `10.11.0.22` | Mayastor/TrueNAS |
 | Worker 03 (storage) | `52:54:00:10:11:13` | `10.11.0.23` | Mayastor/TrueNAS |
@@ -45,21 +49,6 @@ Configure these reservations in OPNsense for the **10.11.0.0/24** network:
 
 Repeat for all 4 nodes (control plane + 3 workers).
 
-### For Storage Network (10.11.0.0/24):
-
-1. Navigate to **Services** → **DHCPv4** → **[Your Storage Interface]**
-2. Ensure DHCP is enabled on this interface with range (e.g., 10.11.0.100-10.11.0.200)
-3. Add static mappings for the 3 workers:
-
-**Example for Worker 01 Storage:**
-- **MAC Address**: `52:54:00:10:11:11`
-- **IP Address**: `10.11.0.21`
-- **Hostname**: `talos-worker-01-storage`
-- **Description**: `Worker 01 Storage Network (Mayastor)`
-- Click **Save**
-
-Repeat for workers 02 and 03.
-
 ## Verification
 
 After configuring DHCP reservations and deploying VMs:
@@ -67,7 +56,7 @@ After configuring DHCP reservations and deploying VMs:
 ### Check DHCP Leases
 In OPNsense:
 - Navigate to **Services** → **DHCPv4** → **Leases**
-- Verify all 7 MAC addresses have obtained their reserved IPs
+- Verify all 4 management network MAC addresses have obtained their reserved IPs (10.10.0.20-23)
 
 ### Check from Talos Nodes
 Once VMs are running:
@@ -153,10 +142,10 @@ ping 10.11.0.23
 
 ## Summary
 
-**Total DHCP Reservations Needed:** 7
+**Total DHCP Reservations Needed:** 4 (Management Network Only)
 
 - **Management Network (10.10.0.0/24):** 4 reservations (1 CP + 3 workers)
-- **Storage Network (10.11.0.0/24):** 3 reservations (3 workers only)
+- **Storage Network (10.11.0.0/24):** No DHCP needed - uses static IPs in Talos
 
 **Next Steps:**
 1. ✅ Code changes committed and pushed to GitHub
