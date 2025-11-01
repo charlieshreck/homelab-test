@@ -302,7 +302,14 @@ resource "helm_release" "cilium" {
     # Enable Cilium LoadBalancer (L2 announcements)
     l2announcements = {
       enabled = true
+      # Ensure Cilium uses the correct interface for L2 announcements
+      leaseDuration      = "3s"
+      leaseRenewDeadline = "1s"
+      leaseRetryPeriod   = "200ms"
     }
+
+    # Specify devices for Cilium to manage
+    devices = "ens18"
 
     # Enable external IPs support
     externalIPs = {
