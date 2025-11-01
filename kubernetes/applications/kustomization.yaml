@@ -7,4 +7,3 @@ resources:
   - radarr-app.yaml
   - prowlarr-app.yaml
   - overseerr-app.yaml
-  - plex-app.yaml
