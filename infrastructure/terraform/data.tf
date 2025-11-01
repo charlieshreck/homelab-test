@@ -63,7 +63,9 @@ data "talos_machine_configuration" "storage_node" {
           hostname = each.value.name
           interfaces = [
             {
-              interface = "eth0"
+              deviceSelector = {
+                busPath = "0*"  # First NIC by bus order
+              }
               dhcp      = false
               addresses = ["${each.value.ip}/24"]
               routes = [{
@@ -72,7 +74,9 @@ data "talos_machine_configuration" "storage_node" {
               }]
             },
             {
-              interface = "eth1"
+              deviceSelector = {
+                busPath = "1*"  # Second NIC by bus order
+              }
               dhcp      = false
               addresses = ["${each.value.storage_ip}/24"]
             }
@@ -111,7 +115,9 @@ data "talos_machine_configuration" "controlplane" {
           interfaces = [
             # Primary Interface (10.10.0.0/24 network) - Management
             {
-              interface = "eth0"
+              deviceSelector = {
+                busPath = "0*"  # First NIC by bus order
+              }
               dhcp      = false
               addresses = ["${var.control_plane.ip}/24"]
               routes = [
@@ -202,7 +208,9 @@ data "talos_machine_configuration" "worker" {
             interfaces = [
               # Primary Interface (10.10.0.0/24 network) - Management
               {
-                interface = "eth0"
+                deviceSelector = {
+                  busPath = "0*"  # First NIC by bus order
+                }
                 dhcp      = false
                 addresses = ["${each.value.ip}/24"]
                 routes = [
@@ -214,7 +222,9 @@ data "talos_machine_configuration" "worker" {
               },
               # Storage Interface (10.11.0.0/24 network) - Mayastor/TrueNAS
               {
-                interface = "eth1"
+                deviceSelector = {
+                  busPath = "1*"  # Second NIC by bus order
+                }
                 dhcp      = false
                 addresses = ["${each.value.storage_ip}/24"]
               }
