@@ -28,11 +28,15 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
+# Use emptyDir instead of PVCs to avoid bootstrap chicken-and-egg problem
 etcd:
   replicaCount: 3
   persistence:
-    enabled: true
-    size: 1Gi
+    enabled: false  # Disable PVCs - etcd uses emptyDir with 3x replication
+
+# Disable Loki (observability) - also needs storage, not required for core functionality
+loki:
+  enabled: false
 
 # Enable metrics
 metrics:
