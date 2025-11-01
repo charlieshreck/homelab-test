@@ -356,7 +356,8 @@ resource "kubectl_manifest" "cilium_lb_ippool" {
     spec = {
       blocks = [
         {
-          cidr = var.cilium_lb_ip_pool[0]
+          start = "10.10.0.50"
+          stop  = "10.10.0.99"
         }
       ]
     }
