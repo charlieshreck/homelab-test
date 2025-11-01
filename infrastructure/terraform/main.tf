@@ -376,7 +376,7 @@ resource "kubectl_manifest" "cilium_l2_announcement" {
     }
     spec = {
       loadBalancerIPs = true
-      interfaces = ["eth0"]
+      # Remove interface restriction - let Cilium auto-detect
       nodeSelector = {
         matchExpressions = [
           {
