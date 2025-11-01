@@ -418,7 +418,7 @@ resource "helm_release" "argocd" {
       server = {
         service = {
           type = "LoadBalancer"
-          loadBalancerIP: "10.30.0.80"
+          loadBalancerIP: "10.10.0.81"
         }
         extraArgs = ["--insecure"]
         config = {
