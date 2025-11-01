@@ -302,7 +302,14 @@ resource "helm_release" "cilium" {
     # Enable Cilium LoadBalancer (L2 announcements)
     l2announcements = {
       enabled = true
+      # Ensure Cilium uses the correct interface for L2 announcements
+      leaseDuration      = "3s"
+      leaseRenewDeadline = "1s"
+      leaseRetryPeriod   = "200ms"
     }
+
+    # Specify devices for Cilium to manage
+    devices = "ens18"
 
     # Enable external IPs support
     externalIPs = {
@@ -376,7 +383,7 @@ resource "kubectl_manifest" "cilium_l2_announcement" {
     }
     spec = {
       loadBalancerIPs = true
-      interfaces = ["eth0"]
+      # Remove interface restriction - let Cilium auto-detect
       nodeSelector = {
         matchExpressions = [
           {
@@ -418,7 +425,8 @@ resource "helm_release" "argocd" {
       server = {
         service = {
           type = "LoadBalancer"
-          loadBalancerIP: "10.30.0.80"
+          loadBalancerIP: "10.10.0.81"
+          externalTrafficPolicy: "Local"
         }
         extraArgs = ["--insecure"]
         config = {
