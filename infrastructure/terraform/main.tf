@@ -419,6 +419,7 @@ resource "helm_release" "argocd" {
         service = {
           type = "LoadBalancer"
           loadBalancerIP: "10.10.0.81"
+          externalTrafficPolicy: "Local"
         }
         extraArgs = ["--insecure"]
         config = {
