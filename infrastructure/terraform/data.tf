@@ -64,10 +64,9 @@ data "talos_machine_configuration" "storage_node" {
           interfaces = [
             {
               deviceSelector = {
-                busPath = "0*"  # First NIC by bus order
+                hardwareAddr = local.mac_addresses.storage[each.key]
               }
-              dhcp      = false
-              addresses = ["${each.value.ip}/24"]
+              dhcp      = true  # Use DHCP with reservation in OPNsense
               routes = [{
                 network = "0.0.0.0/0"
                 gateway = var.prod_gateway
@@ -75,10 +74,9 @@ data "talos_machine_configuration" "storage_node" {
             },
             {
               deviceSelector = {
-                busPath = "1*"  # Second NIC by bus order
+                hardwareAddr = local.storage_mac_addresses.storage[each.key]
               }
-              dhcp      = false
-              addresses = ["${each.value.storage_ip}/24"]
+              dhcp      = true  # Use DHCP with reservation in OPNsense
             }
           ]
           nameservers = var.dns_servers
@@ -116,10 +114,9 @@ data "talos_machine_configuration" "controlplane" {
             # Primary Interface (10.10.0.0/24 network) - Management
             {
               deviceSelector = {
-                busPath = "0*"  # First NIC by bus order
+                hardwareAddr = local.mac_addresses.control_plane
               }
-              dhcp      = false
-              addresses = ["${var.control_plane.ip}/24"]
+              dhcp      = true  # Use DHCP with reservation in OPNsense
               routes = [
                 {
                   network = "0.0.0.0/0"
@@ -209,10 +206,9 @@ data "talos_machine_configuration" "worker" {
               # Primary Interface (10.10.0.0/24 network) - Management
               {
                 deviceSelector = {
-                  busPath = "0*"  # First NIC by bus order
+                  hardwareAddr = local.mac_addresses.workers[each.key]
                 }
-                dhcp      = false
-                addresses = ["${each.value.ip}/24"]
+                dhcp      = true  # Use DHCP with reservation in OPNsense
                 routes = [
                   {
                     network = "0.0.0.0/0"
@@ -223,10 +219,9 @@ data "talos_machine_configuration" "worker" {
               # Storage Interface (10.11.0.0/24 network) - Mayastor/TrueNAS
               {
                 deviceSelector = {
-                  busPath = "1*"  # Second NIC by bus order
+                  hardwareAddr = local.storage_mac_addresses.workers[each.key]
                 }
-                dhcp      = false
-                addresses = ["${each.value.storage_ip}/24"]
+                dhcp      = true  # Use DHCP with reservation in OPNsense
               }
             ]
             nameservers = var.dns_servers
