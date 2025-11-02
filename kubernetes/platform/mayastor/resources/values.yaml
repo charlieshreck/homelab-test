@@ -9,12 +9,12 @@ io_engine:
   # Resource limits per Mayastor best practices
   resources:
     limits:
-      cpu: "1"              # 2 dedicated CPU cores per node
-      memory: "1Gi"
+      cpu: "2"              # 2 dedicated CPU cores per node (increased for stability)
+      memory: "2Gi"
       hugepages-2Mi: "2Gi"  # 1024 x 2MiB huge pages
     requests:
-      cpu: "1"
-      memory: "1Gi"
+      cpu: "2"
+      memory: "2Gi"
       hugepages-2Mi: "2Gi"
   # Target specific CPU cores for better performance (optional)
   # Uncomment and adjust based on your CPU topology
@@ -47,6 +47,7 @@ etcd:
   replicaCount: 3
   persistence:
     enabled: false  # Disable PVCs - etcd uses emptyDir with 3x replication
+  podManagementPolicy: Parallel  # Ensures clean restarts without stale data issues
 
 # Disable Loki (observability) - also needs storage, not required for core functionality
 loki:
