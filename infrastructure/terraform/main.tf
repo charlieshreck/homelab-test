@@ -579,3 +579,35 @@ resource "kubectl_manifest" "argocd_app_of_apps" {
     }
   })
 }
+# Fix Mayastor etcd stale data issue
+# When using persistence: false, emptyDir retains data between pod restarts on same node
+# This causes etcd-2 to crash with "member already bootstrapped" error
+resource "null_resource" "fix_mayastor_etcd" {
+  depends_on = [kubectl_manifest.argocd_app_of_apps]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+
+      echo "Waiting for Mayastor namespace to be created..."
+      timeout 300 bash -c 'until kubectl get namespace mayastor 2>/dev/null; do sleep 5; done' || true
+
+      echo "Waiting for etcd StatefulSet to be created by ArgoCD..."
+      timeout 300 bash -c 'until kubectl get statefulset mayastor-etcd -n mayastor 2>/dev/null; do sleep 5; done' || true
+
+      echo "Deleting etcd StatefulSet to ensure fresh start (prevents stale data issues)..."
+      kubectl delete statefulset mayastor-etcd -n mayastor --ignore-not-found=true
+
+      echo "Waiting for ArgoCD to recreate etcd StatefulSet..."
+      sleep 30
+
+      echo "Waiting for all 3 etcd pods to be ready..."
+      kubectl wait --for=condition=Ready --timeout=5m pod -l app.kubernetes.io/component=etcd -n mayastor || echo "Warning: etcd pods not ready yet"
+    EOT
+  }
+
+  # Run this on every apply to ensure etcd is always clean
+  triggers = {
+    always_run = timestamp()
+  }
+}
