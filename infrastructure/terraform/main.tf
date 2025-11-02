@@ -350,6 +350,29 @@ resource "null_resource" "wait_for_cilium" {
   }
 }
 
+# Label worker nodes for Mayastor IO engine
+resource "null_resource" "label_mayastor_nodes" {
+  depends_on = [null_resource.wait_for_cilium]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+
+      echo "Labeling worker nodes for Mayastor IO engine..."
+      kubectl label node talos-worker-01 openebs.io/engine=mayastor --overwrite
+      kubectl label node talos-worker-02 openebs.io/engine=mayastor --overwrite
+      kubectl label node talos-worker-03 openebs.io/engine=mayastor --overwrite
+
+      echo "✓ All worker nodes labeled with openebs.io/engine=mayastor"
+    EOT
+  }
+
+  # Run on every apply to ensure labels are present
+  triggers = {
+    always_run = timestamp()
+  }
+}
+
 # Configure Cilium LoadBalancer IP Pool
 resource "kubectl_manifest" "cilium_lb_ippool" {
   depends_on = [null_resource.wait_for_cilium]
@@ -549,7 +572,10 @@ resource "null_resource" "wait_and_patch_secret" {
 # Deploy App-of-Apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
-  depends_on = [null_resource.wait_and_patch_secret]
+  depends_on = [
+    null_resource.wait_and_patch_secret,
+    null_resource.label_mayastor_nodes
+  ]
 
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
