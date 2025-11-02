@@ -97,3 +97,7 @@ cloudflare_domain    = "shreck.co.uk"
 # Infisical Configuration
 infisical_client_id     = "26428618-6807-4a12-a461-33242ec1af50"
 infisical_client_secret = "8176c36e0e932f660327236ad288cfb1edbbced739d9c2d074d8cedabf492ee3"
+
+# Docker Hub Configuration (to avoid rate limiting)
+dockerhub_username = "mrlong67"
+dockerhub_password = "B@yc3*rRR483EZDVBNqa9!5uFSjz8I&Om8YW#tuA0S2%X*k1#yUnEJsw$4*t$iqF%QJsQ7Q02$&97A$OeYiYn&fjy0nUPV856Q7j8x5INTQ77rQ!P*74*xLp^pJ#0tsn"
