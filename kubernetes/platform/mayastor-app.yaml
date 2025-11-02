@@ -32,7 +32,9 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions: []
+    syncOptions:
+      - ServerSideApply=true  # Required for large CRDs
+      - Replace=true          # Replace instead of patch for CRD updates
     retry:
       limit: 5
       backoff:
