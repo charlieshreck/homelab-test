@@ -14,7 +14,7 @@ spec:
     # Helm chart for Mayastor operator
     - repoURL: https://openebs.github.io/mayastor-extensions
       chart: mayastor
-      targetRevision: 2.8.0
+      targetRevision: 2.9.3  # Latest stable release
       helm:
         valueFiles:
           - $values/kubernetes/platform/mayastor/resources/values.yaml
