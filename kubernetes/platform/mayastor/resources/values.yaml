@@ -1,10 +1,24 @@
 # Mayastor configuration for 3-node cluster with dual NICs
 # Storage network: 10.11.0.0/24
 
-# Use huge pages (configured in Talos with vm.nr_hugepages=1024)
+# IO Engine configuration (data plane)
 io_engine:
+  # Huge pages (configured in Talos with vm.nr_hugepages=1024)
   hugepages:
     enabled: true
+  # Resource limits per Mayastor best practices
+  resources:
+    limits:
+      cpu: "2"              # 2 dedicated CPU cores per node
+      memory: "1Gi"
+      hugepages-2Mi: "2Gi"  # 1024 x 2MiB huge pages
+    requests:
+      cpu: "2"
+      memory: "1Gi"
+      hugepages-2Mi: "2Gi"
+  # Target specific CPU cores for better performance (optional)
+  # Uncomment and adjust based on your CPU topology
+  # coreList: "2,3"  # Use cores 2 and 3
 
 # Use all 3 worker nodes for Mayastor
 agents:

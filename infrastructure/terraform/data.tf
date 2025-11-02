@@ -178,13 +178,17 @@ data "talos_machine_configuration" "worker" {
             }
           ]
 
-          # Kernel modules for Mayastor (requires nvme-tcp and hugepages)
+          # Kernel modules and parameters for Mayastor
           kernel = {
             modules = [
               {
                 name = "nvme-tcp"
               }
             ]
+            # Enable nvme multipath for High Availability
+            parameters = {
+              "nvme_core.multipath" = "Y"
+            }
           }
 
           kubelet = {

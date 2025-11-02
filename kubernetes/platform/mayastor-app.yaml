@@ -4,7 +4,7 @@ metadata:
   name: mayastor
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "2"  # Deploy after namespace is created
+    argocd.argoproj.io/sync-wave: "1"  # Deploy operator first (installs CRDs)
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -40,14 +40,41 @@ spec:
         factor: 2
         maxDuration: 5m
 ---
-# Mayastor Configuration (Namespace, DiskPools and StorageClasses)
+# Mayastor Namespace (with Pod Security labels)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mayastor-namespace
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"  # Create namespace with PSS labels first
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/charlieshreck/homelab-test.git
+    targetRevision: main
+    path: kubernetes/platform/mayastor/namespace
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mayastor
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# Mayastor Configuration (DiskPools and StorageClasses)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: mayastor-config
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"  # Create namespace with PSS labels first
+    argocd.argoproj.io/sync-wave: "2"  # Create DiskPools after CRDs are installed
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
