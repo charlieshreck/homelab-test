@@ -1,14 +1,11 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: mayastor
----
 # DiskPool for worker-01
 apiVersion: openebs.io/v1beta2
 kind: DiskPool
 metadata:
   name: pool-worker-01
   namespace: mayastor
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after CRDs are installed
 spec:
   node: talos-worker-01
   disks:
@@ -20,6 +17,8 @@ kind: DiskPool
 metadata:
   name: pool-worker-02
   namespace: mayastor
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after CRDs are installed
 spec:
   node: talos-worker-02
   disks:
@@ -31,6 +30,8 @@ kind: DiskPool
 metadata:
   name: pool-worker-03
   namespace: mayastor
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after CRDs are installed
 spec:
   node: talos-worker-03
   disks:
