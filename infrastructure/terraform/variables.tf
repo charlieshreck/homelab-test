@@ -219,3 +219,21 @@ variable "infisical_client_secret" {
   type        = string
   sensitive   = true
 }
+
+# ==============================================================================
+# Container Registry Configuration
+# ==============================================================================
+
+variable "dockerhub_username" {
+  description = "Docker Hub username for authenticated pulls (avoids rate limiting)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "dockerhub_password" {
+  description = "Docker Hub password or access token for authenticated pulls"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
