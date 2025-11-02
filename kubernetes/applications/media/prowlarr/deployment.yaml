@@ -65,7 +65,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: longhorn
+  storageClassName: mayastor-1
   resources:
     requests:
       storage: 2Gi
