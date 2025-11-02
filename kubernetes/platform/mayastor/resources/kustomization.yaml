@@ -1,7 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mayastor
+# namespace is managed by mayastor-namespace application in sync wave 0
+# resources here are deployed in sync wave 2 after CRDs are installed
 
 resources:
   - diskpools.yaml
