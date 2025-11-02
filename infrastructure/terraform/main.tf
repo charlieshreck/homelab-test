@@ -396,12 +396,34 @@ resource "kubectl_manifest" "cilium_l2_announcement" {
   })
 }
 
+# Restart Cilium after L2 policy is created to ensure proper L2 announcement election
+resource "null_resource" "restart_cilium_for_l2" {
+  depends_on = [kubectl_manifest.cilium_l2_announcement]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+      echo "Restarting Cilium to apply L2 announcement policies..."
+      kubectl rollout restart daemonset cilium -n kube-system
+      kubectl rollout status daemonset cilium -n kube-system --timeout=5m
+    EOT
+  }
+
+  # Force this to run on every apply to ensure L2 announcements are correct
+  triggers = {
+    always_run = timestamp()
+  }
+}
+
 # ==============================================================================
 # GitOps Controller: ArgoCD
 # ==============================================================================
 
 resource "helm_release" "argocd" {
-  depends_on = [null_resource.wait_for_cilium]
+  depends_on = [
+    null_resource.wait_for_cilium,
+    null_resource.restart_cilium_for_l2
+  ]
 
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
