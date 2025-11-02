@@ -350,6 +350,29 @@ resource "null_resource" "wait_for_cilium" {
   }
 }
 
+# Label worker nodes for Mayastor IO engine
+resource "null_resource" "label_mayastor_nodes" {
+  depends_on = [null_resource.wait_for_cilium]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+
+      echo "Labeling worker nodes for Mayastor IO engine..."
+      kubectl label node talos-worker-01 openebs.io/engine=mayastor --overwrite
+      kubectl label node talos-worker-02 openebs.io/engine=mayastor --overwrite
+      kubectl label node talos-worker-03 openebs.io/engine=mayastor --overwrite
+
+      echo "✓ All worker nodes labeled with openebs.io/engine=mayastor"
+    EOT
+  }
+
+  # Run on every apply to ensure labels are present
+  triggers = {
+    always_run = timestamp()
+  }
+}
+
 # Configure Cilium LoadBalancer IP Pool
 resource "kubectl_manifest" "cilium_lb_ippool" {
   depends_on = [null_resource.wait_for_cilium]
@@ -549,7 +572,10 @@ resource "null_resource" "wait_and_patch_secret" {
 # Deploy App-of-Apps
 resource "kubectl_manifest" "argocd_app_of_apps" {
   count      = var.gitops_repo_url != "" ? 1 : 0
-  depends_on = [null_resource.wait_and_patch_secret]
+  depends_on = [
+    null_resource.wait_and_patch_secret,
+    null_resource.label_mayastor_nodes
+  ]
 
   yaml_body = yamlencode({
     apiVersion = "argoproj.io/v1alpha1"
@@ -578,4 +604,36 @@ resource "kubectl_manifest" "argocd_app_of_apps" {
       }
     }
   })
+}
+# Fix Mayastor etcd stale data issue
+# When using persistence: false, emptyDir retains data between pod restarts on same node
+# This causes etcd-2 to crash with "member already bootstrapped" error
+resource "null_resource" "fix_mayastor_etcd" {
+  depends_on = [kubectl_manifest.argocd_app_of_apps]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      export KUBECONFIG=${path.module}/generated/kubeconfig
+
+      echo "Waiting for Mayastor namespace to be created..."
+      timeout 300 bash -c 'until kubectl get namespace mayastor 2>/dev/null; do sleep 5; done' || true
+
+      echo "Waiting for etcd StatefulSet to be created by ArgoCD..."
+      timeout 300 bash -c 'until kubectl get statefulset mayastor-etcd -n mayastor 2>/dev/null; do sleep 5; done' || true
+
+      echo "Deleting etcd StatefulSet to ensure fresh start (prevents stale data issues)..."
+      kubectl delete statefulset mayastor-etcd -n mayastor --ignore-not-found=true
+
+      echo "Waiting for ArgoCD to recreate etcd StatefulSet..."
+      sleep 30
+
+      echo "Waiting for all 3 etcd pods to be ready..."
+      kubectl wait --for=condition=Ready --timeout=5m pod -l app.kubernetes.io/component=etcd -n mayastor || echo "Warning: etcd pods not ready yet"
+    EOT
+  }
+
+  # Run this on every apply to ensure etcd is always clean
+  triggers = {
+    always_run = timestamp()
+  }
 }
