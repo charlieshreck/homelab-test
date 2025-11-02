@@ -133,6 +133,25 @@ data "talos_machine_configuration" "controlplane" {
             "rotate-certificates" = "true"
           }
         }
+        # Registry configuration to avoid Docker Hub rate limiting
+        registries = {
+          mirrors = {
+            "docker.io" = {
+              endpoints = ["https://registry-1.docker.io"]
+              overridePath = true
+            }
+          }
+          config = {
+            "registry-1.docker.io" = {
+              auth = {
+                # Note: To add Docker Hub authentication, create variables for username/password
+                # and uncomment the lines below:
+                # username = var.dockerhub_username
+                # password = var.dockerhub_password
+              }
+            }
+          }
+        }
       }
       cluster = {
         network = {
