@@ -59,6 +59,23 @@ data "talos_machine_configuration" "storage_node" {
           "vm.overcommit_memory" = "1"
           "vm.panic_on_oom"      = "0"
         }
+        # Registry configuration to avoid Docker Hub rate limiting
+        registries = var.dockerhub_username != "" ? {
+          mirrors = {
+            "docker.io" = {
+              endpoints = ["https://registry-1.docker.io"]
+              overridePath = true
+            }
+          }
+          config = {
+            "registry-1.docker.io" = {
+              auth = {
+                username = var.dockerhub_username
+                password = var.dockerhub_password
+              }
+            }
+          }
+        } : {}
         network = {
           hostname = each.value.name
           interfaces = [
@@ -134,7 +151,7 @@ data "talos_machine_configuration" "controlplane" {
           }
         }
         # Registry configuration to avoid Docker Hub rate limiting
-        registries = {
+        registries = var.dockerhub_username != "" ? {
           mirrors = {
             "docker.io" = {
               endpoints = ["https://registry-1.docker.io"]
@@ -144,14 +161,12 @@ data "talos_machine_configuration" "controlplane" {
           config = {
             "registry-1.docker.io" = {
               auth = {
-                # Note: To add Docker Hub authentication, create variables for username/password
-                # and uncomment the lines below:
-                # username = var.dockerhub_username
-                # password = var.dockerhub_password
+                username = var.dockerhub_username
+                password = var.dockerhub_password
               }
             }
           }
-        }
+        } : {}
       }
       cluster = {
         network = {
@@ -223,6 +238,23 @@ data "talos_machine_configuration" "worker" {
             "vm.panic_on_oom"      = "0"
           }
 
+          # Registry configuration to avoid Docker Hub rate limiting
+          registries = var.dockerhub_username != "" ? {
+            mirrors = {
+              "docker.io" = {
+                endpoints = ["https://registry-1.docker.io"]
+                overridePath = true
+              }
+            }
+            config = {
+              "registry-1.docker.io" = {
+                auth = {
+                  username = var.dockerhub_username
+                  password = var.dockerhub_password
+                }
+              }
+            }
+          } : {}
 
           network = {
             hostname = each.value.name
