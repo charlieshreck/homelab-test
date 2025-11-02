@@ -9,7 +9,7 @@ metadata:
 spec:
   node: talos-worker-01
   disks:
-    - /dev/sdb
+    - /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
 ---
 # DiskPool for worker-02
 apiVersion: openebs.io/v1beta3
@@ -22,7 +22,7 @@ metadata:
 spec:
   node: talos-worker-02
   disks:
-    - /dev/sdb
+    - /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
 ---
 # DiskPool for worker-03
 apiVersion: openebs.io/v1beta3
@@ -35,4 +35,4 @@ metadata:
 spec:
   node: talos-worker-03
   disks:
-    - /dev/sdb
+    - /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
