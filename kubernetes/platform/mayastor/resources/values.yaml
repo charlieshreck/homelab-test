@@ -33,10 +33,6 @@ etcd:
   replicaCount: 3
   persistence:
     enabled: false  # Disable PVCs - etcd uses emptyDir with 3x replication
-  image:
-    registry: docker.io
-    repository: bitnami/etcd
-    tag: 3.5.15-debian-12-r5  # Override with current valid tag
 
 # Disable Loki (observability) - also needs storage, not required for core functionality
 loki:
