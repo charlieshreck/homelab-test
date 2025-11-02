@@ -1,5 +1,5 @@
 # DiskPool for worker-01
-apiVersion: openebs.io/v1beta2
+apiVersion: openebs.io/v1beta3
 kind: DiskPool
 metadata:
   name: pool-worker-01
@@ -12,7 +12,7 @@ spec:
     - /dev/sdb
 ---
 # DiskPool for worker-02
-apiVersion: openebs.io/v1beta2
+apiVersion: openebs.io/v1beta3
 kind: DiskPool
 metadata:
   name: pool-worker-02
@@ -25,7 +25,7 @@ spec:
     - /dev/sdb
 ---
 # DiskPool for worker-03
-apiVersion: openebs.io/v1beta2
+apiVersion: openebs.io/v1beta3
 kind: DiskPool
 metadata:
   name: pool-worker-03
