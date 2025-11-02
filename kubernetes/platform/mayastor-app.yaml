@@ -4,7 +4,7 @@ metadata:
   name: mayastor
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after namespace is created
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -32,8 +32,7 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+    syncOptions: []
     retry:
       limit: 5
       backoff:
@@ -41,14 +40,14 @@ spec:
         factor: 2
         maxDuration: 5m
 ---
-# Mayastor Configuration (DiskPools and StorageClasses)
+# Mayastor Configuration (Namespace, DiskPools and StorageClasses)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: mayastor-config
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "2"  # Deploy after Mayastor operator
+    argocd.argoproj.io/sync-wave: "1"  # Create namespace with PSS labels first
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -68,7 +67,6 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true
     retry:
