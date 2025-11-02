@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: mayastor
 
 resources:
+  - namespace.yaml
   - diskpools.yaml
   - storageclasses.yaml
