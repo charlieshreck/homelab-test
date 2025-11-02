@@ -168,6 +168,10 @@ data "talos_machine_configuration" "worker" {
           install = {
             disk  = "/dev/sda"
             image = "factory.talos.dev/installer/${local.schematic_id}:${local.talos_version}"
+            # Kernel boot parameters for Mayastor HA
+            extraKernelArgs = [
+              "nvme_core.multipath=Y"  # Enable nvme multipath for High Availability
+            ]
           }
           # Mayastor disk configuration (helford storage - 1TB)
           # Mayastor uses /dev/sdb as a raw block device (no filesystem)
@@ -178,17 +182,13 @@ data "talos_machine_configuration" "worker" {
             }
           ]
 
-          # Kernel modules and parameters for Mayastor
+          # Kernel modules for Mayastor
           kernel = {
             modules = [
               {
                 name = "nvme-tcp"
               }
             ]
-            # Enable nvme multipath for High Availability
-            parameters = {
-              "nvme_core.multipath" = "Y"
-            }
           }
 
           kubelet = {
