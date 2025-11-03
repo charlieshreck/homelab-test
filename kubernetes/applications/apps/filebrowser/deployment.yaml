@@ -26,14 +26,17 @@ spec:
         env:
         - name: TZ
           value: "Europe/London"
-        - name: FB_DATABASE
-          value: "/config/database.db"
-        - name: FB_ROOT
-          value: "/srv"
+        - name: FILEBROWSER_CONFIG
+          value: "/config/config.yaml"
+        - name: FILEBROWSER_ADMIN_PASSWORD
+          value: "admin"
         securityContext:
           runAsUser: 3000
           runAsGroup: 3000
         volumeMounts:
+        - name: filebrowser-config-file
+          mountPath: /config/config.yaml
+          subPath: config.yaml
         - name: config
           mountPath: /config
         - name: downloads
@@ -50,6 +53,9 @@ spec:
             cpu: 500m
             memory: 512Mi
       volumes:
+      - name: filebrowser-config-file
+        configMap:
+          name: filebrowser-config
       - name: config
         persistentVolumeClaim:
           claimName: filebrowser-config
@@ -92,3 +98,25 @@ spec:
     targetPort: 80
   selector:
     app: filebrowser
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebrowser-config
+  namespace: apps
+data:
+  config.yaml: |
+    server:
+      port: 80
+      baseURL: "/"
+      socket: ""
+      tlsKey: ""
+      tlsCert: ""
+      database: "/config/database.db"
+      sources:
+        - path: /srv/downloads
+        - path: /srv/tv
+        - path: /srv/movies
+    auth:
+      adminUsername: "admin"
+      adminPassword: "admin"
