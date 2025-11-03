@@ -23,9 +23,9 @@ spec:
           containerPort: 8989
         env:
         - name: PUID
-          value: "1000"
+          value: "3000"
         - name: PGID
-          value: "1000"
+          value: "3000"
         - name: TZ
           value: "Europe/London"
         volumeMounts:
@@ -33,11 +33,8 @@ spec:
           mountPath: /config
         - name: downloads
           mountPath: /downloads
-          subPath: tv-sonarr
         - name: media
-          mountPath: /tv
-          subPath: Television
-          readOnly: true
+          mountPath: /television
         resources:
           requests:
             cpu: 100m
@@ -56,7 +53,7 @@ spec:
       - name: media
         nfs:
           server: 10.20.0.100
-          path: /mnt/Tongariro/Plexopathy
+          path: /mnt/Tongariro/Plexopathy/Television
 ---
 apiVersion: v1
 kind: Service
