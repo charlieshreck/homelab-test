@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+    spec:
+      containers:
+      - name: filebrowser
+        image: gtstef/filebrowser:latest
+        ports:
+        - name: http
+          containerPort: 80
+        env:
+        - name: TZ
+          value: "Europe/London"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: downloads
+          mountPath: /srv/downloads
+        - name: tv
+          mountPath: /srv/tv
+        - name: movies
+          mountPath: /srv/movies
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: filebrowser-config
+      - name: downloads
+        nfs:
+          server: 10.20.0.100
+          path: /mnt/Taranaki/Tarriance/hopuhopu_katoa
+      - name: tv
+        nfs:
+          server: 10.20.0.100
+          path: /mnt/Tongariro/Plexopathy/Television
+      - name: movies
+        nfs:
+          server: 10.20.0.100
+          path: /mnt/Tongariro/Plexopathy/Film
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-config
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-1
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser
+  namespace: apps
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    app: filebrowser
