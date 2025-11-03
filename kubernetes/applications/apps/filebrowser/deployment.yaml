@@ -33,7 +33,6 @@ spec:
         securityContext:
           runAsUser: 3000
           runAsGroup: 3000
-        workingDir: /config
         volumeMounts:
         - name: config
           mountPath: /config
