@@ -20,16 +20,18 @@ spec:
       containers:
       - name: filebrowser
         image: gtstef/filebrowser:latest
+        command: ["/filebrowser"]
+        args:
+          - "--database=/config/database.db"
+          - "--root=/srv"
+          - "--port=80"
+          - "--address=0.0.0.0"
         ports:
         - name: http
           containerPort: 80
         env:
         - name: TZ
           value: "Europe/London"
-        - name: FB_DATABASE
-          value: "/config/database.db"
-        - name: FB_ROOT
-          value: "/srv"
         securityContext:
           runAsUser: 3000
           runAsGroup: 3000
