@@ -55,7 +55,7 @@ data "talos_machine_configuration" "storage_node" {
           }
         }
         sysctls = {
-          "vm.nr_hugepages"      = "1024"
+          "vm.nr_hugepages"      = "2048"
           "vm.overcommit_memory" = "1"
           "vm.panic_on_oom"      = "0"
         }
@@ -232,8 +232,9 @@ data "talos_machine_configuration" "worker" {
           }
 
           # Sysctls for Mayastor (requires huge pages)
+          # Increased to 2048 pages (4GiB) to provide headroom beyond Mayastor's 2GiB requirement
           sysctls = {
-            "vm.nr_hugepages"      = "1024"
+            "vm.nr_hugepages"      = "2048"
             "vm.overcommit_memory" = "1"
             "vm.panic_on_oom"      = "0"
           }
