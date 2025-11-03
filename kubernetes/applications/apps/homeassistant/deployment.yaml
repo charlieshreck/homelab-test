@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: homeassistant
+  template:
+    metadata:
+      labels:
+        app: homeassistant
+    spec:
+      containers:
+      - name: homeassistant
+        image: ghcr.io/home-assistant/home-assistant:stable
+        ports:
+        - name: http
+          containerPort: 8123
+        env:
+        - name: TZ
+          value: "Europe/London"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        securityContext:
+          privileged: false
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: homeassistant-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homeassistant-config
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-3
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant
+  namespace: apps
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8123
+    targetPort: 8123
+  selector:
+    app: homeassistant

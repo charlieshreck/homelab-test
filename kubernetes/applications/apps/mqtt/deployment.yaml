@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mosquitto
+  namespace: apps
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mosquitto
+  template:
+    metadata:
+      labels:
+        app: mosquitto
+    spec:
+      containers:
+      - name: mosquitto
+        image: eclipse-mosquitto:latest
+        ports:
+        - name: mqtt
+          containerPort: 1883
+        - name: websocket
+          containerPort: 9001
+        volumeMounts:
+        - name: config
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+        - name: data
+          mountPath: /mosquitto/data
+        - name: log
+          mountPath: /mosquitto/log
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: mosquitto-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: mosquitto-data
+      - name: log
+        persistentVolumeClaim:
+          claimName: mosquitto-log
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mosquitto-data
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-3
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mosquitto-log
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-3
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mosquitto
+  namespace: apps
+spec:
+  type: ClusterIP
+  ports:
+  - name: mqtt
+    port: 1883
+    targetPort: 1883
+  - name: websocket
+    port: 9001
+    targetPort: 9001
+  selector:
+    app: mosquitto
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: apps
+data:
+  mosquitto.conf: |
+    listener 1883
+    allow_anonymous true
+
+    listener 9001
+    protocol websockets
+
+    persistence true
+    persistence_location /mosquitto/data/
+
+    log_dest file /mosquitto/log/mosquitto.log
+    log_dest stdout
