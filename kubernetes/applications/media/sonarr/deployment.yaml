@@ -31,12 +31,13 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: media
+        - name: downloads
           mountPath: /downloads
-          subPath: downloads
+          subPath: tv-sonarr
         - name: media
           mountPath: /tv
-          subPath: tv
+          subPath: Television
+          readOnly: true
         resources:
           requests:
             cpu: 100m
@@ -48,10 +49,14 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: sonarr-config
+      - name: downloads
+        nfs:
+          server: 10.20.0.100
+          path: /mnt/Taranaki/Tarriance/hopuhopu_katoa
       - name: media
         nfs:
-          server: 10.30.0.120
-          path: /mnt/Truro/k8s
+          server: 10.20.0.100
+          path: /mnt/Tongariro/Plexopathy
 ---
 apiVersion: v1
 kind: Service

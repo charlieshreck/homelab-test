@@ -40,9 +40,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: media
+        - name: downloads
           mountPath: /downloads
-          subPath: downloads
+          subPath: incomplete
         resources:
           requests:
             cpu: 100m
@@ -54,10 +54,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: transmission-config
-      - name: media
+      - name: downloads
         nfs:
-          server: 10.30.0.120
-          path: /mnt/Truro/k8s
+          server: 10.20.0.100
+          path: /mnt/Taranaki/Tarriance/hopuhopu_katoa
 ---
 apiVersion: v1
 kind: Service
