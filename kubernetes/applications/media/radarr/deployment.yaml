@@ -37,7 +37,6 @@ spec:
         - name: media
           mountPath: /movies
           subPath: Film
-          readOnly: true
         resources:
           requests:
             cpu: 100m
