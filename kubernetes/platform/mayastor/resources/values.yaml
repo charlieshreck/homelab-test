@@ -43,11 +43,13 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
-# Use emptyDir instead of PVCs to avoid bootstrap chicken-and-egg problem
+# Use memory-backed emptyDir to ensure clean state on every restart
 etcd:
   replicaCount: 3
   persistence:
     enabled: false  # Disable PVCs - etcd uses emptyDir with 3x replication
+    medium: Memory  # Use tmpfs (RAM) to prevent stale data persisting across restarts
+    sizeLimit: 512Mi  # Limit memory usage for etcd data
   podManagementPolicy: Parallel  # Ensures clean restarts without stale data issues
 
 # Disable Loki (observability) - also needs storage, not required for core functionality
