@@ -26,9 +26,14 @@ spec:
         env:
         - name: TZ
           value: "Europe/London"
+        - name: FB_DATABASE
+          value: "/config/database.db"
+        - name: FB_ROOT
+          value: "/srv"
         securityContext:
           runAsUser: 3000
           runAsGroup: 3000
+        workingDir: /config
         volumeMounts:
         - name: config
           mountPath: /config
