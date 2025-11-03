@@ -16,6 +16,11 @@ spec:
   dnsNames:
     - shreck.co.uk
     - "*.shreck.co.uk"
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+      reflector.v1.k8s.emberstack.com/reflection-auto-enabled: "true"
+      reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: "argocd,longhorn-system,media"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
