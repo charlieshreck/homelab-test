@@ -28,21 +28,22 @@ spec:
           protocol: UDP
         env:
         - name: PUID
-          value: "1000"
+          value: "3000"
         - name: PGID
-          value: "1000"
+          value: "3000"
         - name: TZ
           value: "Europe/London"
-        - name: USER
-          value: "admin"
-        - name: PASS
-          value: "changeme"
+        - name: TRANSMISSION_RPC_USERNAME
+          value: "chaz"
+        - name: TRANSMISSION_RPC_PASSWORD
+          value: "H4ckwh1z"
+        - name: TRANSMISSION_RPC_AUTHENTICATION_REQUIRED
+          value: "true"
         volumeMounts:
         - name: config
           mountPath: /config
         - name: downloads
           mountPath: /downloads
-          subPath: incomplete
         resources:
           requests:
             cpu: 100m
