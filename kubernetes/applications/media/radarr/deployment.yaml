@@ -31,12 +31,13 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: media
+        - name: downloads
           mountPath: /downloads
-          subPath: downloads
+          subPath: radarr
         - name: media
           mountPath: /movies
-          subPath: film
+          subPath: Film
+          readOnly: true
         resources:
           requests:
             cpu: 100m
@@ -48,6 +49,10 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: radarr-config
+      - name: downloads
+        nfs:
+          server: 10.20.0.100
+          path: /mnt/Taranaki/Tarriance/hopuhopu_katoa
       - name: media
         nfs:
           server: 10.20.0.100
