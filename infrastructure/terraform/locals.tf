@@ -18,6 +18,7 @@ locals {
     control_plane = var.vm_id_start
     workers       = { for idx, key in local.worker_keys : key => var.vm_id_start + idx + 1 }
     storage       = { for idx, key in local.storage_keys : key => var.vm_id_start + length(var.workers) + idx + 1 }
+    plex_lxc      = 210  # Fixed ID for Plex LXC container
   }
 
   # MAC addresses for management network (10.10.0.0/24 on vmbr0)
@@ -31,6 +32,7 @@ locals {
       for idx, key in local.storage_keys : key =>
       format("52:54:00:10:10:%02d", 21 + idx)
     }
+    plex_lxc = "52:54:00:10:10:30"  # MAC for Plex LXC (10.10.0.30)
   }
 
   # MAC addresses for storage network (10.11.0.0/24 on vmbr1)

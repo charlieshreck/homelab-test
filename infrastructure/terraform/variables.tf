@@ -237,3 +237,31 @@ variable "dockerhub_password" {
   default     = ""
   sensitive   = true
 }
+
+# ==============================================================================
+# Plex LXC Configuration
+# ==============================================================================
+
+variable "plex_lxc" {
+  description = "Configuration for the Plex Media Server LXC container"
+  type = object({
+    enabled       = bool
+    name          = string
+    ip            = string
+    cores         = number
+    memory        = number
+    disk          = number
+    gpu_pci_id    = string
+    storage_path  = string  # Path on Proxmox host for persistent storage
+  })
+  default = {
+    enabled       = false
+    name          = "plex"
+    ip            = "10.10.0.30"
+    cores         = 4
+    memory        = 4096
+    disk          = 32
+    gpu_pci_id    = "0000:00:00.0"
+    storage_path  = "/var/lib/plex"
+  }
+}

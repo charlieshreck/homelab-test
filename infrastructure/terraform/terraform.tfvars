@@ -101,3 +101,16 @@ infisical_client_secret = "8176c36e0e932f660327236ad288cfb1edbbced739d9c2d074d8c
 # Docker Hub Configuration (to avoid rate limiting)
 dockerhub_username = "mrlong67"
 dockerhub_password = "B@yc3*rRR483EZDVBNqa9!5uFSjz8I&Om8YW#tuA0S2%X*k1#yUnEJsw$4*t$iqF%QJsQ7Q02$&97A$OeYiYn&fjy0nUPV856Q7j8x5INTQ77rQ!P*74*xLp^pJ#0tsn"
+
+# Plex Media Server LXC Configuration
+# AMD Radeon 680M iGPU in Ryzen 9 6800HX for hardware transcoding
+plex_lxc = {
+  enabled       = true
+  name          = "plex"
+  ip            = "10.10.0.30"
+  cores         = 4
+  memory        = 4096  # 4GB RAM for Plex
+  disk          = 32    # 32GB for OS and Plex application
+  gpu_pci_id    = "0000:00:00.0"  # Auto-detected via /dev/dri passthrough
+  storage_path  = "/var/lib/plex"  # Persistent storage on Proxmox host
+}

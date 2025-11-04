@@ -177,6 +177,227 @@ resource "null_resource" "label_workers_mayastor" {
 #  mac_address    = local.mac_addresses.truenas
 #}
 
+# ==============================================================================
+# Plex Media Server LXC Container
+# ==============================================================================
+
+# Download Debian 12 LXC template
+resource "proxmox_virtual_environment_download_file" "debian_12_lxc" {
+  count = var.plex_lxc.enabled ? 1 : 0
+
+  content_type = "vztmpl"
+  datastore_id = var.proxmox_iso_storage
+  node_name    = var.proxmox_node
+  url          = "http://download.proxmox.com/images/system/debian-12-standard_12.7-1_amd64.tar.zst"
+  file_name    = "debian-12-standard_12.7-1_amd64.tar.zst"
+
+  overwrite           = false
+  overwrite_unmanaged = true
+}
+
+# Plex Media Server LXC Container with GPU Passthrough
+resource "proxmox_virtual_environment_container" "plex" {
+  count = var.plex_lxc.enabled ? 1 : 0
+
+  description = "Plex Media Server with AMD GPU Hardware Transcoding"
+  node_name   = var.proxmox_node
+  vm_id       = local.vm_ids.plex_lxc
+
+  # Basic container settings
+  tags        = ["plex", "media", "lxc"]
+  unprivileged = false  # Privileged container required for GPU passthrough
+  started     = true
+  on_boot     = true
+
+  # Template
+  template = false
+
+  # Operating System
+  operating_system {
+    template_file_id = proxmox_virtual_environment_download_file.debian_12_lxc[0].id
+    type             = "debian"
+  }
+
+  # CPU Configuration
+  cpu {
+    cores        = var.plex_lxc.cores
+    architecture = "amd64"
+  }
+
+  # Memory Configuration
+  memory {
+    dedicated = var.plex_lxc.memory
+    swap      = 512
+  }
+
+  # Network Interface
+  network_interface {
+    name     = "eth0"
+    bridge   = var.network_bridge
+    enabled  = true
+    firewall = false
+    mac_address = local.mac_addresses.plex_lxc
+
+    ip_config {
+      ipv4 {
+        address = "${var.plex_lxc.ip}/24"
+        gateway = var.prod_gateway
+      }
+    }
+  }
+
+  # Root Filesystem
+  disk {
+    datastore_id = var.proxmox_storage
+    size         = var.plex_lxc.disk
+  }
+
+  # Mount point for Plex configuration and metadata (persistent storage)
+  mount_point {
+    volume = var.plex_lxc.storage_path
+    path   = "/var/lib/plexmediaserver"
+    backup = true
+  }
+
+  # Mount point for media files (optional - can be added in tfvars)
+  # Uncomment and configure if you have a media share
+  # mount_point {
+  #   volume = "/mnt/media"
+  #   path   = "/media"
+  #   read_only = true
+  # }
+
+  # Console Configuration
+  console {
+    enabled   = true
+    tty_count = 2
+    type      = "console"
+  }
+
+  # DNS Configuration
+  dns {
+    domain  = "local"
+    servers = var.dns_servers
+  }
+
+  # Initialization
+  initialization {
+    hostname = var.plex_lxc.name
+
+    user_account {
+      keys     = []
+      password = "plex-initial-pass"  # Change after first login
+    }
+
+    # Cloud-init configuration
+    user_data_file_id = proxmox_virtual_environment_file.plex_cloud_init[0].id
+  }
+
+  # Features for GPU passthrough and Plex functionality
+  features {
+    nesting = true  # Allow Docker/containerization inside LXC if needed
+    fuse    = true  # Enable FUSE support
+  }
+
+  # Lifecycle settings
+  lifecycle {
+    ignore_changes = [
+      # Ignore these to prevent recreation on minor changes
+      initialization[0].user_account[0].password,
+    ]
+  }
+
+  depends_on = [
+    proxmox_virtual_environment_download_file.debian_12_lxc
+  ]
+}
+
+# Upload cloud-init configuration for Plex
+resource "proxmox_virtual_environment_file" "plex_cloud_init" {
+  count = var.plex_lxc.enabled ? 1 : 0
+
+  content_type = "snippets"
+  datastore_id = var.proxmox_iso_storage
+  node_name    = var.proxmox_node
+
+  source_raw {
+    data      = file("${path.module}/cloud-init-plex.yml")
+    file_name = "plex-cloud-init.yml"
+  }
+}
+
+# Configure GPU passthrough for Plex LXC using lxc.cgroup2 settings
+# This is done via Proxmox host configuration after container creation
+resource "null_resource" "plex_gpu_passthrough" {
+  count = var.plex_lxc.enabled ? 1 : 0
+
+  depends_on = [proxmox_virtual_environment_container.plex]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # SSH into Proxmox host and configure GPU passthrough
+      ssh -o StrictHostKeyChecking=no ${var.proxmox_user}@${var.proxmox_host} << 'ENDSSH'
+        set -e
+
+        CTID=${local.vm_ids.plex_lxc}
+
+        echo "Configuring GPU passthrough for LXC container $CTID..."
+
+        # Stop container if running
+        pct stop $CTID || true
+        sleep 2
+
+        # Add GPU device passthrough to LXC config
+        # Find AMD GPU render and card devices
+        if [ -e /dev/dri ]; then
+          # Get major:minor numbers for GPU devices
+          RENDERDEV=$(stat -c '%t:%T' /dev/dri/renderD128 2>/dev/null || echo "")
+          CARDDEV=$(stat -c '%t:%T' /dev/dri/card0 2>/dev/null || echo "")
+
+          CONFIG_FILE="/etc/pve/lxc/$CTID.conf"
+
+          # Remove existing lxc.cgroup2.devices.allow lines for DRI
+          sed -i '/lxc.cgroup2.devices.allow.*dri/d' $CONFIG_FILE
+          sed -i '/lxc.mount.entry.*dri/d' $CONFIG_FILE
+
+          # Add device access permissions
+          if [ -n "$RENDERDEV" ]; then
+            echo "lxc.cgroup2.devices.allow: c $RENDERDEV rwm" >> $CONFIG_FILE
+            echo "lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file" >> $CONFIG_FILE
+          fi
+
+          if [ -n "$CARDDEV" ]; then
+            echo "lxc.cgroup2.devices.allow: c $CARDDEV rwm" >> $CONFIG_FILE
+            echo "lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file" >> $CONFIG_FILE
+          fi
+
+          # Also pass through controlD64 if it exists
+          if [ -e /dev/dri/controlD64 ]; then
+            CONTROLDEV=$(stat -c '%t:%T' /dev/dri/controlD64)
+            echo "lxc.cgroup2.devices.allow: c $CONTROLDEV rwm" >> $CONFIG_FILE
+            echo "lxc.mount.entry: /dev/dri/controlD64 dev/dri/controlD64 none bind,optional,create=file" >> $CONFIG_FILE
+          fi
+
+          echo "✓ GPU devices configured for container $CTID"
+        else
+          echo "⚠ Warning: /dev/dri not found - GPU passthrough may not work"
+        fi
+
+        # Start container
+        pct start $CTID
+
+        echo "✓ Container $CTID started with GPU passthrough"
+ENDSSH
+    EOT
+  }
+
+  # Force re-run on any change to GPU PCI ID
+  triggers = {
+    gpu_pci_id = var.plex_lxc.gpu_pci_id
+    container_id = var.plex_lxc.enabled ? proxmox_virtual_environment_container.plex[0].id : ""
+  }
+}
+
 # Apply Talos configuration to control plane
 resource "talos_machine_configuration_apply" "controlplane" {
   depends_on = [module.control_plane]

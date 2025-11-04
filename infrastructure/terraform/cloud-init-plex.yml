@@ -1,0 +1,107 @@
+#cloud-config
+# Cloud-init configuration for Plex Media Server on Debian 12 LXC
+# Installs latest Plex, configures AMD GPU support, and sets up persistent storage
+
+hostname: plex
+manage_etc_hosts: true
+
+# Package management
+package_update: true
+package_upgrade: true
+
+packages:
+  - curl
+  - wget
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - software-properties-common
+  - vainfo
+  - mesa-va-drivers
+  - mesa-vdpau-drivers
+  - libva2
+  - libva-drm2
+  - firmware-amd-graphics
+  - radeontop
+
+# Users
+users:
+  - name: plex
+    groups: video, render
+    system: true
+    shell: /usr/sbin/nologin
+
+runcmd:
+  # Create directories for Plex
+  - mkdir -p /var/lib/plexmediaserver
+  - mkdir -p /tmp/plex-install
+
+  # Download and install latest Plex Media Server
+  - |
+    echo "Downloading latest Plex Media Server..."
+    cd /tmp/plex-install
+    PLEX_URL=$(curl -s 'https://plex.tv/api/downloads/5.json' | grep -oP '"linux".*?"url":\s*"\K[^"]+' | grep 'amd64.deb' | head -n 1)
+    wget -O plexmediaserver.deb "$PLEX_URL"
+
+    echo "Installing Plex Media Server..."
+    dpkg -i plexmediaserver.deb || apt-get install -f -y
+
+    # Clean up
+    cd /
+    rm -rf /tmp/plex-install
+
+  # Configure GPU access for Plex user
+  - usermod -a -G video,render plex
+
+  # Set proper permissions on Plex directories
+  - chown -R plex:plex /var/lib/plexmediaserver
+  - chmod -R 755 /var/lib/plexmediaserver
+
+  # Configure AMD GPU settings for hardware transcoding
+  - |
+    cat > /etc/modprobe.d/amdgpu.conf << 'EOF'
+    options amdgpu si_support=1
+    options amdgpu cik_support=1
+    EOF
+
+  # Update initramfs
+  - update-initramfs -u
+
+  # Enable and start Plex Media Server
+  - systemctl enable plexmediaserver
+  - systemctl start plexmediaserver
+
+  # Verify GPU access
+  - |
+    echo "Verifying GPU access..."
+    if command -v vainfo &> /dev/null; then
+      vainfo > /var/log/plex-gpu-check.log 2>&1 || true
+    fi
+    ls -la /dev/dri >> /var/log/plex-gpu-check.log 2>&1 || true
+
+  # Display installation status
+  - |
+    echo "============================================"
+    echo "Plex Media Server Installation Complete"
+    echo "============================================"
+    echo "Access Plex at: http://$(hostname -I | awk '{print $1}'):32400/web"
+    echo "GPU Devices: $(ls /dev/dri/ 2>/dev/null || echo 'No GPU devices found')"
+    echo "============================================"
+
+# Write completion marker
+write_files:
+  - path: /etc/plex-cloud-init-complete
+    content: |
+      Plex Media Server cloud-init completed
+      Date: $(date)
+      Version: Latest from plex.tv
+    permissions: '0644'
+
+# Final message
+final_message: |
+  Plex Media Server installation completed!
+  Access your server at: http://$HOSTNAME:32400/web
+  Initial setup requires claim token from: https://plex.tv/claim
+
+  GPU Status: Check /var/log/plex-gpu-check.log
+  Plex Logs: /var/lib/plexmediaserver/Library/Application Support/Plex Media Server/Logs/
