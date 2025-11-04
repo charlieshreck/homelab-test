@@ -1,5 +1,18 @@
 # Plex Media Server LXC Setup Guide
 
+## ⚠️ CRITICAL: Data Persistence Warning
+
+**By default, this configuration uses LOCAL storage** which means:
+- ❌ **All Plex data will be LOST if Proxmox host is rebuilt**
+- ❌ No protection against host hardware failure
+- ❌ Difficult to migrate or backup
+
+**For production use, you MUST configure persistent storage (NFS/SMB).**
+
+📖 **READ THIS FIRST**: [PLEX_PERSISTENCE.md](./PLEX_PERSISTENCE.md) - Complete guide to persistent storage options
+
+---
+
 ## Overview
 
 This Terraform configuration deploys a Plex Media Server in a Debian 12 LXC container with:
@@ -14,8 +27,23 @@ This Terraform configuration deploys a Plex Media Server in a Debian 12 LXC cont
 - **IP Address**: 10.10.0.30/24
 - **Gateway**: 10.10.0.1
 - **Resources**: 4 CPU cores, 4GB RAM, 32GB disk
-- **Storage**: `/var/lib/plex` on Proxmox host for persistent data
+- **Storage**: Configurable (local/NFS/SMB) - see [PLEX_PERSISTENCE.md](./PLEX_PERSISTENCE.md)
+  - **Default**: `/var/lib/plex` on Proxmox host (NOT persistent across rebuilds)
+  - **Recommended**: NFS/SMB mount from network storage
 - **Network**: vmbr0 (management network)
+
+## Storage Configuration Options
+
+This deployment supports **four storage types**:
+
+| Type | Persistence | Setup Complexity | Best For |
+|------|-------------|------------------|----------|
+| **local** | ❌ Lost on rebuild | Easy | Testing only |
+| **bind** | ⚠️ Depends on disk | Medium | Separate physical disk |
+| **nfs** | ✅ Fully persistent | Medium | **Production (RECOMMENDED)** |
+| **smb** | ✅ Fully persistent | Medium | Windows file servers |
+
+**To change storage type**, edit `terraform.tfvars` and update the `plex_lxc.storage_type` value. See [PLEX_PERSISTENCE.md](./PLEX_PERSISTENCE.md) for detailed instructions and examples.
 
 ## Prerequisites
 

@@ -245,23 +245,60 @@ variable "dockerhub_password" {
 variable "plex_lxc" {
   description = "Configuration for the Plex Media Server LXC container"
   type = object({
-    enabled       = bool
-    name          = string
-    ip            = string
-    cores         = number
-    memory        = number
-    disk          = number
-    gpu_pci_id    = string
-    storage_path  = string  # Path on Proxmox host for persistent storage
+    enabled           = bool
+    name              = string
+    ip                = string
+    cores             = number
+    memory            = number
+    disk              = number
+    gpu_pci_id        = string
+
+    # Storage configuration options
+    storage_type      = string  # "local", "nfs", "smb", or "bind"
+    storage_path      = string  # Path for bind mount OR mount point path
+
+    # NFS-specific settings (used when storage_type = "nfs")
+    nfs_server        = optional(string)
+    nfs_path          = optional(string)
+    nfs_options       = optional(string)
+
+    # SMB/CIFS settings (used when storage_type = "smb")
+    smb_server        = optional(string)
+    smb_share         = optional(string)
+    smb_username      = optional(string)
+    smb_password      = optional(string)
+    smb_options       = optional(string)
+
+    # Media library mounts (optional)
+    media_mounts = optional(list(object({
+      type        = string  # "nfs", "smb", or "bind"
+      source      = string
+      target      = string
+      read_only   = bool
+      nfs_server  = optional(string)
+      nfs_options = optional(string)
+      smb_server  = optional(string)
+      smb_share   = optional(string)
+    })))
   })
   default = {
-    enabled       = false
-    name          = "plex"
-    ip            = "10.10.0.30"
-    cores         = 4
-    memory        = 4096
-    disk          = 32
-    gpu_pci_id    = "0000:00:00.0"
-    storage_path  = "/var/lib/plex"
+    enabled           = false
+    name              = "plex"
+    ip                = "10.10.0.30"
+    cores             = 4
+    memory            = 4096
+    disk              = 32
+    gpu_pci_id        = "0000:00:00.0"
+    storage_type      = "local"
+    storage_path      = "/var/lib/plex"
+    nfs_server        = null
+    nfs_path          = null
+    nfs_options       = "vers=4,soft,timeo=600,retrans=2,rsize=1048576,wsize=1048576"
+    smb_server        = null
+    smb_share         = null
+    smb_username      = null
+    smb_password      = null
+    smb_options       = "vers=3.0,rw,noperm"
+    media_mounts      = []
   }
 }

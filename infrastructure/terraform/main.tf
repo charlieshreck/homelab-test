@@ -253,19 +253,26 @@ resource "proxmox_virtual_environment_container" "plex" {
   }
 
   # Mount point for Plex configuration and metadata (persistent storage)
+  # Storage type determines how this is handled:
+  # - "local": Direct path on Proxmox host (NOT persistent across rebuilds)
+  # - "bind": Bind mount from Proxmox host path (good for separate disk/partition)
+  # - "nfs": NFS mount (configured via provisioner - RECOMMENDED for persistence)
+  # - "smb": SMB/CIFS mount (configured via provisioner)
   mount_point {
     volume = var.plex_lxc.storage_path
     path   = "/var/lib/plexmediaserver"
     backup = true
   }
 
-  # Mount point for media files (optional - can be added in tfvars)
-  # Uncomment and configure if you have a media share
-  # mount_point {
-  #   volume = "/mnt/media"
-  #   path   = "/media"
-  #   read_only = true
-  # }
+  # Additional media library mounts (configured dynamically)
+  dynamic "mount_point" {
+    for_each = var.plex_lxc.media_mounts != null ? var.plex_lxc.media_mounts : []
+    content {
+      volume    = mount_point.value.source
+      path      = mount_point.value.target
+      read_only = mount_point.value.read_only
+    }
+  }
 
   # Console Configuration
   console {
@@ -326,12 +333,114 @@ resource "proxmox_virtual_environment_file" "plex_cloud_init" {
   }
 }
 
+# Configure persistent storage on Proxmox host (NFS/SMB mounts)
+# This ensures storage survives Proxmox host rebuilds
+resource "null_resource" "plex_storage_setup" {
+  count = var.plex_lxc.enabled && (var.plex_lxc.storage_type == "nfs" || var.plex_lxc.storage_type == "smb") ? 1 : 0
+
+  depends_on = [proxmox_virtual_environment_container.plex]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # SSH into Proxmox host and configure persistent storage
+      ssh -o StrictHostKeyChecking=no ${var.proxmox_user}@${var.proxmox_host} << 'ENDSSH'
+        set -e
+
+        STORAGE_TYPE="${var.plex_lxc.storage_type}"
+        MOUNT_PATH="${var.plex_lxc.storage_path}"
+
+        echo "Configuring $STORAGE_TYPE persistent storage at $MOUNT_PATH..."
+
+        # Create mount directory if it doesn't exist
+        mkdir -p "$MOUNT_PATH"
+
+        # Install required packages
+        if [ "$STORAGE_TYPE" = "nfs" ]; then
+          apt-get update -qq
+          apt-get install -y nfs-common
+
+          # Configure NFS mount
+          NFS_SERVER="${var.plex_lxc.nfs_server}"
+          NFS_PATH="${var.plex_lxc.nfs_path}"
+          NFS_OPTIONS="${var.plex_lxc.nfs_options}"
+
+          # Add to /etc/fstab if not already present
+          if ! grep -q "$MOUNT_PATH" /etc/fstab; then
+            echo "$NFS_SERVER:$NFS_PATH $MOUNT_PATH nfs $NFS_OPTIONS 0 0" >> /etc/fstab
+            echo "✓ Added NFS mount to /etc/fstab"
+          fi
+
+          # Mount now
+          mount -a || mount "$MOUNT_PATH" || echo "⚠ Warning: Could not mount NFS share"
+
+          if mountpoint -q "$MOUNT_PATH"; then
+            echo "✓ NFS share mounted at $MOUNT_PATH"
+          else
+            echo "❌ Failed to mount NFS share at $MOUNT_PATH"
+            exit 1
+          fi
+
+        elif [ "$STORAGE_TYPE" = "smb" ]; then
+          apt-get update -qq
+          apt-get install -y cifs-utils
+
+          # Configure SMB mount
+          SMB_SERVER="${var.plex_lxc.smb_server}"
+          SMB_SHARE="${var.plex_lxc.smb_share}"
+          SMB_USERNAME="${var.plex_lxc.smb_username}"
+          SMB_PASSWORD="${var.plex_lxc.smb_password}"
+          SMB_OPTIONS="${var.plex_lxc.smb_options}"
+
+          # Create credentials file
+          CRED_FILE="/root/.plex-smb-credentials"
+          cat > "$CRED_FILE" << EOF
+username=$SMB_USERNAME
+password=$SMB_PASSWORD
+EOF
+          chmod 600 "$CRED_FILE"
+
+          # Add to /etc/fstab if not already present
+          if ! grep -q "$MOUNT_PATH" /etc/fstab; then
+            echo "//$SMB_SERVER/$SMB_SHARE $MOUNT_PATH cifs credentials=$CRED_FILE,$SMB_OPTIONS 0 0" >> /etc/fstab
+            echo "✓ Added SMB mount to /etc/fstab"
+          fi
+
+          # Mount now
+          mount -a || mount "$MOUNT_PATH" || echo "⚠ Warning: Could not mount SMB share"
+
+          if mountpoint -q "$MOUNT_PATH"; then
+            echo "✓ SMB share mounted at $MOUNT_PATH"
+          else
+            echo "❌ Failed to mount SMB share at $MOUNT_PATH"
+            exit 1
+          fi
+        fi
+
+        echo "✓ Storage configuration complete"
+ENDSSH
+    EOT
+  }
+
+  # Re-run if storage configuration changes
+  triggers = {
+    storage_type = var.plex_lxc.storage_type
+    storage_path = var.plex_lxc.storage_path
+    nfs_server   = var.plex_lxc.nfs_server
+    nfs_path     = var.plex_lxc.nfs_path
+    smb_server   = var.plex_lxc.smb_server
+    smb_share    = var.plex_lxc.smb_share
+  }
+}
+
 # Configure GPU passthrough for Plex LXC using lxc.cgroup2 settings
 # This is done via Proxmox host configuration after container creation
 resource "null_resource" "plex_gpu_passthrough" {
   count = var.plex_lxc.enabled ? 1 : 0
 
-  depends_on = [proxmox_virtual_environment_container.plex]
+  depends_on = [
+    proxmox_virtual_environment_container.plex,
+    null_resource.plex_storage_setup
+  ]
 
   provisioner "local-exec" {
     command = <<-EOT
