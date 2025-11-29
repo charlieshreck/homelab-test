@@ -16,18 +16,11 @@ spec:
         # Deploy node agent for file-level backups (Restic)
         deployNodeAgent: true
 
-        # Backup storage location configuration
+        # Disable default BSL/VSL creation - we'll define them separately via CRDs
         backupStorageLocation:
-          name: minio
-          provider: aws
-          bucket: velero-backups
-          config:
-            s3Url: http://10.20.0.100:9000
-            s3ForcePathStyle: "true"
-            region: us-east-1
-          credential:
-            name: velero-minio-credentials
-            key: cloud
+          create: false
+        volumeSnapshotLocation:
+          create: false
 
         # Use Restic for file-level backups (Mayastor doesn't support snapshots)
         configuration:
