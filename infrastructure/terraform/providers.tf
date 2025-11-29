@@ -34,6 +34,10 @@ terraform {
       source  = "hashicorp/time"
       version = "~> 0.9"
     }
+    infisical = {
+      source  = "infisical/infisical"
+      version = "~> 0.10"
+    }
   }
 }
 

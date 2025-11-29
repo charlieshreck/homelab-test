@@ -242,45 +242,57 @@ variable "dockerhub_password" {
 # Plex LXC Configuration
 # ==============================================================================
 
-variable "plex_root_password" {
-  description = "Root password for the Plex LXC container"
-  type        = string
-  sensitive   = true
-}
-
-variable "plex_claim_token" {
-  description = "Plex claim token for auto-claiming the server (optional)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
 variable "ssh_public_keys" {
-  description = "SSH public keys for container root access"
+  description = "SSH public keys for container root access (optional)"
   type        = list(string)
   default     = []
 }
 
 # ==============================================================================
-# Backup Configuration
+# Backup Configuration (Deprecated - Secrets now fetched from Infisical)
 # ==============================================================================
+#
+# NOTE: The following variables are DEPRECATED. Secrets are now fetched from
+# Infisical automatically via the Infisical provider in infisical-secrets.tf.
+# These variables are kept for backward compatibility but are no longer needed.
+#
+# Required Infisical secrets in /backups path:
+#   - PLEX_ROOT_PASSWORD: Root password for Plex LXC container
+#   - PLEX_CLAIM_TOKEN: (Optional) Plex claim token for auto-claiming
+#   - RESTIC_PASSWORD: Encryption password for Restic backups
+#   - MINIO_ACCESS_KEY: MinIO access key for backups
+#   - MINIO_SECRET_KEY: MinIO secret key for backups
+
+variable "plex_root_password" {
+  description = "DEPRECATED: Fetched from Infisical secret PLEX_ROOT_PASSWORD in /backups"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "plex_claim_token" {
+  description = "DEPRECATED: Fetched from Infisical secret PLEX_CLAIM_TOKEN in /backups (optional)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
 
 variable "restic_encryption_password" {
-  description = "Encryption password for Restic backups"
+  description = "DEPRECATED: Fetched from Infisical secret RESTIC_PASSWORD in /backups"
   type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "minio_access_key" {
-  description = "MinIO access key for backups"
+  description = "DEPRECATED: Fetched from Infisical secret MINIO_ACCESS_KEY in /backups"
   type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "minio_secret_key" {
-  description = "MinIO secret key for backups"
+  description = "DEPRECATED: Fetched from Infisical secret MINIO_SECRET_KEY in /backups"
   type        = string
   sensitive   = true
   default     = ""
