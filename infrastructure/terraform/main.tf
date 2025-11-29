@@ -177,6 +177,27 @@ resource "null_resource" "label_workers_mayastor" {
 #  mac_address    = local.mac_addresses.truenas
 #}
 
+# ==============================================================================
+# Restic Backup LXC Container
+# ==============================================================================
+
+# Deploy Restic backup LXC
+module "restic_lxc" {
+  source = "./modules/restic-lxc"
+
+  vm_name        = "restic-backup"
+  vm_id          = var.restic_lxc_vm_id
+  target_node    = var.proxmox_node
+  cores          = var.restic_lxc_cores
+  memory         = var.restic_lxc_memory
+  root_disk_size = var.restic_lxc_disk
+  ip_address     = var.restic_lxc_ip
+  gateway        = var.prod_gateway
+  dns_servers    = var.dns_servers
+  network_bridge = var.network_bridge
+  storage        = var.proxmox_storage
+}
+
 # Apply Talos configuration to control plane
 resource "talos_machine_configuration_apply" "controlplane" {
   depends_on = [module.control_plane]

@@ -249,6 +249,39 @@ variable "ssh_public_keys" {
 }
 
 # ==============================================================================
+# Restic Backup LXC Configuration
+# ==============================================================================
+
+variable "restic_lxc_vm_id" {
+  description = "Proxmox VM ID for the Restic backup LXC container (unique, 100-999)"
+  type        = number
+}
+
+variable "restic_lxc_cores" {
+  description = "Number of CPU cores for Restic LXC"
+  type        = number
+  default     = 4
+}
+
+variable "restic_lxc_memory" {
+  description = "RAM in MB for Restic LXC"
+  type        = number
+  default     = 2048
+}
+
+variable "restic_lxc_disk" {
+  description = "Root disk size in GB for Restic LXC"
+  type        = number
+  default     = 20
+}
+
+variable "restic_lxc_ip" {
+  description = "Static IP address for Restic LXC (leave empty for DHCP)"
+  type        = string
+  default     = ""
+}
+
+# ==============================================================================
 # Backup Configuration (Deprecated - Secrets now fetched from Infisical)
 # ==============================================================================
 #
