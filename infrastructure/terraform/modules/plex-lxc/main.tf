@@ -75,16 +75,6 @@ resource "proxmox_virtual_environment_container" "plex" {
       }))
     }
   }
-
-  depends_on = [proxmox_virtual_environment_lxc_gpu.plex]
-}
-
-# GPU passthrough configuration via LXC device
-resource "proxmox_virtual_environment_lxc_gpu" "plex" {
-  # This is a workaround to set GPU device mapping via container.conf
-  # We'll need to configure this via local-exec and SSH to the Proxmox host
-
-  depends_on = []
 }
 
 # Configure GPU passthrough via SSH to Proxmox host
