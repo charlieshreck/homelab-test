@@ -3,7 +3,7 @@ output "lxc_id" {
   description = "Proxmox VM ID of the Restic LXC"
 }
 
-output "lxc_name" {
+output "lxc_hostname" {
   value       = proxmox_virtual_environment_lxc.restic_lxc.hostname
   description = "Hostname of the Restic LXC"
 }
