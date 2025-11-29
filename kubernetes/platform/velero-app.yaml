@@ -59,10 +59,11 @@ spec:
             enabled: false
 
         # Override kubectl image (bitnami 1.34 tag doesn't exist)
+        # Use bitnamilegacy/kubectl which has more complete version tags
         kubectl:
           image:
-            repository: bitnami/kubectl
-            tag: latest
+            repository: docker.io/bitnamilegacy/kubectl
+            tag: "1.27.11-debian-11-r5"
 
   destination:
     server: https://kubernetes.default.svc
