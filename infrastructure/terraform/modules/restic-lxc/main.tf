@@ -71,13 +71,3 @@ resource "proxmox_virtual_environment_lxc" "restic_lxc" {
     nesting = true
   }
 }
-
-output "lxc_ip" {
-  value       = var.ip_address != "" ? var.ip_address : "DHCP"
-  description = "IP address of the Restic LXC"
-}
-
-output "lxc_hostname" {
-  value       = proxmox_virtual_environment_lxc.restic_lxc.hostname
-  description = "Hostname of the Restic LXC"
-}
