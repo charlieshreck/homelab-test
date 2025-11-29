@@ -81,6 +81,14 @@ workers = {
 # Storage Nodes (not needed - using workers for Mayastor)
 storage_nodes = {}
 
+# ==============================================================================
+# Restic Backup LXC Configuration
+# ==============================================================================
+restic_lxc_vm_id     = 150
+restic_lxc_cores     = 4
+restic_lxc_memory    = 2048
+restic_lxc_disk      = 20
+restic_lxc_ip        = "10.10.0.25"
 
 # GitOps Configuration
 gitops_repo_url    = "https://github.com/charlieshreck/homelab-test.git"
