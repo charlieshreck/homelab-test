@@ -18,8 +18,7 @@ provider "infisical" {
 data "infisical_secrets" "backup_secrets" {
   env_slug      = "prod"
   project_slug  = "homelab-test-5-ig-k"
-  secrets_path  = "/backups"
-  expand_secret_references = true
+  folder_path   = "/backups"
 }
 
 # Extract individual secrets for easier access
