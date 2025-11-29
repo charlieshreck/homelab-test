@@ -2,15 +2,6 @@
 # infisical-secrets.tf - Fetch secrets from Infisical for Terraform use
 # ==============================================================================
 
-terraform {
-  required_providers {
-    infisical = {
-      source  = "infisical/infisical"
-      version = "~> 0.10"
-    }
-  }
-}
-
 # Configure Infisical provider
 provider "infisical" {
   host = "https://app.infisical.com/api"
