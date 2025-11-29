@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: transmission
-        image: linuxserver/transmission:latest
+        image: linuxserver/transmission:4.05
         ports:
         - name: web
           containerPort: 9091

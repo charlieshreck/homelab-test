@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: infisical-service-token
-  namespace: infisical-operator-system
-type: Opaque
-stringData:
-  infisicalToken: "st.c0cec267-e4c2-41b7-a466-7da7207477ec.4983ae2d93cce766c6aba5f41fe62f72.020e2c4db94315f13a7a5539b03f5096"

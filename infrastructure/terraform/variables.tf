@@ -237,3 +237,51 @@ variable "dockerhub_password" {
   default     = ""
   sensitive   = true
 }
+
+# ==============================================================================
+# Plex LXC Configuration
+# ==============================================================================
+
+variable "plex_root_password" {
+  description = "Root password for the Plex LXC container"
+  type        = string
+  sensitive   = true
+}
+
+variable "plex_claim_token" {
+  description = "Plex claim token for auto-claiming the server (optional)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "ssh_public_keys" {
+  description = "SSH public keys for container root access"
+  type        = list(string)
+  default     = []
+}
+
+# ==============================================================================
+# Backup Configuration
+# ==============================================================================
+
+variable "restic_encryption_password" {
+  description = "Encryption password for Restic backups"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "minio_access_key" {
+  description = "MinIO access key for backups"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "minio_secret_key" {
+  description = "MinIO secret key for backups"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
