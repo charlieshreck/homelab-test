@@ -43,14 +43,44 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
-# Use memory-backed emptyDir to ensure clean state on every restart
+# Use tmpfs-backed storage to ensure clean state on every restart
 etcd:
   replicaCount: 3
   persistence:
-    enabled: false  # Disable PVCs - etcd uses emptyDir with 3x replication
-    medium: Memory  # Use tmpfs (RAM) to prevent stale data persisting across restarts
-    sizeLimit: 512Mi  # Limit memory usage for etcd data
-  podManagementPolicy: Parallel  # Ensures clean restarts without stale data issues
+    enabled: false
+
+  # Use tmpfs for truly ephemeral data directory
+  extraVolumes:
+    - name: etcd-data-tmpfs
+      emptyDir:
+        medium: Memory
+        sizeLimit: 512Mi
+
+  extraVolumeMounts:
+    - name: etcd-data-tmpfs
+      mountPath: /bitnami/etcd/data
+
+  extraEnvVars:
+    - name: ETCD_HEARTBEAT_INTERVAL
+      value: "250"
+    - name: ETCD_ELECTION_TIMEOUT
+      value: "1250"
+    - name: ETCD_AUTO_COMPACTION_MODE
+      value: "periodic"
+    - name: ETCD_AUTO_COMPACTION_RETENTION
+      value: "1h"
+
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+
+  pdb:
+    create: true
+    minAvailable: 2
 
 # Disable Loki (observability) - also needs storage, not required for core functionality
 loki:
