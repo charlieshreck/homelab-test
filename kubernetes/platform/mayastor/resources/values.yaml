@@ -65,10 +65,6 @@ etcd:
       value: "250"
     - name: ETCD_ELECTION_TIMEOUT
       value: "1250"
-    - name: ETCD_AUTO_COMPACTION_MODE
-      value: "periodic"
-    - name: ETCD_AUTO_COMPACTION_RETENTION
-      value: "1h"
 
   resources:
     limits:
