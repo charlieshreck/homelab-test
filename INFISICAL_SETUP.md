@@ -4,7 +4,10 @@ This document explains how to configure all secrets in Infisical for the infrast
 
 ## Overview
 
-All sensitive secrets are now fetched from Infisical by Terraform during `terraform apply`. This eliminates the need to store secrets in `terraform.tfvars` locally.
+All sensitive secrets are stored in Infisical. Terraform and Kubernetes access them differently:
+
+- **Kubernetes:** InfisicalSecret CRD syncs secrets automatically from Infisical
+- **Terraform:** Secrets provided via environment variables or terraform.tfvars
 
 **Project:** `homelab-test-5-ig-k`
 **Environment:** `prod`
@@ -21,11 +24,12 @@ Create the following secrets in Infisical at `/backups` in the `prod` environmen
 **Description:** Root password for the Plex LXC container
 
 **Where to get it:**
-- Generate a strong password (e.g., `openssl rand -base64 32`)
+- Generate a strong password: `openssl rand -base64 32`
 - Example: `A7x!kM9p#L2qR$vW5tBn&8cD`
 
 **Infisical Setup:**
 ```
+Path: /backups
 Name: PLEX_ROOT_PASSWORD
 Value: <your_strong_password>
 ```
@@ -199,45 +203,119 @@ If using a non-admin access key, ensure it has permissions for:
 
 ## Terraform Workflow
 
-Once secrets are in Infisical:
+Once secrets are stored in Infisical, provide them to Terraform before running:
 
-1. **Plan changes:** `terraform plan`
-   - Terraform automatically fetches secrets from Infisical
-   - Secrets are NOT shown in plan output
+### Option 1: Using Environment Variables (Recommended)
 
-2. **Apply changes:** `terraform apply tfplan`
-   - Plex LXC container is created with `PLEX_ROOT_PASSWORD`
-   - Restic backup agent is configured with `RESTIC_PASSWORD` and MinIO credentials
-   - Velero's Kubernetes secret is created via InfisicalSecret CRD (in Kubernetes)
+```bash
+# Set environment variables from Infisical values
+export TF_VAR_plex_root_password="<from Infisical /backups>"
+export TF_VAR_plex_claim_token="<from Infisical /backups>"
+export TF_VAR_minio_access_key="<from Infisical /backups>"
+export TF_VAR_minio_secret_key="<from Infisical /backups>"
+export TF_VAR_restic_encryption_password="<from Infisical /backups>"
 
-3. **No local secrets:** Your `terraform.tfvars` file contains NO sensitive data
+# Then run Terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+### Option 2: Using Infisical CLI (Easiest)
+
+```bash
+# Use Infisical CLI to automatically load secrets as environment variables
+infisical login
+infisical run -- terraform init
+infisical run -- terraform plan
+infisical run -- terraform apply
+```
+
+The Infisical CLI will:
+- Authenticate to Infisical
+- Load all secrets from `/backups` path as environment variables
+- Set `TF_VAR_*` variables automatically
+- Run Terraform with access to all secrets
+
+### Option 3: Using terraform.tfvars (Less Secure)
+
+Create `infrastructure/terraform/terraform.tfvars` (DO NOT COMMIT):
+
+```hcl
+plex_root_password         = "<from Infisical>"
+plex_claim_token           = "<from Infisical>"
+minio_access_key           = "<from Infisical>"
+minio_secret_key           = "<from Infisical>"
+restic_encryption_password = "<from Infisical>"
+```
+
+Then run normally:
+```bash
+terraform plan
+terraform apply
+```
+
+⚠️ **WARNING:** If using Option 3, make sure `.gitignore` includes `terraform.tfvars` to prevent accidental commits.
+
+### Verification
+
+After running Terraform:
+```bash
+# Check that Plex LXC was created
+# Check that Restic backup is configured on the container
+# Verify Kubernetes secrets were synced via Velero
+```
 
 ---
 
 ## Troubleshooting
 
-### Terraform fails with "secret not found"
+### Terraform fails with "required argument missing"
 
-**Solution:** Check that secrets exist in Infisical at `/backups` path:
+**Solution:** Environment variables not set. Provide secrets before running Terraform:
 
+**Option A - Using environment variables:**
 ```bash
-# Manually verify secret access (if infisical CLI is installed)
-infisical export --projectId=<id> --env=prod --secretsPath=/backups
+export TF_VAR_plex_root_password="<value>"
+export TF_VAR_plex_claim_token="<value>"
+export TF_VAR_minio_access_key="<value>"
+export TF_VAR_minio_secret_key="<value>"
+export TF_VAR_restic_encryption_password="<value>"
+terraform plan
 ```
 
-### MinIO credentials rejected
-
-**Solution:** Verify the access key has permissions:
-- MinIO UI → Access Keys → Check bucket permissions
-- Ensure both `velero-backups` and `restic-backups` are listed
-
-### Plex container can't authenticate
-
-**Solution:** Verify `PLEX_ROOT_PASSWORD` is correct:
+**Option B - Using Infisical CLI:**
 ```bash
-# From Plex container
+infisical run -- terraform plan
+```
+
+**Option C - Using terraform.tfvars:**
+```bash
+# Create infrastructure/terraform/terraform.tfvars with secret values
+terraform plan
+```
+
+### Terraform fails to access Infisical secrets
+
+**Solution:** Use one of the options above to provide secrets. Terraform no longer fetches directly from Infisical API.
+
+### MinIO credentials rejected during Velero/Restic deployment
+
+**Solution:** Verify:
+1. Secrets were provided to Terraform (check environment variables)
+2. MinIO access key has bucket permissions:
+   - MinIO UI → Access Keys → Check permissions for `velero-backups` and `restic-backups`
+3. Buckets exist on MinIO:
+   - MinIO UI → Buckets → Verify both backup buckets are created
+
+### Plex container SSH access fails
+
+**Solution:** Verify the password:
+```bash
+# SSH to Plex container
 ssh root@10.10.0.60
-# Log in with the password set in PLEX_ROOT_PASSWORD
+
+# Password is the value of PLEX_ROOT_PASSWORD from Infisical
 ```
 
 ---
@@ -281,10 +359,12 @@ terraform apply
 
 ## Related Files
 
-- `infrastructure/terraform/infisical-secrets.tf` - Fetches secrets from Infisical
-- `infrastructure/terraform/plex.tf` - Uses fetched secrets for Plex deployment
-- `kubernetes/platform/velero/infisical-secret.yaml` - Syncs MinIO secrets to Kubernetes
-- `infrastructure/terraform/variables.tf` - Lists all variables (now mostly non-sensitive)
+- `infrastructure/terraform/infisical-secrets.tf` - Documents how to provide secrets to Terraform
+- `infrastructure/terraform/plex.tf` - Uses secrets for Plex and Restic deployment
+- `infrastructure/terraform/variables.tf` - Lists all Terraform variables
+- `kubernetes/platform/velero/infisical-secret.yaml` - Syncs MinIO secrets to Kubernetes via InfisicalSecret CRD
+- `kubernetes/platform/velero/kustomization.yaml` - Kubernetes secret management
+- `.pre-commit-config.yaml` - Security checks to prevent secret commits
 
 ---
 
