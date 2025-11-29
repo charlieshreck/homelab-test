@@ -74,8 +74,6 @@ etcd:
       value: "250"
     - name: ETCD_ELECTION_TIMEOUT
       value: "1250"
-    - name: ETCD_INITIAL_CLUSTER_STATE
-      value: "new"
 
   resources:
     limits:
