@@ -16,15 +16,11 @@ spec:
         # Deploy node agent for file-level backups (Restic)
         deployNodeAgent: true
 
-        # Disable default BSL/VSL creation - we'll define them separately via CRDs
+        # Disable default BSL/VSL creation - we provide explicit config below
         backupStorageLocation:
           create: false
         volumeSnapshotLocation:
           create: false
-
-        # Use Restic for file-level backups (Mayastor doesn't support snapshots)
-        configuration:
-          defaultVolumesToFsBackup: true
 
         # Velero server resources
         resources:
