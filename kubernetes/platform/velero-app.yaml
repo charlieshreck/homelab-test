@@ -1,0 +1,130 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    chart: velero
+    targetRevision: 7.2.1
+    helm:
+      valuesObject:
+        # Deploy node agent for file-level backups (Restic)
+        deployNodeAgent: true
+
+        # Backup storage location configuration
+        backupStorageLocation:
+          name: minio
+          provider: aws
+          bucket: velero-backups
+          config:
+            s3Url: http://10.20.0.100:9000
+            s3ForcePathStyle: "true"
+            region: us-east-1
+          credential:
+            name: velero-minio-credentials
+            key: cloud
+
+        # Use Restic for file-level backups (Mayastor doesn't support snapshots)
+        configuration:
+          defaultVolumesToFsBackup: true
+
+        # Velero server resources
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        # Node agent (Restic) resources
+        nodeAgent:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+        # Prometheus metrics
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: false
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+---
+# Velero custom resources for scheduled backups
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero-schedules
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charlieshreck/homelab-test.git
+    targetRevision: main
+    path: kubernetes/platform/velero/schedules
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Velero secret management via Infisical
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero-secrets
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/charlieshreck/homelab-test.git
+    targetRevision: main
+    path: kubernetes/platform/velero
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
