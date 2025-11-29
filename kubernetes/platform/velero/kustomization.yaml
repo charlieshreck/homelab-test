@@ -5,5 +5,3 @@ namespace: velero
 
 resources:
   - infisical-secret.yaml
-  - backup-storage-location.yaml
-  - volume-snapshot-location.yaml
