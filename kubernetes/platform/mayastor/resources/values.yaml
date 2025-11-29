@@ -60,11 +60,22 @@ etcd:
     - name: etcd-data-tmpfs
       mountPath: /bitnami/etcd/data
 
+  # Add init container to wipe stale member data on startup
+  initContainers:
+    - name: clean-data
+      image: busybox:1.36
+      command: ['sh', '-c', 'rm -rf /bitnami/etcd/data/member']
+      volumeMounts:
+        - name: etcd-data-tmpfs
+          mountPath: /bitnami/etcd/data
+
   extraEnvVars:
     - name: ETCD_HEARTBEAT_INTERVAL
       value: "250"
     - name: ETCD_ELECTION_TIMEOUT
       value: "1250"
+    - name: ETCD_INITIAL_CLUSTER_STATE
+      value: "new"
 
   resources:
     limits:
