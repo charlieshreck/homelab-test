@@ -3,8 +3,7 @@
 # ==============================================================================
 
 module "plex_lxc" {
-  depends_on = [data.infisical_secrets.backup_secrets]
-  source     = "./modules/plex-lxc"
+  source = "./modules/plex-lxc"
 
   container_name       = "plex-media-server"
   container_id         = 250
@@ -18,8 +17,8 @@ module "plex_lxc" {
   cores                = 4
   disk_size            = 50
 
-  plex_root_password   = local.plex_root_password
-  plex_claim_token     = local.plex_claim_token
+  plex_root_password   = var.plex_root_password
+  plex_claim_token     = var.plex_claim_token
   ssh_public_keys      = var.ssh_public_keys
 
   proxmox_host         = var.proxmox_host
@@ -42,14 +41,14 @@ module "plex_backup" {
 
   host                = "10.10.0.60"
   host_user          = "root"
-  host_password      = local.plex_root_password
+  host_password      = var.plex_root_password
   ssh_key_path       = null
   container_name     = "plex-restic-backup"
 
   restic_repository   = "s3:http://10.20.0.100:9000/restic-backups/plex"
-  restic_password     = local.restic_encryption_password
-  aws_access_key      = local.minio_access_key
-  aws_secret_key      = local.minio_secret_key
+  restic_password     = var.restic_encryption_password
+  aws_access_key      = var.minio_access_key
+  aws_secret_key      = var.minio_secret_key
 
   backup_paths = ["/opt/plex/config"]
   backup_excludes = [
