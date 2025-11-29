@@ -54,10 +54,10 @@ spec:
         nodeAgent:
           resources:
             requests:
-              cpu: 100m
+              cpu: 50m
               memory: 128Mi
             limits:
-              cpu: 500m
+              cpu: 250m
               memory: 512Mi
           # Remove default affinity to allow scheduling on all worker nodes
           affinity: {}
