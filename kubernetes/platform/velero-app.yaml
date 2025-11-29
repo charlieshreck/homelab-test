@@ -58,6 +58,12 @@ spec:
           serviceMonitor:
             enabled: false
 
+        # Override kubectl image (bitnami 1.34 tag doesn't exist)
+        kubectl:
+          image:
+            repository: bitnami/kubectl
+            tag: latest
+
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
