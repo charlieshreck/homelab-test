@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://infisical.com/helm
-    chart: infisical-operator
-    targetRevision: 0.4.0
+    repoURL: https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/
+    chart: secrets-operator
+    targetRevision: 0.9.5
     helm:
       valuesObject:
         installCRDs: true
