@@ -281,6 +281,13 @@ variable "restic_lxc_ip" {
   default     = ""
 }
 
+variable "restic_repository" {
+  description = "Restic repository URL (e.g., s3:http://host:port/bucket)"
+  type        = string
+  sensitive   = true
+  default     = "s3:http://10.20.0.103:9000/restic-backups"
+}
+
 # ==============================================================================
 # Backup Configuration (Deprecated - Secrets now fetched from Infisical)
 # ==============================================================================

@@ -64,3 +64,39 @@ variable "dns_servers" {
   type        = list(string)
   default     = ["1.1.1.1", "8.8.8.8"]
 }
+
+variable "root_password" {
+  description = "Root password for the LXC container"
+  type        = string
+  sensitive   = true
+}
+
+variable "ssh_public_keys" {
+  description = "SSH public keys for root user"
+  type        = list(string)
+  default     = []
+}
+
+variable "restic_repository" {
+  description = "Restic repository URL (e.g., s3:http://host:port/bucket)"
+  type        = string
+  sensitive   = true
+}
+
+variable "restic_password" {
+  description = "Restic repository encryption password"
+  type        = string
+  sensitive   = true
+}
+
+variable "minio_access_key" {
+  description = "MinIO access key for S3 backups"
+  type        = string
+  sensitive   = true
+}
+
+variable "minio_secret_key" {
+  description = "MinIO secret key for S3 backups"
+  type        = string
+  sensitive   = true
+}
