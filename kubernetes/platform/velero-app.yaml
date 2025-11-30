@@ -35,11 +35,6 @@ spec:
                 name: velero-minio-credentials
                 key: cloud
 
-          # Volume Snapshot Location configuration
-          volumeSnapshotLocation:
-            - name: default
-              provider: openebs
-              config: {}
 
         # Velero server resources
         resources:
@@ -50,7 +45,7 @@ spec:
             cpu: 500m
             memory: 512Mi
 
-        # Node agent (Restic) resources
+        # Node agent (Restic) resources and scheduling
         nodeAgent:
           resources:
             requests:
@@ -58,7 +53,17 @@ spec:
               memory: 128Mi
             limits:
               cpu: 250m
-              memory: 512Mi
+              memory: 1Gi
+          # Schedule node agent on Mayastor nodes
+          nodeSelector:
+            openebs.io/engine: mayastor
+          # AWS plugin for S3/MinIO backup support
+          initContainers:
+            - name: velero-plugin-for-aws
+              image: velero/velero-plugin-for-aws:v1.11.0
+              volumeMounts:
+                - mountPath: /target
+                  name: plugins
           # Remove default affinity to allow scheduling on all worker nodes
           affinity: {}
 
@@ -68,9 +73,8 @@ spec:
           serviceMonitor:
             enabled: false
 
-        # Disable upgrade-crds job (pre-install hook) since it's failing
-        # The Helm chart will still apply CRDs on install/upgrade
-        upgradeCRDs: false
+        # Enable upgrade-crds to ensure CRDs are properly installed/updated
+        upgradeCRDs: true
 
   destination:
     server: https://kubernetes.default.svc
@@ -82,6 +86,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=false
+      - ServerSideApply=true
     retry:
       limit: 5
       backoff:
