@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Infisical operator and credentials are managed by Terraform
+# See infrastructure/terraform/infisical.tf
 resources:
   - namespace.yaml
-  - credentials-secret.yaml
