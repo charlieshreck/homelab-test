@@ -58,7 +58,7 @@ etcd:
     - name: etcd-data
       mountPath: /bitnami/etcd/data
 
-  # Init container to clean up stale member_id file that causes bootstrap conflicts
+  # Init container to clean up stale data that causes bootstrap conflicts
   initContainers:
     - name: cleanup-stale-data
       image: busybox:latest
@@ -66,11 +66,11 @@ etcd:
         - sh
         - -c
         - |
-          # Remove the member_id file that causes "already bootstrapped" errors
+          # Remove member directory that contains stale bootstrap data
           # This allows etcd to rejoin the cluster cleanly after crashes
-          if [ -f /bitnami/etcd/data/member_id ]; then
-            echo "Removing stale member_id file"
-            rm -f /bitnami/etcd/data/member_id
+          if [ -d /bitnami/etcd/data/member ]; then
+            echo "Removing stale member directory to prevent bootstrap conflicts"
+            rm -rf /bitnami/etcd/data/member
           fi
           echo "Cleanup complete"
       volumeMounts:
