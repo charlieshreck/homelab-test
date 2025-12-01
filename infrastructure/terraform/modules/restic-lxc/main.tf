@@ -24,11 +24,11 @@ resource "proxmox_virtual_environment_container" "restic_lxc" {
 
   node_name = var.target_node
   vm_id     = var.vm_id
-  hostname  = var.vm_name
 
   # Operating system with template reference
   operating_system {
-    type = "debian"
+    type          = "debian"
+    template_file_id = proxmox_virtual_environment_download_file.debian_lxc_template.id
   }
 
   # Root filesystem
@@ -37,10 +37,16 @@ resource "proxmox_virtual_environment_container" "restic_lxc" {
     size         = var.root_disk_size
   }
 
-  # CPU and Memory
-  cores  = var.cores
-  memory = var.memory
-  swap   = var.swap
+  # CPU configuration
+  cpu {
+    cores = var.cores
+  }
+
+  # Memory configuration
+  memory {
+    dedicated = var.memory
+    swap      = var.swap
+  }
 
   # Network configuration with initialization
   initialization {
