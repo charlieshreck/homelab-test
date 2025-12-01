@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashwise
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashwise
+  template:
+    metadata:
+      labels:
+        app: dashwise
+    spec:
+      containers:
+      - name: dashwise
+        image: mauricenino/dashwise:latest
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - name: TZ
+          value: "Europe/London"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: dashwise-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashwise
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  selector:
+    app: dashwise
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dashwise-data
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-1
+  resources:
+    requests:
+      storage: 1Gi
