@@ -32,8 +32,6 @@ spec:
               value: "Renovate Bot <bot@renovateapp.com>"
             - name: LOG_LEVEL
               value: "info"
-            - name: RENOVATE_CONFIG_FILE
-              value: "/usr/src/app/renovate.json"
             - name: RENOVATE_ONBOARDING
               value: "false"
             - name: RENOVATE_REQUIRE_CONFIG
