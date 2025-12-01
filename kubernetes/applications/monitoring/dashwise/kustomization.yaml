@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
+  - infisical-secret.yaml
   - deployment.yaml
   - ingress.yaml

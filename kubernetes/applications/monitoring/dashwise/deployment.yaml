@@ -27,9 +27,15 @@ spec:
         - name: NEXT_PUBLIC_APP_URL
           value: "https://dashwise.shreck.co.uk"
         - name: PB_ADMIN_EMAIL
-          value: "charlieshreck@gmail.com"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_EMAIL
         - name: PB_ADMIN_PASSWORD
-          value: "H4ckwh1z"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_PASSWORD
         - name: NEXT_PUBLIC_INTEGRATIONS_ENABLE_SSL
           value: "false"
         - name: NEXT_PUBLIC_ENABLE_SSO
@@ -50,9 +56,15 @@ spec:
           containerPort: 8090
         env:
         - name: PB_ADMIN_EMAIL
-          value: "charlieshreck@gmail.com"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_EMAIL
         - name: PB_ADMIN_PASSWORD
-          value: "H4ckwh1z"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_PASSWORD
         volumeMounts:
         - name: pb-data
           mountPath: /app/pb_data
@@ -74,9 +86,15 @@ spec:
         - name: DASHWISE_URL
           value: "http://localhost:3000"
         - name: PB_ADMIN_EMAIL
-          value: "charlieshreck@gmail.com"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_EMAIL
         - name: PB_ADMIN_PASSWORD
-          value: "H4ckwh1z"
+          valueFrom:
+            secretKeyRef:
+              name: dashwise-credentials
+              key: PB_ADMIN_PASSWORD
         resources:
           requests:
             cpu: 50m
