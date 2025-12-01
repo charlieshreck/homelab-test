@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: dashwise
-        image: andreasmolnardev/dashwise:latest
+        image: andreasmolnardev/dashwise:stable
         ports:
         - name: http
           containerPort: 3000
@@ -23,7 +23,7 @@ spec:
         - name: TZ
           value: "Europe/London"
         - name: NEXT_PUBLIC_PB_URL
-          value: "http://pocketbase:8090"
+          value: "http://localhost:8090"
         - name: NEXT_PUBLIC_APP_URL
           value: "https://dashwise.shreck.co.uk"
         - name: PB_ADMIN_EMAIL
@@ -36,9 +36,47 @@ spec:
           value: "false"
         - name: NEXT_PUBLIC_DEFAULT_BG_URL
           value: "/dashboard-wallpaper.png"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      - name: pocketbase
+        image: andreasmolnardev/dashwise-pb:stable
+        ports:
+        - name: pb
+          containerPort: 8090
+        env:
+        - name: PB_ADMIN_EMAIL
+          value: "charlieshreck@gmail.com"
+        - name: PB_ADMIN_PASSWORD
+          value: "H4ckwh1z"
         volumeMounts:
-        - name: data
-          mountPath: /app/data
+        - name: pb-data
+          mountPath: /app/pb_data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      - name: jobs
+        image: andreasmolnardev/dashwise-jobs:stable
+        ports:
+        - name: jobs
+          containerPort: 3001
+        env:
+        - name: PB_URL
+          value: "http://localhost:8090"
+        - name: DASHWISE_URL
+          value: "http://localhost:3000"
+        - name: PB_ADMIN_EMAIL
+          value: "charlieshreck@gmail.com"
+        - name: PB_ADMIN_PASSWORD
+          value: "H4ckwh1z"
         resources:
           requests:
             cpu: 50m
@@ -47,9 +85,9 @@ spec:
             cpu: 500m
             memory: 512Mi
       volumes:
-      - name: data
+      - name: pb-data
         persistentVolumeClaim:
-          claimName: dashwise-data
+          claimName: dashwise-pb-data
 ---
 apiVersion: v1
 kind: Service
@@ -66,9 +104,23 @@ spec:
     app: dashwise
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: pb
+    port: 8090
+    targetPort: 8090
+  selector:
+    app: dashwise
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: dashwise-data
+  name: dashwise-pb-data
   namespace: monitoring
 spec:
   accessModes:
