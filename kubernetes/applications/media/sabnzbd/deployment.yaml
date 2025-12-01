@@ -28,6 +28,8 @@ spec:
           value: "3000"
         - name: TZ
           value: "Europe/London"
+        - name: HOST_WHITELIST_ENTRIES
+          value: "sabnzbd.shreck.co.uk,sabnzbd"
         volumeMounts:
         - name: config
           mountPath: /config
