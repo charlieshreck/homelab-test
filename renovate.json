@@ -5,6 +5,9 @@
     ":semanticCommits",
     ":dependencyDashboard"
   ],
+  "repositories": ["charlieshreck/homelab-test"],
+  "platform": "github",
+  "gitAuthor": "Renovate Bot <bot@renovateapp.com>",
   "kubernetes": {
     "fileMatch": ["kubernetes/.+\\.yaml$"]
   },

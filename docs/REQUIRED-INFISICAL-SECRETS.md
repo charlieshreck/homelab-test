@@ -8,7 +8,7 @@ This document lists all secrets that must be configured in Infisical for the hom
 ### Path: `/infrastructure`
 | Secret Key | Description | Used By |
 |------------|-------------|---------|
-| `GITHUB_TOKEN` | GitHub PAT for ArgoCD private repo access | ArgoCD |
+| `GITHUB_TOKEN` | GitHub PAT for ArgoCD private repo access and Renovate | ArgoCD, Renovate |
 
 ### Path: `/kubernetes`
 | Secret Key | Description | Used By |
