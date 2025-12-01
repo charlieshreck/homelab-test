@@ -20,6 +20,10 @@ spec:
         configuration:
           defaultVolumesToFsBackup: true
 
+          # Disable VolumeSnapshotLocation (not needed for file-level backups)
+          defaultVolumeSnapshotLocations: null
+          volumeSnapshotLocation: []
+
           # Backup Storage Location configuration
           backupStorageLocation:
             - name: minio
