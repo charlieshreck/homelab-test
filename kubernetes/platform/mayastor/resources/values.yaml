@@ -58,15 +58,31 @@ etcd:
     - name: etcd-data
       mountPath: /bitnami/etcd/data
 
+  # Init container to clean up stale member_id file that causes bootstrap conflicts
+  initContainers:
+    - name: cleanup-stale-data
+      image: busybox:latest
+      command:
+        - sh
+        - -c
+        - |
+          # Remove the member_id file that causes "already bootstrapped" errors
+          # This allows etcd to rejoin the cluster cleanly after crashes
+          if [ -f /bitnami/etcd/data/member_id ]; then
+            echo "Removing stale member_id file"
+            rm -f /bitnami/etcd/data/member_id
+          fi
+          echo "Cleanup complete"
+      volumeMounts:
+        - name: etcd-data
+          mountPath: /bitnami/etcd/data
+
   # Increased timeouts for stability (from 250/1250 to 500/2500)
   extraEnvVars:
     - name: ETCD_HEARTBEAT_INTERVAL
       value: "500"
     - name: ETCD_ELECTION_TIMEOUT
       value: "2500"
-    # Disable automatic member_id storage to force clean restart on crashes
-    - name: ETCD_DISABLE_STORE_MEMBER_ID
-      value: "yes"
 
   # Spread etcd pods across different nodes for stability
   affinity:
