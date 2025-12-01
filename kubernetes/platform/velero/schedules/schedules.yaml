@@ -6,22 +6,15 @@ metadata:
   namespace: velero
 spec:
   schedule: "0 2 * * *"
-  backupTemplate:
+  template:
     storageLocation: minio
     ttl: 168h  # 7 days
-    includeNamespaces:
+    includedNamespaces:
       - "*"
-    excludeNamespaces:
+    excludedNamespaces:
       - kube-system
       - mayastor
-    includedResources: []
-    excludedResources: []
-    includedNamespaceScopes:
-      - operator: In
-        values:
-          - "*"
-    includedClusterScopes:
-      - operator: Exists
+    defaultVolumesToFsBackup: true
 
 ---
 # Weekly backup at 3 AM on Sundays with 30-day retention
@@ -32,19 +25,12 @@ metadata:
   namespace: velero
 spec:
   schedule: "0 3 * * 0"
-  backupTemplate:
+  template:
     storageLocation: minio
     ttl: 720h  # 30 days
-    includeNamespaces:
+    includedNamespaces:
       - "*"
-    excludeNamespaces:
+    excludedNamespaces:
       - kube-system
       - mayastor
-    includedResources: []
-    excludedResources: []
-    includedNamespaceScopes:
-      - operator: In
-        values:
-          - "*"
-    includedClusterScopes:
-      - operator: Exists
+    defaultVolumesToFsBackup: true
