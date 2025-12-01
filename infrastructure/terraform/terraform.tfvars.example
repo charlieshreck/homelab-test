@@ -1,3 +1,20 @@
+# =============================================================================
+# SECURITY WARNING
+# =============================================================================
+# This file contains EXAMPLE values only. Never commit real credentials.
+#
+# Required secrets (store in Infisical or environment variables):
+#   - proxmox_password
+#   - infisical_client_id / infisical_client_secret
+#   - dockerhub_username / dockerhub_password
+#   - plex_root_password
+#   - restic_encryption_password
+#   - minio_access_key / minio_secret_key
+#
+# Use: cp terraform.tfvars.example terraform.tfvars
+# Then edit terraform.tfvars with real values (it's in .gitignore)
+# =============================================================================
+
 # terraform.tfvars.example - Template for production configuration
 # Copy this file to terraform.tfvars and replace CHANGE_ME values with real secrets
 
