@@ -43,7 +43,7 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
-# Use regular emptyDir storage to preserve data across pod restarts
+# Use emptyDir with lifecycle hooks to clean up stale data on restarts
 etcd:
   replicaCount: 3
   persistence:
@@ -64,6 +64,9 @@ etcd:
       value: "500"
     - name: ETCD_ELECTION_TIMEOUT
       value: "2500"
+    # Disable automatic member_id storage to force clean restart on crashes
+    - name: ETCD_DISABLE_STORE_MEMBER_ID
+      value: "yes"
 
   # Spread etcd pods across different nodes for stability
   affinity:
