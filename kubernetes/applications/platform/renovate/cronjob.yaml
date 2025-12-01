@@ -15,7 +15,7 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: renovate
-            image: renovate/renovate:39.130.0
+            image: renovate/renovate:42.29.4
             env:
             - name: RENOVATE_TOKEN
               valueFrom:
