@@ -51,6 +51,22 @@ etcd:
     - name: etcd-data-hostpath
       mountPath: /bitnami/etcd/data
 
+  # Init container to fix hostPath permissions for etcd user (UID 1001)
+  initContainers:
+    - name: fix-permissions
+      image: busybox:latest
+      command:
+        - sh
+        - -c
+        - |
+          chown -R 1001:1001 /bitnami/etcd/data
+          chmod 700 /bitnami/etcd/data
+      volumeMounts:
+        - name: etcd-data-hostpath
+          mountPath: /bitnami/etcd/data
+      securityContext:
+        runAsUser: 0
+
   # Stability tuning
   extraEnvVars:
     - name: ETCD_HEARTBEAT_INTERVAL
