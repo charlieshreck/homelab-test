@@ -43,6 +43,12 @@ variable "storage" {
   type        = string
 }
 
+variable "template_storage" {
+  description = "Proxmox storage where LXC templates are stored (e.g., local)"
+  type        = string
+  default     = "local"
+}
+
 variable "network_bridge" {
   description = "Network bridge for the LXC (e.g., vmbr0)"
   type        = string
