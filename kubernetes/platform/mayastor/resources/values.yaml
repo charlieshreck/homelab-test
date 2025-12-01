@@ -43,39 +43,11 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
-# Use emptyDir with lifecycle hooks to clean up stale data on restarts
+# Use emptyDir - etcd can rebuild state from cluster
 etcd:
   replicaCount: 3
   persistence:
     enabled: false
-
-  # Use regular emptyDir (not Memory) to preserve data across pod restarts
-  extraVolumes:
-    - name: etcd-data
-      emptyDir: {}
-
-  extraVolumeMounts:
-    - name: etcd-data
-      mountPath: /bitnami/etcd/data
-
-  # Init container to clean up stale data that causes bootstrap conflicts
-  initContainers:
-    - name: cleanup-stale-data
-      image: busybox:latest
-      command:
-        - sh
-        - -c
-        - |
-          # Remove member directory that contains stale bootstrap data
-          # This allows etcd to rejoin the cluster cleanly after crashes
-          if [ -d /bitnami/etcd/data/member ]; then
-            echo "Removing stale member directory to prevent bootstrap conflicts"
-            rm -rf /bitnami/etcd/data/member
-          fi
-          echo "Cleanup complete"
-      volumeMounts:
-        - name: etcd-data
-          mountPath: /bitnami/etcd/data
 
   # Increased timeouts for stability (from 250/1250 to 500/2500)
   extraEnvVars:
