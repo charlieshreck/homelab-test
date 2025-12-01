@@ -3,35 +3,23 @@
 
 # IO Engine configuration (data plane)
 io_engine:
-  # Huge pages (configured in Talos with vm.nr_hugepages=1024)
   hugepages:
     enabled: true
-  # Resource limits per Mayastor best practices
-  # Workers have 4 cores each, allowing 2 for IO engine + 2 for workloads
   resources:
     limits:
-      cpu: "2"              # 2 dedicated CPU cores per node (Mayastor recommended)
-      memory: "2Gi"
-      hugepages-2Mi: "2Gi"  # 1024 x 2MiB huge pages
-    requests:
-      cpu: "1"              # Reduced request to allow node scheduling flexibility
+      cpu: "2"
       memory: "2Gi"
       hugepages-2Mi: "2Gi"
-  # Target specific CPU cores for better performance (optional)
-  # Uncomment and adjust based on your CPU topology
-  # coreList: "2,3"  # Use cores 2 and 3
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+      hugepages-2Mi: "2Gi"
 
-# Use all 3 worker nodes for Mayastor
 agents:
   core:
     nodeSelector:
       openebs.io/engine: mayastor
 
-# Storage pool configuration
-# Each worker has a dedicated disk /dev/sdb for Mayastor (helford storage - 1TB total, ~300GB per node)
-# DiskPools are automatically created via diskpools.yaml (deployed by ArgoCD)
-
-# Resource limits appropriate for 9GB RAM per node
 csi:
   node:
     resources:
@@ -42,21 +30,40 @@ csi:
         cpu: "100m"
         memory: "128Mi"
 
-# Enable etcd for Mayastor control plane
-# Use emptyDir - etcd can rebuild state from cluster
+# =============================================================================
+# ETCD: hostPath persistence to prevent bootstrap conflicts
+# =============================================================================
 etcd:
   replicaCount: 3
+
+  # Disable default PVC-based persistence
   persistence:
     enabled: false
 
-  # Increased timeouts for stability (from 250/1250 to 500/2500)
+  # Use hostPath via extraVolumes (survives pod restarts, no StorageClass needed)
+  extraVolumes:
+    - name: etcd-data-hostpath
+      hostPath:
+        path: /var/lib/mayastor-etcd
+        type: DirectoryOrCreate
+
+  extraVolumeMounts:
+    - name: etcd-data-hostpath
+      mountPath: /bitnami/etcd/data
+
+  # Stability tuning
   extraEnvVars:
     - name: ETCD_HEARTBEAT_INTERVAL
       value: "500"
     - name: ETCD_ELECTION_TIMEOUT
       value: "2500"
+    - name: ETCD_AUTO_COMPACTION_MODE
+      value: "periodic"
+    - name: ETCD_AUTO_COMPACTION_RETENTION
+      value: "1h"
+    - name: ETCD_QUOTA_BACKEND_BYTES
+      value: "2147483648"
 
-  # Increase liveness/readiness probe timeouts to prevent kills under memory pressure
   livenessProbe:
     enabled: true
     initialDelaySeconds: 60
@@ -73,7 +80,6 @@ etcd:
     successThreshold: 1
     failureThreshold: 5
 
-  # Spread etcd pods across different nodes for stability
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -99,10 +105,8 @@ etcd:
     create: true
     minAvailable: 2
 
-# Disable Loki (observability) - also needs storage, not required for core functionality
 loki:
   enabled: false
 
-# Enable metrics
 metrics:
   enabled: true
