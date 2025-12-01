@@ -6,19 +6,19 @@ terraform {
   }
 }
 
-# Download Debian 13 LXC template if not already present
+# Download Debian 13 (Trixie) LXC template if not already present
 resource "proxmox_virtual_environment_download_file" "debian_lxc_template" {
   content_type = "vztmpl"
   datastore_id = var.storage
   node_name    = var.target_node
-  url          = "http://download.proxmox.com/images/system/debian-13-standard_13.2-1_amd64.tar.zst"
-  file_name    = "debian-13-standard_13.2-1_amd64.tar.zst"
+  url          = "http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst"
+  file_name    = "debian-13-standard_13.1-2_amd64.tar.zst"
 
   overwrite           = false
   overwrite_unmanaged = true
 }
 
-# Create Debian 13 LXC container for Restic backup
+# Create Debian 13 (Trixie) LXC container for Restic backup
 resource "proxmox_virtual_environment_container" "restic_lxc" {
   depends_on = [proxmox_virtual_environment_download_file.debian_lxc_template]
 
