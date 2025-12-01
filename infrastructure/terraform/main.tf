@@ -196,6 +196,14 @@ module "restic_lxc" {
   dns_servers    = var.dns_servers
   network_bridge = var.network_bridge
   storage        = var.proxmox_storage
+
+  # Backup and credentials
+  root_password      = var.plex_root_password
+  ssh_public_keys    = var.ssh_public_keys
+  restic_repository  = var.restic_repository
+  restic_password    = var.restic_encryption_password
+  minio_access_key   = var.minio_access_key
+  minio_secret_key   = var.minio_secret_key
 }
 
 # Apply Talos configuration to control plane

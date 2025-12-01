@@ -14,7 +14,7 @@ io_engine:
       memory: "2Gi"
       hugepages-2Mi: "2Gi"  # 1024 x 2MiB huge pages
     requests:
-      cpu: "2"
+      cpu: "1"              # Reduced request to allow node scheduling flexibility
       memory: "2Gi"
       hugepages-2Mi: "2Gi"
   # Target specific CPU cores for better performance (optional)
@@ -43,37 +43,41 @@ csi:
         memory: "128Mi"
 
 # Enable etcd for Mayastor control plane
-# Use tmpfs-backed storage to ensure clean state on every restart
+# Use regular emptyDir storage to preserve data across pod restarts
 etcd:
   replicaCount: 3
   persistence:
     enabled: false
 
-  # Use tmpfs for truly ephemeral data directory
+  # Use regular emptyDir (not Memory) to preserve data across pod restarts
   extraVolumes:
-    - name: etcd-data-tmpfs
-      emptyDir:
-        medium: Memory
-        sizeLimit: 512Mi
+    - name: etcd-data
+      emptyDir: {}
 
   extraVolumeMounts:
-    - name: etcd-data-tmpfs
+    - name: etcd-data
       mountPath: /bitnami/etcd/data
 
-  # Add init container to wipe stale member data on startup
-  initContainers:
-    - name: clean-data
-      image: busybox:1.36
-      command: ['sh', '-c', 'rm -rf /bitnami/etcd/data/member']
-      volumeMounts:
-        - name: etcd-data-tmpfs
-          mountPath: /bitnami/etcd/data
-
+  # Increased timeouts for stability (from 250/1250 to 500/2500)
   extraEnvVars:
     - name: ETCD_HEARTBEAT_INTERVAL
-      value: "250"
+      value: "500"
     - name: ETCD_ELECTION_TIMEOUT
-      value: "1250"
+      value: "2500"
+
+  # Spread etcd pods across different nodes for stability
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - etcd
+            topologyKey: kubernetes.io/hostname
 
   resources:
     limits:

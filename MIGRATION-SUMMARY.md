@@ -219,9 +219,30 @@ After cluster is up, ArgoCD will automatically:
 2. Deploy Mayastor configuration (sync-wave: 2):
    - DiskPools for all 3 workers (/dev/sdb on each)
    - StorageClasses (mayastor-1, mayastor-2, mayastor-3)
-   - Set mayastor-3 as default StorageClass
+   - Set mayastor-1 as default StorageClass
 
 **No manual steps required!** Node labels are applied by Terraform, pools and storage classes are created via GitOps.
+
+### 3. StorageClass Configuration
+
+**Default StorageClass Changed to mayastor-1**
+
+| Class | Replicas | Use Case | Default |
+|-------|----------|----------|---------|
+| mayastor-1 | 1 | General workloads, cost efficiency | ✅ YES |
+| mayastor-2 | 2 | Redundancy with capacity efficiency | No |
+| mayastor-3 | 3 | Critical workloads needing HA | No |
+
+**Rationale**: Single physical host means 3-way replication provides no real HA benefit, just 3x storage overhead. Use mayastor-1 as default for better capacity efficiency (900GB effective instead of 300GB with 3-way replication).
+
+**How to use different classes**:
+```yaml
+# For critical workloads needing redundancy
+spec:
+  storageClassName: mayastor-2  # or mayastor-3
+```
+
+All existing storage classes remain available for explicit selection.
 
 To verify deployment:
 ```bash

@@ -2,6 +2,16 @@
 
 Infisical is used for secure secrets management in your homelab. This guide walks through creating an Infisical account, setting up a project, and generating Universal Auth credentials for Kubernetes integration.
 
+## ⚠️ CRITICAL: Secrets Management
+
+**Infisical credentials are managed by Terraform and MUST NOT be committed to Git.**
+
+- Infisical operator namespace and credentials secret are provisioned by `infrastructure/terraform/infisical.tf`
+- ArgoCD does NOT manage Infisical credentials - Terraform is the single source of truth
+- Credentials are stored in `infrastructure/terraform/terraform.tfvars` which is in `.gitignore`
+- Use `terraform.tfvars.example` as a template with placeholder values
+- Never commit plaintext secrets to Git, regardless of branch
+
 ## Overview
 
 **What is Infisical?**
