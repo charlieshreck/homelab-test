@@ -4,7 +4,7 @@ output "lxc_id" {
 }
 
 output "lxc_hostname" {
-  value       = proxmox_virtual_environment_container.restic_lxc.hostname
+  value       = var.vm_name
   description = "Hostname of the Restic LXC"
 }
 
