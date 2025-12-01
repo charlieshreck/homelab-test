@@ -15,6 +15,32 @@ spec:
       labels:
         app: sabnzbd
     spec:
+      initContainers:
+      - name: config-host-whitelist
+        image: busybox:latest
+        command:
+          - sh
+          - -c
+          - |
+            CONFIG_FILE="/config/sabnzbd.ini"
+            if [ -f "$CONFIG_FILE" ]; then
+              # Update existing host_whitelist setting
+              if grep -q "^host_whitelist" "$CONFIG_FILE"; then
+                sed -i 's/^host_whitelist.*/host_whitelist = sabnzbd.shreck.co.uk, sabnzbd/' "$CONFIG_FILE"
+                echo "Updated host_whitelist in existing config"
+              else
+                # Add host_whitelist to [misc] section if it doesn't exist
+                if grep -q "^\[misc\]" "$CONFIG_FILE"; then
+                  sed -i '/^\[misc\]/a host_whitelist = sabnzbd.shreck.co.uk, sabnzbd' "$CONFIG_FILE"
+                  echo "Added host_whitelist to [misc] section"
+                fi
+              fi
+            else
+              echo "Config file not found, sabnzbd will create it on first run"
+            fi
+        volumeMounts:
+        - name: config
+          mountPath: /config
       containers:
       - name: sabnzbd
         image: lscr.io/linuxserver/sabnzbd:latest
@@ -28,8 +54,6 @@ spec:
           value: "3000"
         - name: TZ
           value: "Europe/London"
-        - name: HOST_WHITELIST_ENTRIES
-          value: "sabnzbd.shreck.co.uk,sabnzbd,*.shreck.co.uk"
         volumeMounts:
         - name: config
           mountPath: /config
