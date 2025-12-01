@@ -76,6 +76,12 @@ spec:
         # Enable upgrade-crds to ensure CRDs are properly installed/updated
         upgradeCRDs: true
 
+        # Use a valid kubectl image for CRD upgrades
+        kubectl:
+          image:
+            repository: docker.io/bitnami/kubectl
+            tag: latest
+
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
