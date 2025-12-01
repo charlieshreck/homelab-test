@@ -34,9 +34,15 @@ spec:
         - name: TZ
           value: "Europe/London"
         - name: TRANSMISSION_RPC_USERNAME
-          value: "chaz"
+          valueFrom:
+            secretKeyRef:
+              name: transmission-credentials
+              key: TRANSMISSION_RPC_USERNAME
         - name: TRANSMISSION_RPC_PASSWORD
-          value: "H4ckwh1z"
+          valueFrom:
+            secretKeyRef:
+              name: transmission-credentials
+              key: TRANSMISSION_RPC_PASSWORD
         - name: TRANSMISSION_RPC_AUTHENTICATION_REQUIRED
           value: "true"
         volumeMounts:
