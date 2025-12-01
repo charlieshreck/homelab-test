@@ -6,3 +6,4 @@ namespace: velero
 resources:
   - namespace.yaml
   - infisical-secret.yaml
+  - credentials-transformer.yaml
