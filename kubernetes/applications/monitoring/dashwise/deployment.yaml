@@ -22,6 +22,20 @@ spec:
         env:
         - name: TZ
           value: "Europe/London"
+        - name: NEXT_PUBLIC_PB_URL
+          value: "http://pocketbase:8090"
+        - name: NEXT_PUBLIC_APP_URL
+          value: "https://dashwise.shreck.co.uk"
+        - name: PB_ADMIN_EMAIL
+          value: "charlieshreck@gmail.com"
+        - name: PB_ADMIN_PASSWORD
+          value: "H4ckwh1z"
+        - name: NEXT_PUBLIC_INTEGRATIONS_ENABLE_SSL
+          value: "false"
+        - name: NEXT_PUBLIC_ENABLE_SSO
+          value: "false"
+        - name: NEXT_PUBLIC_DEFAULT_BG_URL
+          value: "/dashboard-wallpaper.png"
         volumeMounts:
         - name: data
           mountPath: /app/data
