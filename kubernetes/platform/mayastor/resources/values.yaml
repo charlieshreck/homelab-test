@@ -57,10 +57,6 @@ etcd:
       value: "500"
     - name: ETCD_ELECTION_TIMEOUT
       value: "2500"
-    - name: ETCD_AUTO_COMPACTION_MODE
-      value: "periodic"
-    - name: ETCD_AUTO_COMPACTION_RETENTION
-      value: "1h"
     - name: ETCD_QUOTA_BACKEND_BYTES
       value: "2147483648"
 
