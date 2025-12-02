@@ -20,6 +20,25 @@ spec:
       automountServiceAccountToken: true
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: copy-config
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              cp -r /tmp/config/* /app/config/ && \
+              chmod -R 755 /app/config && \
+              chown -R 1000:1000 /app/config
+          volumeMounts:
+            - name: homepage-config-source
+              mountPath: /tmp/config
+            - name: homepage-config
+              mountPath: /app/config
+          securityContext:
+            runAsUser: 0
       containers:
         - name: homepage
           image: ghcr.io/gethomepage/homepage:latest
@@ -34,8 +53,9 @@ spec:
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
-            - name: logs
-              mountPath: /app/config/logs
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           resources:
             requests:
               cpu: 100m
@@ -44,9 +64,11 @@ spec:
               cpu: 500m
               memory: 512Mi
       volumes:
-        - name: homepage-config
+        - name: homepage-config-source
           configMap:
             name: homepage
+        - name: homepage-config
+          emptyDir: {}
         - name: logs
           emptyDir: {}
 ---
