@@ -153,7 +153,7 @@ data:
             description: Home automation
             icon: home-assistant.png
             namespace: apps
-            app: homeassistant
+            pod-selector: app=homeassistant
 
         - File Browser:
             href: https://filebrowser.shreck.co.uk
