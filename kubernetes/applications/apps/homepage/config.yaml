@@ -56,10 +56,10 @@ data:
             description: Movie collection manager
             icon: radarr.png
             namespace: media
-            app: radarr
+            pod-selector: app=radarr
             widget:
               type: radarr
-              url: https://radarr.shreck.co.uk
+              url: http://radarr.media.svc.cluster.local:7878
               key: {{HOMEPAGE_VAR_RADARR_API_KEY}}
 
         - Sonarr:
@@ -67,10 +67,10 @@ data:
             description: TV series collection manager
             icon: sonarr.png
             namespace: media
-            app: sonarr
+            pod-selector: app=sonarr
             widget:
               type: sonarr
-              url: https://sonarr.shreck.co.uk
+              url: http://sonarr.media.svc.cluster.local:8989
               key: {{HOMEPAGE_VAR_SONARR_API_KEY}}
 
         - Overseerr:
@@ -78,10 +78,10 @@ data:
             description: Request management
             icon: overseerr.png
             namespace: media
-            app: overseerr
+            pod-selector: app=overseerr
             widget:
               type: overseerr
-              url: https://overseerr.shreck.co.uk
+              url: http://overseerr.media.svc.cluster.local:5055
               key: {{HOMEPAGE_VAR_OVERSEERR_API_KEY}}
 
         - Prowlarr:
@@ -89,10 +89,10 @@ data:
             description: Indexer manager
             icon: prowlarr.png
             namespace: media
-            app: prowlarr
+            pod-selector: app=prowlarr
             widget:
               type: prowlarr
-              url: https://prowlarr.shreck.co.uk
+              url: http://prowlarr.media.svc.cluster.local:9696
               key: {{HOMEPAGE_VAR_PROWLARR_API_KEY}}
 
         - SABnzbd:
@@ -100,10 +100,10 @@ data:
             description: Usenet downloader
             icon: sabnzbd.png
             namespace: media
-            app: sabnzbd
+            pod-selector: app=sabnzbd
             widget:
               type: sabnzbd
-              url: https://sabnzbd.shreck.co.uk
+              url: http://sabnzbd.media.svc.cluster.local:8080
               key: {{HOMEPAGE_VAR_SABNZBD_API_KEY}}
 
         - Transmission:
@@ -111,10 +111,10 @@ data:
             description: Torrent client
             icon: transmission.png
             namespace: media
-            app: transmission
+            pod-selector: app=transmission
             widget:
               type: transmission
-              url: https://transmission.shreck.co.uk
+              url: http://transmission.media.svc.cluster.local:9091
               username: admin
               password: {{HOMEPAGE_VAR_TRANSMISSION_PASSWORD}}
 
