@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: radarr
-        image: linuxserver/radarr:5.8.3
+        image: linuxserver/radarr:5.28.0
         ports:
         - name: http
           containerPort: 7878
