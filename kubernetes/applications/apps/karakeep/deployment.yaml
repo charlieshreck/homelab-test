@@ -29,7 +29,6 @@ spec:
             secretKeyRef:
               name: karakeep-secrets
               key: NEXTAUTH_SECRET
-              optional: true
         - name: DATA_DIR
           value: "/data"
         volumeMounts:
