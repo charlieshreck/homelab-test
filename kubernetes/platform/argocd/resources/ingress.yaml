@@ -3,6 +3,13 @@ kind: Ingress
 metadata:
   name: argocd
   namespace: argocd
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "ArgoCD"
+    gethomepage.dev/description: "GitOps continuous delivery"
+    gethomepage.dev/group: "Platform Services"
+    gethomepage.dev/icon: "argo.png"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
 spec:
   ingressClassName: traefik
   tls:

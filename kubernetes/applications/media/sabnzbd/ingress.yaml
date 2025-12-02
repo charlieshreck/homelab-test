@@ -5,6 +5,15 @@ metadata:
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "SABnzbd"
+    gethomepage.dev/description: "Usenet downloader"
+    gethomepage.dev/group: "Media Services"
+    gethomepage.dev/icon: "sabnzbd.png"
+    gethomepage.dev/pod-selector: "app=sabnzbd"
+    gethomepage.dev/widget.type: "sabnzbd"
+    gethomepage.dev/widget.url: "http://sabnzbd.media.svc.cluster.local:8080"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}"
 spec:
   ingressClassName: traefik
   tls:

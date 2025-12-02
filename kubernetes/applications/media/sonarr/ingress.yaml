@@ -5,6 +5,15 @@ metadata:
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Sonarr"
+    gethomepage.dev/description: "TV series collection manager"
+    gethomepage.dev/group: "Media Services"
+    gethomepage.dev/icon: "sonarr.png"
+    gethomepage.dev/pod-selector: "app=sonarr"
+    gethomepage.dev/widget.type: "sonarr"
+    gethomepage.dev/widget.url: "http://sonarr.media.svc.cluster.local:8989"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
 spec:
   ingressClassName: traefik
   tls:

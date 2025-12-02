@@ -6,6 +6,12 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Home Assistant"
+    gethomepage.dev/description: "Home automation"
+    gethomepage.dev/group: "Home Services"
+    gethomepage.dev/icon: "home-assistant.png"
+    gethomepage.dev/pod-selector: "app=homeassistant"
 spec:
   ingressClassName: traefik
   tls:

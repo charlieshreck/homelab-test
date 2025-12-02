@@ -6,6 +6,12 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Vaultwarden"
+    gethomepage.dev/description: "Password manager"
+    gethomepage.dev/group: "Platform Services"
+    gethomepage.dev/icon: "vaultwarden.png"
+    gethomepage.dev/pod-selector: "app=vaultwarden"
 spec:
   ingressClassName: traefik
   tls:

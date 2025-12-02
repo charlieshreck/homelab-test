@@ -6,6 +6,12 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "File Browser"
+    gethomepage.dev/description: "Web file manager"
+    gethomepage.dev/group: "Home Services"
+    gethomepage.dev/icon: "filebrowser.png"
+    gethomepage.dev/pod-selector: "app=filebrowser"
 spec:
   ingressClassName: traefik
   tls:

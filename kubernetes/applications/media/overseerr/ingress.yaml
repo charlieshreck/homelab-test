@@ -5,6 +5,15 @@ metadata:
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Overseerr"
+    gethomepage.dev/description: "Request management"
+    gethomepage.dev/group: "Media Services"
+    gethomepage.dev/icon: "overseerr.png"
+    gethomepage.dev/pod-selector: "app=overseerr"
+    gethomepage.dev/widget.type: "overseerr"
+    gethomepage.dev/widget.url: "http://overseerr.media.svc.cluster.local:5055"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_OVERSEERR_API_KEY}}"
 spec:
   ingressClassName: traefik
   tls:
