@@ -11,3 +11,6 @@ resources:
   - homeassistant-app.yaml
   - mqtt-app.yaml
   - filebrowser-app.yaml
+  - tasmoadmin-app.yaml
+  - karakeep-app.yaml
+  - tautulli-app.yaml
