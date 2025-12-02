@@ -50,6 +50,9 @@ spec:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: "homepage.shreck.co.uk"
+          envFrom:
+            - secretRef:
+                name: homepage-api-keys
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
