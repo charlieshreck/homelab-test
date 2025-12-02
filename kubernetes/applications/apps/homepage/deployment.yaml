@@ -29,9 +29,15 @@ spec:
             - sh
             - -c
             - |
-              cp -r /tmp/config/* /app/config/ && \
+              echo "Listing /tmp/config:" && \
+              ls -la /tmp/config/ && \
+              echo "Copying files to /app/config" && \
+              cp -rv /tmp/config/* /app/config/ && \
+              echo "Setting permissions" && \
               chmod -R 755 /app/config && \
-              chown -R 1000:1000 /app/config
+              chown -R 1000:1000 /app/config && \
+              echo "Final listing of /app/config:" && \
+              ls -la /app/config/
           volumeMounts:
             - name: homepage-config-source
               mountPath: /tmp/config
