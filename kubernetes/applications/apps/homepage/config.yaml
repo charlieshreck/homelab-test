@@ -122,7 +122,7 @@ data:
         - ArgoCD:
             href: https://argocd.shreck.co.uk
             description: GitOps continuous delivery
-            icon: argocd.png
+            icon: argo.png
             namespace: argocd
             app: argocd-server
 
@@ -156,7 +156,7 @@ data:
             pod-selector: app=homeassistant
 
         - File Browser:
-            href: https://filebrowser.shreck.co.uk
+            href: https://files.shreck.co.uk
             description: Web file manager
             icon: filebrowser.png
             namespace: apps
