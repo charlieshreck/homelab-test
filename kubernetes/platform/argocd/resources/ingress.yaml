@@ -8,7 +8,7 @@ metadata:
     gethomepage.dev/name: "ArgoCD"
     gethomepage.dev/description: "GitOps continuous delivery"
     gethomepage.dev/group: "Platform Services"
-    gethomepage.dev/icon: "argo.png"
+    gethomepage.dev/icon: "argocd.png"
     gethomepage.dev/pod-selector: "app.kubernetes.io/name=argocd-server"
 spec:
   ingressClassName: traefik

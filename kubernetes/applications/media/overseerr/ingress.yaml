@@ -8,7 +8,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Overseerr"
     gethomepage.dev/description: "Request management"
-    gethomepage.dev/group: "Media Services"
+    gethomepage.dev/group: "Media"
     gethomepage.dev/icon: "overseerr.png"
     gethomepage.dev/pod-selector: "app=overseerr"
     gethomepage.dev/widget.type: "overseerr"
