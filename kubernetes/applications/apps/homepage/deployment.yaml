@@ -50,9 +50,36 @@ spec:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: "homepage.shreck.co.uk"
-          envFrom:
-            - secretRef:
-                name: homepage-api-keys
+            - name: HOMEPAGE_VAR_RADARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-radarr
+                  key: API_KEY
+            - name: HOMEPAGE_VAR_SONARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-sonarr
+                  key: API_KEY
+            - name: HOMEPAGE_VAR_OVERSEERR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-overseerr
+                  key: API_KEY
+            - name: HOMEPAGE_VAR_PROWLARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-prowlarr
+                  key: API_KEY
+            - name: HOMEPAGE_VAR_SABNZBD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-sabnzbd
+                  key: API_KEY
+            - name: HOMEPAGE_VAR_TRANSMISSION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-transmission
+                  key: PASSWORD
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
