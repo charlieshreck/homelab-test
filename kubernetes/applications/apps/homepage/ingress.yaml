@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage
+  namespace: apps
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  labels:
+    app.kubernetes.io/name: homepage
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - homepage.shreck.co.uk
+      secretName: shreck-co-uk-tls
+  rules:
+    - host: homepage.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000
