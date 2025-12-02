@@ -22,13 +22,13 @@ data:
     color: slate
     headerStyle: boxed
     layout:
-      media:
+      Media:
         style: row
         columns: 3
-      apps:
+      Home Services:
         style: row
         columns: 3
-      monitoring:
+      Platform Services:
         style: row
         columns: 3
 
