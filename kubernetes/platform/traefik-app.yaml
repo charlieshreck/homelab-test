@@ -43,8 +43,8 @@ spec:
             publishedService:
               enabled: true
           kubernetesCRD:
-            enabled: false  # ❌ DISABLED - using standard Ingress only
-        
+            enabled: true  # ✅ ENABLED - required for dashboard IngressRoute
+
         # Service Configuration - Cilium LoadBalancer
         service:
           enabled: true
@@ -84,6 +84,7 @@ spec:
         # Additional arguments (simplified)
         additionalArguments:
           - "--providers.kubernetesingress.ingressclass=traefik"
+          - "--api.insecure=true"
         
         # TLS Configuration
         tlsOptions:

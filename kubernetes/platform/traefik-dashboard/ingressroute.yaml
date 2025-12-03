@@ -1,46 +1,24 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: traefik-dashboard
-  namespace: traefik
-  labels:
-    app.kubernetes.io/name: traefik-dashboard
-spec:
-  ports:
-    - name: traefik
-      port: 8080
-      targetPort: traefik
-  selector:
-    app.kubernetes.io/name: traefik
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: traefik-dashboard
   namespace: traefik
   labels:
     app.kubernetes.io/name: traefik-dashboard
   annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: "Traefik"
     gethomepage.dev/description: "Ingress Controller Dashboard"
     gethomepage.dev/group: "Platform Services"
     gethomepage.dev/icon: "traefik.png"
 spec:
-  ingressClassName: traefik
-  rules:
-    - host: traefik.shreck.co.uk
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: traefik-dashboard
-                port:
-                  number: 8080
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`traefik.shreck.co.uk`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))
+      services:
+        - kind: TraefikService
+          name: api@internal
   tls:
-    - hosts:
-        - traefik.shreck.co.uk
-      secretName: shreck-co-uk-tls
+    secretName: shreck-co-uk-tls
