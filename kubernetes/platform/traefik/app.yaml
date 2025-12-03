@@ -24,6 +24,11 @@ spec:
             enabled: true
           kubernetesCRD:
             enabled: true
+        ingressRoute:
+          dashboard:
+            enabled: false
+        additionalArguments:
+          - "--api.insecure=true"
         service:
           enabled: true
           type: LoadBalancer
