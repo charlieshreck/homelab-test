@@ -99,12 +99,6 @@ data:
             proxmoxNode: fal
             proxmoxVMID: 203
 
-    - Platform Services:
-        - Traefik:
-            icon: traefik.png
-            href: https://traefik.shreck.co.uk/dashboard/
-            description: Ingress Controller Dashboard
-
   widgets.yaml: |
     - logo:
         icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
