@@ -22,6 +22,8 @@ spec:
         providers:
           kubernetesIngress:
             enabled: true
+          kubernetesCRD:
+            enabled: true
         service:
           enabled: true
           type: LoadBalancer
