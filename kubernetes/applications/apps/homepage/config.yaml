@@ -65,22 +65,16 @@ data:
             description: Main Proxmox Server
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 100
+              proxmoxNode: fal
+              proxmoxVMID: 100
 
         - Restic Backup:
             icon: mdi-backup-restore
             description: Backup Server
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 150
+              proxmoxNode: fal
+              proxmoxVMID: 150
 
     - Kubernetes:
         - Talos Control Plane:
@@ -88,44 +82,32 @@ data:
             description: K8s Control Plane Node
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 200
+              proxmoxNode: fal
+              proxmoxVMID: 200
 
         - Talos Worker 01:
             icon: kubernetes.png
             description: K8s Worker Node 1
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 201
+              proxmoxNode: fal
+              proxmoxVMID: 201
 
         - Talos Worker 02:
             icon: kubernetes.png
             description: K8s Worker Node 2
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 202
+              proxmoxNode: fal
+              proxmoxVMID: 202
 
         - Talos Worker 03:
             icon: kubernetes.png
             description: K8s Worker Node 3
             widget:
               type: proxmox
-              url: https://10.10.0.151:8006
-              username: root@pam!homepage
-              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
-              node: fal
-              vm: 203
+              proxmoxNode: fal
+              proxmoxVMID: 203
 
   widgets.yaml: |
     - logo:
@@ -158,10 +140,10 @@ data:
   docker.yaml: ""
 
   proxmox.yaml: |
-    - terra:
+    - fal:
         url: https://10.10.0.151:8006
-        username: root@pam!homepage
-        password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
+        token: root@pam!homepage
+        secret: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
 
   custom.css: ""
 
