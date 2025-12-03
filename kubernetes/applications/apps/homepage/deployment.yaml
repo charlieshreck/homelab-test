@@ -158,14 +158,19 @@ spec:
               cpu: 100m
               memory: 128Mi
         - name: stats-server
-          image: python:3.11-alpine
+          image: busybox:latest
           imagePullPolicy: IfNotPresent
           command:
             - sh
             - -c
             - |
-              cd /shared
-              python3 -m http.server 8080
+              while true; do
+                if [ -f /shared/stats.json ]; then
+                  echo -e "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n$(cat /shared/stats.json)" | nc -l -p 8080
+                else
+                  echo -e "HTTP/1.1 503 Service Unavailable\r\n\r\n{\"error\":\"Stats not available yet\"}" | nc -l -p 8080
+                fi
+              done
           ports:
             - name: stats
               containerPort: 8080
@@ -176,10 +181,10 @@ spec:
           resources:
             requests:
               cpu: 5m
-              memory: 16Mi
+              memory: 8Mi
             limits:
               cpu: 20m
-              memory: 32Mi
+              memory: 16Mi
       volumes:
         - name: homepage-config-source
           configMap:
