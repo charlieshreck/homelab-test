@@ -109,7 +109,7 @@ etcd:
       memory: "512Mi"
     requests:
       cpu: "100m"
-      memory: "256Mi"
+      memory: "128Mi"
 
   pdb:
     create: true
