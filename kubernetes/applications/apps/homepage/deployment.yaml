@@ -131,14 +131,14 @@ spec:
                     USED_PERCENT=0
                   fi
 
-                  # Write stats to file that Homepage can read
-                  printf "Mayastor Storage Pools\nTotal Capacity: %s\nUsed: %s (%d%%)\nAvailable: %s\nStatus: %s\n" \
-                    "$(numfmt --to=iec-i --suffix=B $TOTAL_CAPACITY)" \
-                    "$(numfmt --to=iec-i --suffix=B $TOTAL_USED)" \
-                    "$USED_PERCENT" \
-                    "$(numfmt --to=iec-i --suffix=B $TOTAL_AVAILABLE)" \
-                    "$([ "$DEGRADED_COUNT" -eq 0 ] && echo 'All Online' || echo "$DEGRADED_COUNT Degraded/Faulted")" \
-                    > /shared/stats.txt
+                  # Write stats as JSON for Homepage custom API widget
+                  TOTAL_FMT=$(numfmt --to=iec-i --suffix=B $TOTAL_CAPACITY)
+                  USED_FMT=$(numfmt --to=iec-i --suffix=B $TOTAL_USED)
+                  AVAIL_FMT=$(numfmt --to=iec-i --suffix=B $TOTAL_AVAILABLE)
+                  STATUS=$([ "$DEGRADED_COUNT" -eq 0 ] && echo 'All Online' || echo "$DEGRADED_COUNT Degraded/Faulted")
+
+                  # Write JSON file
+                  echo "{\"total\":\"$TOTAL_FMT\",\"used\":\"$USED_FMT ($USED_PERCENT%)\",\"available\":\"$AVAIL_FMT\",\"status\":\"$STATUS\"}" > /shared/stats.json
 
                   echo "Updated Mayastor stats at $(date)"
                 else
@@ -157,6 +157,29 @@ spec:
             limits:
               cpu: 100m
               memory: 128Mi
+        - name: stats-server
+          image: python:3.11-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              cd /shared
+              python3 -m http.server 8080
+          ports:
+            - name: stats
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: mayastor-stats
+              mountPath: /shared
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
       volumes:
         - name: homepage-config-source
           configMap:

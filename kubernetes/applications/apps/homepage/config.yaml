@@ -53,6 +53,29 @@ data:
     # Services are now automatically discovered via ingress annotations
     # See gethomepage.dev/enabled annotations on ingress resources
 
+    - Storage:
+        - Mayastor Pools:
+            icon: openebs.png
+            description: Distributed Storage
+            widget:
+              type: customapi
+              url: http://localhost:8080/mayastor-stats
+              refreshInterval: 30000
+              display: block
+              mappings:
+                - field: total
+                  label: Total Capacity
+                  format: text
+                - field: used
+                  label: Used
+                  format: text
+                - field: available
+                  label: Available
+                  format: text
+                - field: status
+                  label: Status
+                  format: text
+
   widgets.yaml: |
     - logo:
         icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
@@ -79,13 +102,6 @@ data:
         cpu: true
         memory: true
         disk: /
-        expanded: true
-
-    - resources:
-        label: "Mayastor Storage"
-        cpu: false
-        memory: false
-        disk: /app/mayastor
         expanded: true
 
   docker.yaml: ""
