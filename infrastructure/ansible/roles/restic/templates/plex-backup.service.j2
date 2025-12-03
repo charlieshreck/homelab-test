@@ -1,0 +1,14 @@
+[Unit]
+Description=Plex Media Server Backup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/plex-backup.sh
+TimeoutStartSec=3600
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=multi-user.target

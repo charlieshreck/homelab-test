@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Plex Backup Timer
+
+[Timer]
+OnCalendar={{ backup_schedule }}
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

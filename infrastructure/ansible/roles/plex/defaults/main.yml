@@ -1,0 +1,25 @@
+---
+# Plex defaults
+plex_uid: 1000
+plex_gid: 1000
+plex_timezone: "Europe/London"
+plex_claim_token: ""
+
+# Docker image
+plex_image: "lscr.io/linuxserver/plex:latest"
+plex_docker_mod: "jefflessard/plex-vaapi-amdgpu-mod"
+
+# Paths
+plex_config_dir: "/opt/plex/config"
+plex_compose_dir: "/opt/plex/compose"
+plex_transcode_dir: "/dev/shm"  # RAM-based transcoding
+
+# NFS
+nfs_server: "10.11.0.5"
+nfs_media_path: "/mnt/Tongariro/Plexopathy"
+nfs_mount_point: "/mnt/media"
+media_network_ip: "10.11.0.60"
+
+# Network
+plex_network_mode: "host"
+plex_web_port: 32400

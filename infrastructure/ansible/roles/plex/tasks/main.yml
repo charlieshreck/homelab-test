@@ -1,0 +1,100 @@
+---
+- name: Install required packages
+  apt:
+    name:
+      - docker.io
+      - docker-compose
+      - nfs-common
+      - vainfo
+      - mesa-va-drivers
+      - libva-drm2
+      - libva2
+      - curl
+      - jq
+    state: present
+
+- name: Start and enable Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Create Plex user
+  user:
+    name: plex
+    uid: "{{ plex_uid }}"
+    group: "{{ plex_gid }}"
+    system: true
+    create_home: false
+
+- name: Create Plex directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ plex_uid }}"
+    group: "{{ plex_gid }}"
+    mode: "0755"
+  loop:
+    - "{{ plex_config_dir }}"
+    - "{{ plex_compose_dir }}"
+    - "{{ nfs_mount_point }}"
+
+- name: Configure NFS mount with media network binding
+  mount:
+    src: "{{ nfs_server }}:{{ nfs_media_path }}"
+    path: "{{ nfs_mount_point }}"
+    fstype: nfs
+    opts: "nofail,x-systemd.automount,x-systemd.device-timeout=10s,noatime,async,soft,timeo=150,retrans=3,clientaddr={{ media_network_ip }}"
+    state: mounted
+
+- name: Verify GPU device exists
+  stat:
+    path: /dev/dri/renderD128
+  register: gpu_device
+  failed_when: not gpu_device.stat.exists
+
+- name: Verify VAAPI support
+  command: vainfo --display drm --device /dev/dri/renderD128
+  register: vainfo_result
+  changed_when: false
+  failed_when: "'VAEntrypointVLD' not in vainfo_result.stdout"
+
+- name: Display VAAPI capabilities
+  debug:
+    var: vainfo_result.stdout_lines
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ plex_compose_dir }}/docker-compose.yml"
+    mode: "0644"
+  notify: Restart Plex
+
+- name: Create .env file for Plex
+  template:
+    src: plex.env.j2
+    dest: "{{ plex_compose_dir }}/.env"
+    mode: "0600"
+  notify: Restart Plex
+
+- name: Start Plex container
+  community.docker.docker_compose:
+    project_src: "{{ plex_compose_dir }}"
+    state: present
+    pull: true
+  register: plex_compose
+
+- name: Wait for Plex to be ready
+  uri:
+    url: "http://localhost:{{ plex_web_port }}/web"
+    status_code: [200, 401]
+  register: plex_status
+  until: plex_status.status in [200, 401]
+  retries: 30
+  delay: 10
+
+- name: Deploy backup script
+  template:
+    src: plex-backup.sh.j2
+    dest: /usr/local/bin/plex-backup.sh
+    mode: "0755"

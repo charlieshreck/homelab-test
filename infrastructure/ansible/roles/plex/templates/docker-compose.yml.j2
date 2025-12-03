@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  plex:
+    image: {{ plex_image }}
+    container_name: plex
+    environment:
+      - PUID={{ plex_uid }}
+      - PGID={{ plex_gid }}
+      - TZ={{ plex_timezone }}
+      - VERSION=docker
+      - DOCKER_MODS={{ plex_docker_mod }}
+      - PLEX_CLAIM=${PLEX_CLAIM_TOKEN}
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - {{ plex_config_dir }}:/config
+      - {{ plex_transcode_dir }}:/transcode
+      - {{ nfs_mount_point }}:/data:ro
+    network_mode: {{ plex_network_mode }}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/web"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

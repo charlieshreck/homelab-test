@@ -1,0 +1,38 @@
+---
+- name: Configure Plex Media Server with AMD GPU transcoding
+  hosts: plex
+  become: true
+
+  pre_tasks:
+    - name: Wait for container to be ready
+      wait_for_connection:
+        timeout: 300
+
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+  roles:
+    - role: plex
+      tags: [plex]
+    - role: restic
+      tags: [backup, restic]
+
+  post_tasks:
+    - name: Display Plex access information
+      debug:
+        msg: |
+          Plex Media Server deployed successfully!
+
+          Web UI: http://{{ management_ip }}:32400/web
+
+          Next steps:
+          1. Visit the Web UI to complete initial setup
+          2. Claim your server with Plex account
+          3. Add library paths pointing to /mnt/media
+          4. Enable Hardware Transcoding in Settings > Transcoder
+
+          Verify hardware transcoding:
+          - Play a video and force transcoding
+          - Check dashboard shows "Video: Transcode (HW)"

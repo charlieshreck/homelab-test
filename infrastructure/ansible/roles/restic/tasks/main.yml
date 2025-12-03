@@ -1,0 +1,55 @@
+---
+- name: Install Restic
+  apt:
+    name: restic
+    state: present
+
+- name: Create Restic config directory
+  file:
+    path: /etc/restic
+    state: directory
+    mode: "0700"
+
+- name: Deploy Restic environment file
+  template:
+    src: restic.env.j2
+    dest: /etc/restic/plex.env
+    mode: "0600"
+
+- name: Create Restic password file
+  copy:
+    content: "{{ restic_password }}"
+    dest: /etc/restic/password.txt
+    mode: "0600"
+
+- name: Initialize Restic repository
+  command: restic init
+  environment:
+    RESTIC_REPOSITORY: "{{ restic_repository }}"
+    RESTIC_PASSWORD_FILE: /etc/restic/password.txt
+    AWS_ACCESS_KEY_ID: "{{ minio_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ minio_secret_key }}"
+  register: restic_init
+  changed_when: restic_init.rc == 0
+  failed_when: restic_init.rc != 0 and "already initialized" not in restic_init.stderr
+
+- name: Deploy backup systemd service
+  template:
+    src: plex-backup.service.j2
+    dest: /etc/systemd/system/plex-backup.service
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Deploy backup systemd timer
+  template:
+    src: plex-backup.timer.j2
+    dest: /etc/systemd/system/plex-backup.timer
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Enable and start backup timer
+  systemd:
+    name: plex-backup.timer
+    state: started
+    enabled: true
+    daemon_reload: true

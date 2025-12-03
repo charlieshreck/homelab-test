@@ -1,0 +1,71 @@
+#!/bin/bash
+# Plex Media Server Backup Script
+# Backs up Plex database and configuration to Restic repository
+
+set -euo pipefail
+
+# Load Restic environment
+source /etc/restic/plex.env
+
+PLEX_DATA="{{ plex_config_dir }}/Library/Application Support/Plex Media Server"
+LOCK_FILE="/var/run/plex-backup.lock"
+LOG_FILE="/var/log/plex-backup.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+cleanup() {
+    rm -f "$LOCK_FILE"
+    # Restart Plex if we stopped it
+    if [[ "${PLEX_STOPPED:-false}" == "true" ]]; then
+        log "Restarting Plex..."
+        docker compose -f {{ plex_compose_dir }}/docker-compose.yml start
+    fi
+}
+
+trap cleanup EXIT
+
+# Prevent concurrent runs
+if [[ -f "$LOCK_FILE" ]]; then
+    log "ERROR: Backup already running (lock file exists)"
+    exit 1
+fi
+touch "$LOCK_FILE"
+
+log "Starting Plex backup..."
+
+# Stop Plex for consistent database backup
+log "Stopping Plex for consistent backup..."
+docker compose -f {{ plex_compose_dir }}/docker-compose.yml stop
+PLEX_STOPPED=true
+sleep 10
+
+# Perform backup with exclusions
+log "Running Restic backup..."
+restic backup "$PLEX_DATA" \
+    --exclude="Cache" \
+    --exclude="Logs" \
+    --exclude="Crash Reports" \
+    --exclude="Updates" \
+    --exclude="*.log" \
+    --tag plex-backup \
+    --tag "$(date +%Y-%m-%d)" \
+    2>&1 | tee -a "$LOG_FILE"
+
+# Apply retention policy
+log "Applying retention policy..."
+restic forget \
+    --keep-daily 7 \
+    --keep-weekly 4 \
+    --keep-monthly 12 \
+    --prune \
+    2>&1 | tee -a "$LOG_FILE"
+
+# Verify backup integrity (weekly)
+if [[ $(date +%u) -eq 7 ]]; then
+    log "Running weekly integrity check..."
+    restic check 2>&1 | tee -a "$LOG_FILE"
+fi
+
+log "Backup completed successfully!"

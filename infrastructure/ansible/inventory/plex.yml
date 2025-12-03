@@ -1,0 +1,30 @@
+all:
+  hosts:
+    plex:
+      ansible_host: 10.10.0.60
+      ansible_user: root
+      ansible_python_interpreter: /usr/bin/python3
+  vars:
+    # Plex configuration
+    plex_uid: 1000
+    plex_gid: 1000
+    plex_timezone: "Europe/London"
+    plex_claim_token: ""  # Set via environment variable PLEX_CLAIM
+
+    # Network configuration
+    management_ip: "10.10.0.60"
+    media_network_ip: "10.11.0.60"
+
+    # NFS configuration (TrueNAS)
+    nfs_server: "10.11.0.5"  # TrueNAS on storage network
+    nfs_media_path: "/mnt/Tongariro/Plexopathy"
+    nfs_mount_point: "/mnt/media"
+
+    # Restic backup configuration
+    restic_repository: "s3:http://10.10.0.70:9000/plex-backups"
+    restic_password: "{{ lookup('env', 'RESTIC_PASSWORD') }}"
+    minio_access_key: "{{ lookup('env', 'MINIO_ACCESS_KEY') }}"
+    minio_secret_key: "{{ lookup('env', 'MINIO_SECRET_KEY') }}"
+
+    # Backup schedule (03:00 daily)
+    backup_schedule: "*-*-* 03:00:00"
