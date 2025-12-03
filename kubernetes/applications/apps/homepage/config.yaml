@@ -65,12 +65,14 @@ data:
             description: Main Proxmox Server
             proxmoxNode: fal
             proxmoxVMID: 100
+            proxmoxType: lxc
 
         - Restic Backup:
             icon: mdi-backup-restore
             description: Backup Server
             proxmoxNode: fal
             proxmoxVMID: 150
+            proxmoxType: lxc
 
     - Kubernetes:
         - Talos Control Plane:
