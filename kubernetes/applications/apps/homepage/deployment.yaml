@@ -132,13 +132,13 @@ spec:
                   fi
 
                   # Write stats to file that Homepage can read
-                  cat > /shared/stats.txt <<EOF
-Mayastor Storage Pools
-Total Capacity: $(numfmt --to=iec-i --suffix=B $TOTAL_CAPACITY)
-Used: $(numfmt --to=iec-i --suffix=B $TOTAL_USED) (${USED_PERCENT}%)
-Available: $(numfmt --to=iec-i --suffix=B $TOTAL_AVAILABLE)
-Status: $([ "$DEGRADED_COUNT" -eq 0 ] && echo "All Online" || echo "$DEGRADED_COUNT Degraded/Faulted")
-EOF
+                  printf "Mayastor Storage Pools\nTotal Capacity: %s\nUsed: %s (%d%%)\nAvailable: %s\nStatus: %s\n" \
+                    "$(numfmt --to=iec-i --suffix=B $TOTAL_CAPACITY)" \
+                    "$(numfmt --to=iec-i --suffix=B $TOTAL_USED)" \
+                    "$USED_PERCENT" \
+                    "$(numfmt --to=iec-i --suffix=B $TOTAL_AVAILABLE)" \
+                    "$([ "$DEGRADED_COUNT" -eq 0 ] && echo 'All Online' || echo "$DEGRADED_COUNT Degraded/Faulted")" \
+                    > /shared/stats.txt
 
                   echo "Updated Mayastor stats at $(date)"
                 else
