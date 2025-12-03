@@ -75,9 +75,17 @@ data:
           showLabel: true
 
     - resources:
+        label: "Homepage Node"
         cpu: true
         memory: true
         disk: /
+        expanded: true
+
+    - resources:
+        label: "Mayastor Storage"
+        cpu: false
+        memory: false
+        disk: /app/mayastor
         expanded: true
 
   docker.yaml: ""

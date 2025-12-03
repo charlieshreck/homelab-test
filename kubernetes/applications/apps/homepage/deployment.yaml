@@ -88,6 +88,8 @@ spec:
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
+            - name: mayastor-stats
+              mountPath: /app/mayastor
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
@@ -98,11 +100,70 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+        - name: mayastor-monitor
+          image: bitnami/kubectl:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                # Query DiskPool CRDs and aggregate stats
+                POOLS_JSON=$(kubectl get diskpools -n mayastor -o json 2>/dev/null)
+
+                if [ $? -eq 0 ]; then
+                  # Calculate totals using jq
+                  TOTAL_CAPACITY=$(echo "$POOLS_JSON" | jq -r '[.items[].status.capacity // 0] | add')
+                  TOTAL_USED=$(echo "$POOLS_JSON" | jq -r '[.items[].status.used // 0] | add')
+                  TOTAL_AVAILABLE=$(echo "$POOLS_JSON" | jq -r '[.items[].status.available // 0] | add')
+
+                  # Check if any pool is degraded/faulted
+                  DEGRADED_COUNT=$(echo "$POOLS_JSON" | jq -r '[.items[].status.pool_status] | map(select(. != "Online")) | length')
+
+                  # Create a mock filesystem stats file for Homepage resources widget
+                  # Homepage expects disk usage in a specific format
+                  mkdir -p /shared
+
+                  # Calculate percentages
+                  if [ "$TOTAL_CAPACITY" -gt 0 ]; then
+                    USED_PERCENT=$((TOTAL_USED * 100 / TOTAL_CAPACITY))
+                  else
+                    USED_PERCENT=0
+                  fi
+
+                  # Write stats to file that Homepage can read
+                  cat > /shared/stats.txt <<EOF
+Mayastor Storage Pools
+Total Capacity: $(numfmt --to=iec-i --suffix=B $TOTAL_CAPACITY)
+Used: $(numfmt --to=iec-i --suffix=B $TOTAL_USED) (${USED_PERCENT}%)
+Available: $(numfmt --to=iec-i --suffix=B $TOTAL_AVAILABLE)
+Status: $([ "$DEGRADED_COUNT" -eq 0 ] && echo "All Online" || echo "$DEGRADED_COUNT Degraded/Faulted")
+EOF
+
+                  echo "Updated Mayastor stats at $(date)"
+                else
+                  echo "Failed to query DiskPools at $(date)"
+                fi
+
+                sleep 30
+              done
+          volumeMounts:
+            - name: mayastor-stats
+              mountPath: /shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
       volumes:
         - name: homepage-config-source
           configMap:
             name: homepage
         - name: homepage-config
+          emptyDir: {}
+        - name: mayastor-stats
           emptyDir: {}
         - name: logs
           emptyDir: {}

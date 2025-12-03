@@ -14,3 +14,4 @@ resources:
   - tasmoadmin-app.yaml
   - karakeep-app.yaml
   - tautulli-app.yaml
+  - metrics-server-app.yaml
