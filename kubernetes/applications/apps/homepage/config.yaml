@@ -63,51 +63,39 @@ data:
         - Terra (Proxmox Host):
             icon: proxmox.png
             description: Main Proxmox Server
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 100
+            proxmoxNode: fal
+            proxmoxVMID: 100
 
         - Restic Backup:
             icon: mdi-backup-restore
             description: Backup Server
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 150
+            proxmoxNode: fal
+            proxmoxVMID: 150
 
     - Kubernetes:
         - Talos Control Plane:
             icon: talos.png
             description: K8s Control Plane Node
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 200
+            proxmoxNode: fal
+            proxmoxVMID: 200
 
         - Talos Worker 01:
             icon: kubernetes.png
             description: K8s Worker Node 1
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 201
+            proxmoxNode: fal
+            proxmoxVMID: 201
 
         - Talos Worker 02:
             icon: kubernetes.png
             description: K8s Worker Node 2
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 202
+            proxmoxNode: fal
+            proxmoxVMID: 202
 
         - Talos Worker 03:
             icon: kubernetes.png
             description: K8s Worker Node 3
-            widget:
-              type: proxmox
-              proxmoxNode: fal
-              proxmoxVMID: 203
+            proxmoxNode: fal
+            proxmoxVMID: 203
 
   widgets.yaml: |
     - logo:
