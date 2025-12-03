@@ -53,29 +53,6 @@ data:
     # Services are now automatically discovered via ingress annotations
     # See gethomepage.dev/enabled annotations on ingress resources
 
-    - Storage:
-        - Mayastor Pools:
-            icon: openebs.png
-            description: Distributed Storage
-            widget:
-              type: customapi
-              url: http://localhost:8080/mayastor-stats
-              refreshInterval: 30000
-              display: block
-              mappings:
-                - field: total
-                  label: Total Capacity
-                  format: text
-                - field: used
-                  label: Used
-                  format: text
-                - field: available
-                  label: Available
-                  format: text
-                - field: status
-                  label: Status
-                  format: text
-
   widgets.yaml: |
     - logo:
         icon: https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png/kubernetes.png
@@ -106,7 +83,11 @@ data:
 
   docker.yaml: ""
 
-  proxmox.yaml: ""
+  proxmox.yaml: |
+    - terra:
+        url: https://10.10.0.151:8006
+        username: root@pam!homepage
+        password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
 
   custom.css: ""
 
