@@ -142,7 +142,7 @@ data:
   proxmox.yaml: |
     fal:
       url: https://10.10.0.151:8006
-      token: root@pam!homepage
+      token: api@pam!homepage
       secret: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
 
   custom.css: ""
