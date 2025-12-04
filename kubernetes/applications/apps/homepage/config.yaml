@@ -46,7 +46,7 @@ data:
               href: https://github.com/
         - ArgoCD:
             - abbr: CD
-              icon: argocd.png
+              icon: si-argo
               href: https://argocd.shreck.co.uk/
 
     - Management:
