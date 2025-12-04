@@ -1,0 +1,135 @@
+# Cloudflare Tunnel Ingresses for Media Namespace
+# These ingresses automatically create tunnel routes and DNS records
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: overseerr-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: overseerr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: overseerr
+                port:
+                  number: 5055
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prowlarr-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: prowlarr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prowlarr
+                port:
+                  number: 9696
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: radarr-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: radarr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: radarr
+                port:
+                  number: 7878
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sabnzbd-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: sabnzbd.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sabnzbd
+                port:
+                  number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sonarr-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: sonarr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sonarr
+                port:
+                  number: 8989
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tautulli-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: tautulli.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tautulli
+                port:
+                  number: 8181
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transmission-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: transmission.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: transmission
+                port:
+                  number: 9091

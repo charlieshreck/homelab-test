@@ -1,0 +1,154 @@
+# Cloudflare Tunnel Ingresses for Apps Namespace
+# These ingresses automatically create tunnel routes and DNS records
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: filebrowser-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: files.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: filebrowser
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: glasskeep-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: glasskeep.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: glasskeep
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homeassistant-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: homeassistant.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homeassistant
+                port:
+                  number: 8123
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: homepage.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  number: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: karakeep-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: karakeep.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: karakeep
+                port:
+                  number: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tasmoadmin-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: tasmoadmin.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tasmoadmin
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: termix-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: termix.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: termix
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vaultwarden-cloudflare
+  namespace: apps
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: vaultwarden.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vaultwarden
+                port:
+                  number: 80
