@@ -42,20 +42,25 @@ data:
     - Developer:
         - Github:
             - abbr: GH
+              icon: github.png
               href: https://github.com/
         - ArgoCD:
             - abbr: CD
+              icon: argocd.png
               href: https://argocd.shreck.co.uk/
 
     - Management:
         - Traefik:
             - abbr: TF
+              icon: traefik.png
               href: https://traefik.shreck.co.uk/
         - Cloudflare:
             - abbr: CF
+              icon: cloudflare.png
               href: https://dash.cloudflare.com/
         - Infisical:
             - abbr: IS
+              icon: infisical.png
               href: https://app.infisical.com/organizations/8c59d9a9-00bb-472f-a140-3e5c7984f56c/projects
 
   services.yaml: |
