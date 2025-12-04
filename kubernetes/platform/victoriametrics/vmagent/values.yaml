@@ -5,14 +5,14 @@
 remoteWriteUrls:
   - http://victoria-metrics-single-server.monitoring.svc:8428/api/v1/write
 
-# Resource limits
+# Resource limits - reduced for tight cluster
 resources:
   requests:
-    cpu: 100m
-    memory: 200Mi
+    cpu: 50m
+    memory: 128Mi
   limits:
     cpu: 500m
-    memory: 500Mi
+    memory: 384Mi
 
 # Extra scrape configs
 extraArgs:

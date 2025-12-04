@@ -13,14 +13,14 @@ server:
   # Retention period
   retentionPeriod: 15d
 
-  # Resource limits
+  # Resource limits - reduced for tight cluster
   resources:
     requests:
-      cpu: 200m
-      memory: 300Mi
+      cpu: 150m
+      memory: 256Mi
     limits:
       cpu: 1000m
-      memory: 800Mi
+      memory: 768Mi
 
   # Extra args for optimization
   extraArgs:
