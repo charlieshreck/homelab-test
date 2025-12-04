@@ -3,21 +3,12 @@
 # Automatically manages Cloudflare Tunnel routes from Kubernetes Ingresses
 
 cloudflare:
-  # Cloudflare Account ID
-  accountId: "9a7a5c367a6dd8a2e39c89f1e24db208"
-
-  # API Token from secret (synced from Infisical)
-  apiTokenSecretRef:
+  # Use existing secret for all credentials
+  secretRef:
     name: cloudflare-tunnel-credentials
-    key: CLOUDFLARE_API_TOKEN
-
-# Tunnel configuration
-tunnel:
-  # Existing tunnel ID
-  id: "51b2231f-8d36-4795-a706-7405da8ea3d9"
-
-  # Don't create new tunnel, use existing
-  create: false
+    accountIDKey: CLOUDFLARE_ACCOUNT_ID
+    tunnelIDKey: CLOUDFLARE_TUNNEL_ID
+    apiTokenKey: CLOUDFLARE_API_TOKEN
 
 # Ingress class configuration
 ingressClass:
