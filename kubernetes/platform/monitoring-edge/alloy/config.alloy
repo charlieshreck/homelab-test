@@ -1,0 +1,231 @@
+// Grafana Alloy Configuration
+// Flow language for unified telemetry collection
+
+// ============================================================================
+// DISCOVERY: Find all pods, services, and nodes in the cluster
+// ============================================================================
+
+// Discover all pods
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+
+// Discover all services
+discovery.kubernetes "services" {
+  role = "service"
+}
+
+// Discover all nodes
+discovery.kubernetes "nodes" {
+  role = "node"
+}
+
+// Discover endpoints (for scraping)
+discovery.kubernetes "endpoints" {
+  role = "endpoints"
+}
+
+// ============================================================================
+// METRICS: Scrape Prometheus metrics
+// ============================================================================
+
+// Scrape metrics from pods with prometheus.io/scrape annotation
+prometheus.scrape "pods" {
+  targets    = discovery.kubernetes.pods.targets
+  forward_to = [prometheus.relabel.pods.receiver]
+
+  scrape_interval = "30s"
+  scrape_timeout  = "10s"
+
+  // Honor pod annotations
+  honor_labels = true
+}
+
+// Relabel pod metrics
+prometheus.relabel "pods" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  // Keep only targets with prometheus.io/scrape = "true"
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  // Use custom port if specified
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
+    action        = "replace"
+    regex         = "([^:]+)(?::\\d+)?;(.*)"
+    replacement   = "$2:$1"
+    target_label  = "__address__"
+  }
+
+  // Use custom path if specified
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+    action        = "replace"
+    target_label  = "__metrics_path__"
+    regex         = "(.+)"
+  }
+
+  // Add pod metadata as labels
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label  = "node"
+  }
+}
+
+// Scrape kubelet metrics (cAdvisor)
+prometheus.scrape "kubelet" {
+  targets    = discovery.kubernetes.nodes.targets
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "30s"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  scheme            = "https"
+  tls_config {
+    insecure_skip_verify = true
+  }
+
+  // Relabel to scrape kubelet metrics
+  clustering {
+    enabled = false
+  }
+}
+
+// Remote write to Mimir
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://mimir-nginx.monitoring.svc:80/api/v1/push"
+
+    // Queue configuration for reliability
+    queue_config {
+      capacity          = 10000
+      max_shards        = 10
+      min_shards        = 1
+      max_samples_per_send = 5000
+      batch_send_deadline  = "5s"
+    }
+
+    // Retry configuration
+    metadata_config {
+      send         = true
+      send_interval = "1m"
+    }
+  }
+}
+
+// ============================================================================
+// LOGS: Collect logs from all pods
+// ============================================================================
+
+// Source logs from Kubernetes pods
+loki.source.kubernetes "pods" {
+  targets    = discovery.kubernetes.pods.targets
+  forward_to = [loki.process.pod_logs.receiver]
+}
+
+// Process and enrich logs
+loki.process "pod_logs" {
+  forward_to = [loki.write.loki.receiver]
+
+  // Extract log level if present
+  stage.regex {
+    expression = "level=(?P<level>\\w+)"
+  }
+
+  stage.labels {
+    values = {
+      level = "",
+    }
+  }
+
+  // Add pod metadata
+  stage.static_labels {
+    values = {
+      cluster = "homelab",
+    }
+  }
+}
+
+// Write logs to Loki
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+
+    // Batch configuration
+    batch_wait = "1s"
+    batch_size = 102400  // 100KB
+  }
+}
+
+// ============================================================================
+// TRACES: Receive and forward traces to Tempo
+// ============================================================================
+
+// OTLP receiver for traces (gRPC)
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.metrics_from_traces.input]
+    logs    = [otelcol.exporter.loki.logs_from_traces.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// Export traces to Tempo
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo.monitoring.svc:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Generate metrics from traces (RED metrics)
+otelcol.exporter.prometheus "metrics_from_traces" {
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// Extract logs from traces
+otelcol.exporter.loki "logs_from_traces" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// ============================================================================
+// SELF-MONITORING: Monitor Alloy itself
+// ============================================================================
+
+prometheus.exporter.self "alloy" {
+}
+
+prometheus.scrape "alloy" {
+  targets    = prometheus.exporter.self.alloy.targets
+  forward_to = [prometheus.remote_write.mimir.receiver]
+
+  scrape_interval = "30s"
+}

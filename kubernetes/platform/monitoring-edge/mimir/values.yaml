@@ -1,0 +1,82 @@
+# Grafana Mimir - Scalable Metrics Storage
+# Version: 2.13.0
+
+mimir:
+  structuredConfig:
+    # Storage configuration
+    common:
+      storage:
+        backend: filesystem
+        filesystem:
+          dir: /data/mimir
+
+    # Limits configuration
+    limits:
+      # 15-day retention
+      compactor_blocks_retention_period: 15d
+
+      # Adaptive metrics (brand new feature)
+      max_global_series_per_user: 1000000
+      max_global_series_per_metric: 50000
+
+      # Prevent cardinality explosions
+      max_label_names_per_series: 30
+      max_label_value_length: 2048
+
+    # Query frontend config
+    frontend:
+      results_cache:
+        backend: memory
+        memory:
+          max_size_mb: 128
+
+# Single-instance deployment (not clustered)
+mimir-distributed:
+  enabled: false
+
+# Resource configuration
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: mayastor-2
+  size: 50Gi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+
+# Enable metrics about Mimir itself
+metrics:
+  enabled: true
+
+# Retention and compaction
+compactor:
+  enabled: true
+  persistentVolume:
+    enabled: true
+    storageClass: mayastor-2
+    size: 10Gi
+
+# Ingester configuration
+ingester:
+  replicas: 1
+  persistentVolume:
+    enabled: true
+    storageClass: mayastor-2
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi

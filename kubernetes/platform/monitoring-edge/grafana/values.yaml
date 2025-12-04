@@ -1,0 +1,251 @@
+# Grafana - Unified Observability UI
+# Version: 11.3.0
+
+# Admin credentials
+adminUser: admin
+adminPassword: changeme-temp  # Change after first login
+
+# Persistence
+persistence:
+  enabled: true
+  storageClassName: mayastor-2
+  size: 5Gi
+  accessModes:
+    - ReadWriteOnce
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Replicas
+replicas: 1
+
+# Service
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+# Grafana configuration
+grafana.ini:
+  server:
+    root_url: https://grafana.shreck.co.uk
+    serve_from_sub_path: false
+
+  security:
+    admin_user: admin
+    admin_password: changeme-temp
+    disable_gravatar: true
+
+  auth:
+    disable_login_form: false
+    disable_signout_menu: false
+
+  auth.anonymous:
+    enabled: false
+
+  users:
+    allow_sign_up: false
+    auto_assign_org: true
+    auto_assign_org_role: Viewer
+
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+
+  log:
+    mode: console
+    level: info
+
+  feature_toggles:
+    enable: traceqlEditor traceQLStreaming metricsSummary traceToMetrics traceToProfiles correlations
+
+# Datasources - Unified LGTM Stack
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      # Mimir - Metrics
+      - name: Mimir
+        type: prometheus
+        uid: mimir
+        access: proxy
+        url: http://mimir-nginx.monitoring.svc:80/prometheus
+        jsonData:
+          httpMethod: POST
+          prometheusType: Mimir
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+          incrementalQuerying: true
+          incrementalQueryOverlapWindow: 10m
+        isDefault: true
+        editable: false
+
+      # Loki - Logs
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        url: http://loki.monitoring.svc:3100
+        jsonData:
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: "trace_id=(\\w+)"
+              name: TraceID
+              url: "$${__value.raw}"
+            - datasourceUid: tempo
+              matcherRegex: "traceID=(\\w+)"
+              name: TraceID
+              url: "$${__value.raw}"
+          maxLines: 1000
+        isDefault: false
+        editable: false
+
+      # Tempo - Traces
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        access: proxy
+        url: http://tempo.monitoring.svc:3100
+        jsonData:
+          httpMethod: GET
+          tracesToLogs:
+            datasourceUid: loki
+            mappedTags:
+              - key: service.name
+                value: service
+            mapTagNamesEnabled: true
+            spanStartTimeShift: -1h
+            spanEndTimeShift: 1h
+            filterByTraceID: true
+            filterBySpanID: false
+          tracesToMetrics:
+            datasourceUid: mimir
+            queries:
+              - name: Sample query
+                query: "sum(rate(tempo_spanmetrics_latency_bucket{$$__tags}[5m]))"
+          serviceMap:
+            datasourceUid: mimir
+          search:
+            hide: false
+          nodeGraph:
+            enabled: true
+          lokiSearch:
+            datasourceUid: loki
+        isDefault: false
+        editable: false
+
+# Dashboards
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+      - name: 'kubernetes'
+        orgId: 1
+        folder: 'Kubernetes'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/kubernetes
+
+      - name: 'observability'
+        orgId: 1
+        folder: 'Observability'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/observability
+
+# Dashboard ConfigMaps (will be created separately)
+dashboardsConfigMaps:
+  kubernetes: grafana-dashboards-kubernetes
+  observability: grafana-dashboards-observability
+
+# Plugins
+plugins:
+  - grafana-clock-panel
+  - grafana-piechart-panel
+  - grafana-polystat-panel
+
+# Environment variables
+env:
+  GF_FEATURE_TOGGLES_ENABLE: "traceqlEditor traceQLStreaming metricsSummary traceToMetrics correlations"
+  GF_INSTALL_PLUGINS: ""
+
+# RBAC
+rbac:
+  create: true
+  pspEnabled: false
+
+# Service Account
+serviceAccount:
+  create: true
+  name: grafana
+
+# Security Context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 472
+  runAsUser: 472
+  runAsGroup: 472
+
+# Liveness probe
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 60
+  timeoutSeconds: 30
+  failureThreshold: 10
+
+# Readiness probe
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 30
+  timeoutSeconds: 30
+
+# Affinity - prefer different nodes for HA
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - grafana
+          topologyKey: kubernetes.io/hostname
+
+# Tolerations
+tolerations: []
+
+# Node selector
+nodeSelector: {}

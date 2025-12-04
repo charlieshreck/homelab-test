@@ -7,3 +7,4 @@ kind: Kustomization
 resources:
   - diskpools.yaml
   - storageclasses.yaml
+  - monitoring-annotations.yaml
