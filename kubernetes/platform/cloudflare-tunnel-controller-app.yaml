@@ -29,6 +29,19 @@ spec:
     server: https://kubernetes.default.svc
     namespace: cloudflare-tunnel-controller
 
+  # Ignore dynamically-created resources
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: controlled-cloudflared-connector
+      jsonPointers:
+        - /spec
+    - group: ""
+      kind: Secret
+      name: cloudflare-api
+      jsonPointers:
+        - /data
+
   syncPolicy:
     automated:
       prune: true
