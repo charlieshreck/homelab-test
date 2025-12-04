@@ -1,40 +1,33 @@
-# Grafana Mimir - Single Binary Mode (Lightweight)
-# Chart: grafana/mimir version 5.5.1
+# Grafana Mimir - Monolithic Mode (using mimir-distributed chart)
+# Chart: grafana/mimir-distributed version 5.5.0
+# Configured for single-instance monolithic deployment
 
-# Deployment mode: single binary (not microservices)
-deploymentMode: SingleBinary
-
-# Single binary replicas
-replicas: 1
+# Global settings
+global:
+  dnsService: "kube-dns"
+  clusterDomain: "cluster.local"
 
 # Mimir configuration
 mimir:
   structuredConfig:
-    # Multitenancy disabled
     multitenancy_enabled: false
 
-    # Limits
     limits:
       compactor_blocks_retention_period: 15d
       max_global_series_per_user: 500000
-      max_label_names_per_series: 30
       ingestion_rate: 50000
-      ingestion_burst_size: 100000
 
-    # Storage backend
     common:
       storage:
         backend: filesystem
-        filesystem:
-          dir: /data
 
-    # Compactor
-    compactor:
-      data_dir: /data/compactor
-      compaction_interval: 30m
+# =============================================================================
+# MONOLITHIC MODE: Enable only mimir-backend with all components
+# =============================================================================
 
-# Single Binary pod resources
-singleBinary:
+# Mimir backend - runs all components in one pod
+mimir-backend:
+  enabled: true
   replicas: 1
 
   resources:
@@ -45,32 +38,30 @@ singleBinary:
       cpu: 2000m
       memory: 2Gi
 
-  # Persistence
   persistence:
     enabled: true
     storageClass: mayastor-2
     size: 50Gi
 
-# Nginx gateway (lightweight reverse proxy)
-nginx:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
+# =============================================================================
+# DISABLE ALL MICROSERVICES
+# =============================================================================
 
-# Disable all microservices components
 alertmanager:
+  enabled: false
+
+compactor:
   enabled: false
 
 distributor:
   enabled: false
 
 ingester:
+  enabled: false
+  zoneAwareReplication:
+    enabled: false
+
+overrides_exporter:
   enabled: false
 
 querier:
@@ -87,9 +78,24 @@ ruler:
 
 store_gateway:
   enabled: false
+  zoneAwareReplication:
+    enabled: false
 
-compactor:
-  enabled: false
+# =============================================================================
+# SUPPORTING SERVICES
+# =============================================================================
+
+# Nginx gateway - lightweight reverse proxy
+nginx:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
 # Disable MinIO (using filesystem storage)
 minio:
@@ -99,17 +105,15 @@ minio:
 memcached:
   enabled: false
 
-memcached-queries:
+memcachedExporter:
   enabled: false
 
-memcached-metadata:
-  enabled: false
-
-memcached-results:
-  enabled: false
-
-# Rollout operator not needed for single binary
+# Disable rollout operator
 rollout_operator:
+  enabled: false
+
+# Disable metrics generator
+metrics_generator:
   enabled: false
 
 # RBAC
@@ -120,8 +124,3 @@ rbac:
 serviceAccount:
   create: true
   name: mimir
-
-# Service
-service:
-  type: ClusterIP
-  port: 8080
