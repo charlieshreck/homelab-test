@@ -63,6 +63,7 @@ metadata:
     gethomepage.dev/description: Web SSH Terminal
     gethomepage.dev/group: Home Services
     gethomepage.dev/icon: terminal.png
+    gethomepage.dev/pod-selector: app=termix
 spec:
   type: ClusterIP
   selector:
@@ -85,6 +86,7 @@ metadata:
     gethomepage.dev/description: Web SSH Terminal
     gethomepage.dev/group: Home Services
     gethomepage.dev/icon: terminal.png
+    gethomepage.dev/pod-selector: app=termix
 spec:
   ingressClassName: traefik
   tls:

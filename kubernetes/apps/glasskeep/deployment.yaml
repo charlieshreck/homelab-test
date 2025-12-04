@@ -83,6 +83,7 @@ metadata:
     gethomepage.dev/description: Google Keep Clone
     gethomepage.dev/group: Home Services
     gethomepage.dev/icon: google-keep.png
+    gethomepage.dev/pod-selector: app=glasskeep
 spec:
   type: ClusterIP
   selector:
@@ -105,6 +106,7 @@ metadata:
     gethomepage.dev/description: Google Keep Clone
     gethomepage.dev/group: Home Services
     gethomepage.dev/icon: google-keep.png
+    gethomepage.dev/pod-selector: app=glasskeep
 spec:
   ingressClassName: traefik
   tls:
