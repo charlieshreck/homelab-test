@@ -1,22 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mimir
+  name: victoria-metrics-single
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "11"
+    argocd.argoproj.io/sync-wave: "10"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
   sources:
-    - repoURL: https://grafana.github.io/helm-charts
-      chart: mimir-distributed
-      targetRevision: 5.5.0
+    - repoURL: https://victoriametrics.github.io/helm-charts
+      chart: victoria-metrics-single
+      targetRevision: 0.9.22
       helm:
         valueFiles:
-          - $values/kubernetes/platform/monitoring-edge/mimir/values.yaml
+          - $values/kubernetes/platform/victoriametrics/victoria-metrics-single/values.yaml
 
     - repoURL: https://github.com/charlieshreck/homelab-test.git
       targetRevision: main

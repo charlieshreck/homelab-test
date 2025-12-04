@@ -1,0 +1,44 @@
+# VMAlert - Alert Rule Evaluation for VictoriaMetrics
+# Chart: victoria-metrics-alert from vm/victoria-metrics-alert
+
+# Data source (VictoriaMetrics)
+server:
+  datasource:
+    url: http://victoria-metrics-single-server.monitoring.svc:8428
+
+  # Alert manager URL
+  notifier:
+    alertmanager:
+      url: http://alertmanager.monitoring.svc:9093
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  # Extra args
+  extraArgs:
+    evaluationInterval: 30s
+
+# Config reloader
+configReloader:
+  enabled: true
+
+# RBAC
+rbac:
+  create: true
+
+# Service Account
+serviceAccount:
+  create: true
+  name: vmalert
+
+# Service Monitor
+serviceMonitor:
+  enabled: true
+  extraLabels:
+    release: victoria-metrics

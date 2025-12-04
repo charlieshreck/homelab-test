@@ -1,22 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: loki
+  name: vmalert
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "11"
+    argocd.argoproj.io/sync-wave: "12"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
   sources:
-    - repoURL: https://grafana.github.io/helm-charts
-      chart: loki
-      targetRevision: 6.21.0
+    - repoURL: https://victoriametrics.github.io/helm-charts
+      chart: victoria-metrics-alert
+      targetRevision: 0.9.10
       helm:
         valueFiles:
-          - $values/kubernetes/platform/monitoring-edge/loki/values.yaml
+          - $values/kubernetes/platform/victoriametrics/vmalert/values.yaml
 
     - repoURL: https://github.com/charlieshreck/homelab-test.git
       targetRevision: main

@@ -1,0 +1,53 @@
+# VictoriaMetrics Single - Efficient TSDB
+# Chart: victoria-metrics-single from vm/victoria-metrics-single
+
+server:
+  # Enable persistent storage
+  persistentVolume:
+    enabled: true
+    storageClass: mayastor-2
+    size: 30Gi
+    accessModes:
+      - ReadWriteOnce
+
+  # Retention period
+  retentionPeriod: 15d
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 200m
+      memory: 300Mi
+    limits:
+      cpu: 1000m
+      memory: 800Mi
+
+  # Extra args for optimization
+  extraArgs:
+    dedup.minScrapeInterval: 30s
+    search.maxQueryDuration: 30m
+    search.maxStalenessInterval: 5m
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    servicePort: 8428
+
+  # Scrape configuration (disabled - using vmagent)
+  scrape:
+    enabled: false
+
+# ServiceMonitor for self-monitoring
+serviceMonitor:
+  enabled: true
+  extraLabels:
+    release: victoria-metrics
+
+# RBAC
+rbac:
+  create: true
+
+# Service Account
+serviceAccount:
+  create: true
+  name: victoria-metrics

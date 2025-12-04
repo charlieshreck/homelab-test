@@ -1,0 +1,68 @@
+# AlertManager - Alert Notification Manager
+# Chart: alertmanager from prometheus-community/alertmanager
+
+# Replicas for HA
+replicaCount: 1
+
+# Resource limits
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: mayastor-1
+  size: 2Gi
+
+# AlertManager configuration
+config:
+  global:
+    resolve_timeout: 5m
+
+  route:
+    group_by: ['alertname', 'cluster', 'service']
+    group_wait: 10s
+    group_interval: 10s
+    repeat_interval: 12h
+    receiver: 'null'
+    routes:
+      - match:
+          alertname: Watchdog
+        receiver: 'null'
+
+  receivers:
+    - name: 'null'
+
+  # Add your notification channels here
+  # - name: 'slack'
+  #   slack_configs:
+  #     - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+  #       channel: '#alerts'
+
+# Service
+service:
+  type: ClusterIP
+  port: 9093
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9093"
+
+# RBAC
+rbac:
+  create: true
+
+# Service Account
+serviceAccount:
+  create: true
+  name: alertmanager
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
