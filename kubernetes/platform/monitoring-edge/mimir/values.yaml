@@ -1,82 +1,127 @@
-# Grafana Mimir - Scalable Metrics Storage
-# Version: 2.13.0
+# Grafana Mimir - Single Binary Mode (Lightweight)
+# Chart: grafana/mimir version 5.5.1
 
+# Deployment mode: single binary (not microservices)
+deploymentMode: SingleBinary
+
+# Single binary replicas
+replicas: 1
+
+# Mimir configuration
 mimir:
   structuredConfig:
-    # Storage configuration
+    # Multitenancy disabled
+    multitenancy_enabled: false
+
+    # Limits
+    limits:
+      compactor_blocks_retention_period: 15d
+      max_global_series_per_user: 500000
+      max_label_names_per_series: 30
+      ingestion_rate: 50000
+      ingestion_burst_size: 100000
+
+    # Storage backend
     common:
       storage:
         backend: filesystem
         filesystem:
-          dir: /data/mimir
+          dir: /data
 
-    # Limits configuration
+    # Compactor
+    compactor:
+      data_dir: /data/compactor
+      compaction_interval: 30m
+
+# Single Binary pod resources
+singleBinary:
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
     limits:
-      # 15-day retention
-      compactor_blocks_retention_period: 15d
+      cpu: 2000m
+      memory: 2Gi
 
-      # Adaptive metrics (brand new feature)
-      max_global_series_per_user: 1000000
-      max_global_series_per_metric: 50000
+  # Persistence
+  persistence:
+    enabled: true
+    storageClass: mayastor-2
+    size: 50Gi
 
-      # Prevent cardinality explosions
-      max_label_names_per_series: 30
-      max_label_value_length: 2048
+# Nginx gateway (lightweight reverse proxy)
+nginx:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-    # Query frontend config
-    frontend:
-      results_cache:
-        backend: memory
-        memory:
-          max_size_mb: 128
-
-# Single-instance deployment (not clustered)
-mimir-distributed:
+# Disable all microservices components
+alertmanager:
   enabled: false
 
-# Resource configuration
-resources:
-  requests:
-    cpu: 500m
-    memory: 1Gi
-  limits:
-    cpu: 2000m
-    memory: 2Gi
+distributor:
+  enabled: false
 
-# Persistence
-persistence:
-  enabled: true
-  storageClass: mayastor-2
-  size: 50Gi
+ingester:
+  enabled: false
 
-# Service configuration
+querier:
+  enabled: false
+
+query_frontend:
+  enabled: false
+
+query_scheduler:
+  enabled: false
+
+ruler:
+  enabled: false
+
+store_gateway:
+  enabled: false
+
+compactor:
+  enabled: false
+
+# Disable MinIO (using filesystem storage)
+minio:
+  enabled: false
+
+# Disable memcached
+memcached:
+  enabled: false
+
+memcached-queries:
+  enabled: false
+
+memcached-metadata:
+  enabled: false
+
+memcached-results:
+  enabled: false
+
+# Rollout operator not needed for single binary
+rollout_operator:
+  enabled: false
+
+# RBAC
+rbac:
+  create: true
+
+# Service Account
+serviceAccount:
+  create: true
+  name: mimir
+
+# Service
 service:
   type: ClusterIP
   port: 8080
-
-# Enable metrics about Mimir itself
-metrics:
-  enabled: true
-
-# Retention and compaction
-compactor:
-  enabled: true
-  persistentVolume:
-    enabled: true
-    storageClass: mayastor-2
-    size: 10Gi
-
-# Ingester configuration
-ingester:
-  replicas: 1
-  persistentVolume:
-    enabled: true
-    storageClass: mayastor-2
-    size: 20Gi
-  resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      cpu: 1000m
-      memory: 1Gi

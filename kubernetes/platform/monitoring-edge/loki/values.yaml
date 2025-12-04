@@ -89,3 +89,14 @@ service:
 # Test pods
 test:
   enabled: false
+
+# Disable external caches (use embedded cache only)
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+# Disable canary
+lokiCanary:
+  enabled: false
