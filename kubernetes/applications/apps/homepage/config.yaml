@@ -47,7 +47,7 @@ data:
             - abbr: CD
               href: https://argocd.shreck.co.uk/
 
-    - Infrastructure:
+    - Management:
         - Traefik:
             - abbr: TF
               href: https://traefik.shreck.co.uk/
@@ -57,9 +57,6 @@ data:
         - Infisical:
             - abbr: IS
               href: https://app.infisical.com/organizations/8c59d9a9-00bb-472f-a140-3e5c7984f56c/projects
-        - Grafana:
-            - abbr: GF
-              href: https://grafana.shreck.co.uk/
 
   services.yaml: |
     # Services are now automatically discovered via ingress annotations
