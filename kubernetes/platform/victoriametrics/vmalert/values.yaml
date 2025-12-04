@@ -24,6 +24,42 @@ server:
   extraArgs:
     evaluationInterval: 30s
 
+  # Alert rules configuration (required - at least one rule needed)
+  config:
+    alerts:
+      groups:
+        - name: basic-alerts
+          rules:
+            # Node down alert
+            - alert: NodeDown
+              expr: up{job="kubernetes-nodes"} == 0
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "Node {{ $labels.instance }} is down"
+                description: "Node {{ $labels.instance }} has been down for more than 5 minutes"
+
+            # High memory usage
+            - alert: HighMemoryUsage
+              expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "High memory usage on {{ $labels.instance }}"
+                description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+            # Pod restarts
+            - alert: PodRestartingFrequently
+              expr: rate(kube_pod_container_status_restarts_total[15m]) > 0.2
+              for: 5m
+              labels:
+                severity: warning
+              annotations:
+                summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} restarting frequently"
+                description: "Pod has restarted {{ $value }} times in the last 15 minutes"
+
 # Config reloader
 configReloader:
   enabled: true
