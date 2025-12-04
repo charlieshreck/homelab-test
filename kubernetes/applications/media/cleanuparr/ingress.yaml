@@ -27,4 +27,4 @@ spec:
               service:
                 name: cleanuparr
                 port:
-                  number: 5500
+                  number: 11011

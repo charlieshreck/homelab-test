@@ -17,11 +17,13 @@ spec:
     spec:
       containers:
       - name: cleanuparr
-        image: linuxserver/cleanuparr:latest
+        image: ghcr.io/cleanuparr/cleanuparr:latest
         ports:
         - name: http
-          containerPort: 5500
+          containerPort: 11011
         env:
+        - name: PORT
+          value: "11011"
         - name: PUID
           value: "3000"
         - name: PGID
@@ -52,8 +54,8 @@ spec:
   type: ClusterIP
   ports:
   - name: http
-    port: 5500
-    targetPort: 5500
+    port: 11011
+    targetPort: 11011
   selector:
     app: cleanuparr
 ---
