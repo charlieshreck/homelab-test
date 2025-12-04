@@ -24,7 +24,7 @@ data:
     layout:
       Infrastructure:
         style: row
-        columns: 2
+        columns: 3
       Kubernetes:
         style: row
         columns: 4
@@ -68,11 +68,28 @@ data:
     # See gethomepage.dev/enabled annotations on ingress resources
 
     - Infrastructure:
-        - Terra (Proxmox Host):
+        - Proxmox (fal):
             icon: proxmox.png
-            description: Main Proxmox Server
+            description: Proxmox VE Host
+            widget:
+              type: proxmox
+              url: https://10.10.0.151:8006
+              username: api@pam!homepage
+              password: {{HOMEPAGE_VAR_PROXMOX_TOKEN}}
+              node: fal
+
+        - Terra LXC:
+            icon: proxmox.png
+            description: Proxmox Management LXC
             proxmoxNode: fal
             proxmoxVMID: 100
+            proxmoxType: lxc
+
+        - Plex LXC:
+            icon: plex.png
+            description: Plex Media Server
+            proxmoxNode: fal
+            proxmoxVMID: 220
             proxmoxType: lxc
 
         - Restic Backup:
