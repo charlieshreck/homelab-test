@@ -1,0 +1,57 @@
+# Cloudflare Tunnel Ingress Controller
+# Chart: strrl/cloudflare-tunnel-ingress-controller
+# Automatically manages Cloudflare Tunnel routes from Kubernetes Ingresses
+
+cloudflare:
+  # Cloudflare Account ID
+  accountId: "9a7a5c367a6dd8a2e39c89f1e24db208"
+
+  # API Token from secret (synced from Infisical)
+  apiTokenSecretRef:
+    name: cloudflare-tunnel-credentials
+    key: CLOUDFLARE_API_TOKEN
+
+# Tunnel configuration
+tunnel:
+  # Existing tunnel ID
+  id: "51b2231f-8d36-4795-a706-7405da8ea3d9"
+
+  # Don't create new tunnel, use existing
+  create: false
+
+# Ingress class configuration
+ingressClass:
+  # Name of the ingress class this controller manages
+  name: cloudflare-tunnel
+
+  # Set as default ingress class (false - keep Traefik as default)
+  default: false
+
+# Controller configuration
+controller:
+  # Watch all namespaces for ingresses
+  watchNamespaces: []
+
+  # Log level
+  logLevel: info
+
+  # Resources
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Service account
+serviceAccount:
+  create: true
+  name: cloudflare-tunnel-controller
+
+# RBAC
+rbac:
+  create: true
+
+# Number of replicas
+replicaCount: 1
