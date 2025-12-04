@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: termix
+  namespace: apps
+  labels:
+    app: termix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: termix
+  template:
+    metadata:
+      labels:
+        app: termix
+    spec:
+      containers:
+      - name: termix
+        image: ghcr.io/lukegus/termix:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PORT
+          value: "8080"
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: termix-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: termix-data
+  namespace: apps
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: mayastor-1
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: termix
+  namespace: apps
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Termix
+    gethomepage.dev/description: Web SSH Terminal
+    gethomepage.dev/group: Home Services
+    gethomepage.dev/icon: terminal.png
+spec:
+  type: ClusterIP
+  selector:
+    app: termix
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: termix
+  namespace: apps
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Termix
+    gethomepage.dev/description: Web SSH Terminal
+    gethomepage.dev/group: Home Services
+    gethomepage.dev/icon: terminal.png
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - termix.shreck.co.uk
+      secretName: termix-tls
+  rules:
+    - host: termix.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: termix
+                port:
+                  number: 80
