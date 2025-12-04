@@ -14,7 +14,7 @@ spec:
     # Helm chart from STRRL repository
     - repoURL: https://helm.strrl.dev
       chart: cloudflare-tunnel-ingress-controller
-      targetRevision: 0.3.0
+      targetRevision: 0.0.21
       helm:
         valueFiles:
           - $values/kubernetes/platform/cloudflare-tunnel-controller/values.yaml
