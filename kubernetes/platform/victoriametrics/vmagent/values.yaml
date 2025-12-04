@@ -141,8 +141,6 @@ serviceAccount:
   create: true
   name: vmagent
 
-# Service Monitor (for self-monitoring)
+# Service Monitor (for self-monitoring) - disabled, no Prometheus Operator
 serviceMonitor:
-  enabled: true
-  extraLabels:
-    release: victoria-metrics
+  enabled: false

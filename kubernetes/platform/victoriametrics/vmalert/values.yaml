@@ -37,8 +37,6 @@ serviceAccount:
   create: true
   name: vmalert
 
-# Service Monitor
+# Service Monitor - disabled, no Prometheus Operator
 serviceMonitor:
-  enabled: true
-  extraLabels:
-    release: victoria-metrics
+  enabled: false

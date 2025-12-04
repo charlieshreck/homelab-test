@@ -37,11 +37,9 @@ server:
   scrape:
     enabled: false
 
-# ServiceMonitor for self-monitoring
+# ServiceMonitor for self-monitoring - disabled, no Prometheus Operator
 serviceMonitor:
-  enabled: true
-  extraLabels:
-    release: victoria-metrics
+  enabled: false
 
 # RBAC
 rbac:
