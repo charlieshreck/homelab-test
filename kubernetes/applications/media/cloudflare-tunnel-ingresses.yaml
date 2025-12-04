@@ -133,3 +133,22 @@ spec:
                 name: transmission
                 port:
                   number: 9091
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cleanuparr-cloudflare
+  namespace: media
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: cleanuparr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cleanuparr
+                port:
+                  number: 5500

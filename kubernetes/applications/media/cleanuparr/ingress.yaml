@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cleanuparr
+  namespace: media
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Cleanuparr"
+    gethomepage.dev/description: "Media cleanup automation"
+    gethomepage.dev/group: "Media"
+    gethomepage.dev/icon: "si-sonarr"
+    gethomepage.dev/pod-selector: "app=cleanuparr"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - cleanuparr.shreck.co.uk
+      secretName: shreck-co-uk-tls
+  rules:
+    - host: cleanuparr.shreck.co.uk
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cleanuparr
+                port:
+                  number: 5500
