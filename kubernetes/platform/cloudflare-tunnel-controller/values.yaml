@@ -3,12 +3,12 @@
 # Automatically manages Cloudflare Tunnel routes from Kubernetes Ingresses
 
 cloudflare:
-  # Credentials for Cloudflare API
-  # These values are used to generate the default secret
-  # We override this with the manually-created 'cloudflare-api' secret
-  accountId: "9a7a5c367a6dd8a2e39c89f1e24db208"
-  tunnelName: "homelab-shreck-co-uk"
-  apiToken: "xWwafGrMJMz5yssiQiD0lbzqz1UzaDVUzayycjF2"
+  # Credentials are managed via external secret (cloudflare-api-secret.yaml)
+  # Helm chart expects these values but we provide empty strings
+  # The actual secret is created from our manifest
+  accountId: ""
+  tunnelName: ""
+  apiToken: ""
 
 # Ingress class configuration
 ingressClass:
