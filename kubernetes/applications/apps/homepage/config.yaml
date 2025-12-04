@@ -51,6 +51,12 @@ data:
         - Traefik:
             - abbr: TF
               href: https://traefik.shreck.co.uk/
+        - Cloudflare:
+            - abbr: CF
+              href: https://dash.cloudflare.com/
+        - Infisical:
+            - abbr: IS
+              href: https://app.infisical.com/organizations/8c59d9a9-00bb-472f-a140-3e5c7984f56c/projects
         - Grafana:
             - abbr: GF
               href: https://grafana.shreck.co.uk/
