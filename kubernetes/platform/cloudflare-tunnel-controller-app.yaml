@@ -12,7 +12,7 @@ spec:
 
   sources:
     # Helm chart from STRRL repository
-    - repoURL: https://strrl.github.io/cloudflare-tunnel-ingress-controller
+    - repoURL: https://helm.strrl.dev
       chart: cloudflare-tunnel-ingress-controller
       targetRevision: 0.3.0
       helm:
