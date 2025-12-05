@@ -65,8 +65,9 @@ resource "null_resource" "plex_ansible" {
     EOT
   }
 
+  # Only run when GPU config changes
   triggers = {
-    always_run = timestamp()
+    gpu_config_id = null_resource.plex_gpu_config.id
   }
 }
 

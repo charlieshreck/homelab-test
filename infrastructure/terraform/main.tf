@@ -375,9 +375,9 @@ resource "null_resource" "label_mayastor_nodes" {
     EOT
   }
 
-  # Run on every apply to ensure labels are present
+  # Only run when cluster changes (idempotent operation with --overwrite)
   triggers = {
-    always_run = timestamp()
+    cluster_id = talos_machine_bootstrap.this.id
   }
 }
 
@@ -440,9 +440,9 @@ resource "null_resource" "restart_cilium_for_l2" {
     EOT
   }
 
-  # Force this to run on every apply to ensure L2 announcements are correct
+  # Only run when L2 announcement policy changes
   triggers = {
-    always_run = timestamp()
+    l2_policy_id = kubectl_manifest.cilium_l2_announcement.id
   }
 }
 
