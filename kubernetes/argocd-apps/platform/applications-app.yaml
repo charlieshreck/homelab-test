@@ -10,7 +10,10 @@ spec:
   source:
     repoURL: https://github.com/charlieshreck/homelab-test.git
     targetRevision: main
-    path: kubernetes/applications
+    path: kubernetes/argocd-apps/applications
+    directory:
+      recurse: false
+      include: '*-app.yaml'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
