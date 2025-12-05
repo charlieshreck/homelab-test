@@ -12,7 +12,7 @@
 ### Option A: If you have SSH access to Proxmox host
 
 ```bash
-ssh root@10.10.0.151 'bash -s' < infrastructure/scripts/verify-proxmox-gpu.sh
+ssh root@10.10.0.151 'bash -s' < scripts/maintenance/verify-proxmox-gpu.sh
 ```
 
 ### Option B: Manual verification on Proxmox host
@@ -45,7 +45,7 @@ stat -c '%g' /dev/dri/renderD128
 
 ```bash
 # From your workstation
-scp infrastructure/scripts/configure-plex-gpu.sh root@10.10.0.151:/tmp/
+scp scripts/maintenance/configure-plex-gpu.sh root@10.10.0.151:/tmp/
 ssh root@10.10.0.151 'bash /tmp/configure-plex-gpu.sh 220'
 ```
 
@@ -396,4 +396,4 @@ Once everything is working:
 
 - **Detailed docs**: `/root/homelab-test/docs/PLEX_DEPLOYMENT.md`
 - **Quick reference**: `/root/homelab-test/docs/PLEX_QUICK_START.md`
-- **Scripts**: `/root/homelab-test/infrastructure/scripts/`
+- **Scripts**: `/root/homelab-test/scripts/maintenance/`

@@ -8,7 +8,7 @@ Deploy Plex Media Server in an LXC container with AMD 680M GPU hardware transcod
 
 ```bash
 # Verify Proxmox host GPU prerequisites
-ssh root@10.10.0.151 'bash -s' < infrastructure/scripts/verify-proxmox-gpu.sh
+ssh root@10.10.0.151 'bash -s' < scripts/maintenance/verify-proxmox-gpu.sh
 ```
 
 ## Deployment (3 Steps)

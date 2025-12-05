@@ -17,7 +17,7 @@ Before deploying, verify these prerequisites on the Proxmox host:
 
 ```bash
 # Run verification script
-ssh root@10.10.0.151 'bash -s' < infrastructure/scripts/verify-proxmox-gpu.sh
+ssh root@10.10.0.151 'bash -s' < scripts/maintenance/verify-proxmox-gpu.sh
 ```
 
 Required:
@@ -51,7 +51,7 @@ Required:
 ### 1. Verify Prerequisites
 
 ```bash
-ssh root@10.10.0.151 'bash -s' < infrastructure/scripts/verify-proxmox-gpu.sh
+ssh root@10.10.0.151 'bash -s' < scripts/maintenance/verify-proxmox-gpu.sh
 ```
 
 ### 2. Set Environment Variables
