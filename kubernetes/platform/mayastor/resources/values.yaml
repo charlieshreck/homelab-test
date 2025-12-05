@@ -42,7 +42,7 @@ csi:
 # ETCD: hostPath persistence to prevent bootstrap conflicts
 # =============================================================================
 etcd:
-  replicaCount: 3
+  replicaCount: 1
 
   # Disable default PVC-based persistence
   persistence:
@@ -120,5 +120,4 @@ etcd:
       memory: "128Mi"
 
   pdb:
-    create: true
-    minAvailable: 2
+    create: false
