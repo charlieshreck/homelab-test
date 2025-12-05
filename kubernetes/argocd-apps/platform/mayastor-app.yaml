@@ -58,7 +58,9 @@ spec:
   source:
     repoURL: https://github.com/charlieshreck/homelab-test.git
     targetRevision: main
-    path: kubernetes/platform/mayastor/namespace
+    path: kubernetes/platform/namespaces
+    directory:
+      include: "mayastor-namespace.yaml"
 
   destination:
     server: https://kubernetes.default.svc
