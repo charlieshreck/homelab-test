@@ -83,7 +83,7 @@ variable "mac_address" {
 variable "enable_storage_network" {
   type        = bool
   default     = false
-  description = "Enable second NIC for storage network (Mayastor/TrueNAS)"
+  description = "Enable second NIC for storage network (Mayastor)"
 }
 
 variable "storage_bridge" {

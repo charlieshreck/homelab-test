@@ -32,7 +32,7 @@ resource "proxmox_virtual_environment_container" "plex" {
       }
     }
 
-    # Secondary NIC - Media network to TrueNAS (no gateway)
+    # Secondary NIC - Media/storage network (no gateway)
     ip_config {
       ipv4 {
         address = "${var.media_network_ip}/24"

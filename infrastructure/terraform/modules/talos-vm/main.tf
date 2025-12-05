@@ -54,7 +54,7 @@ resource "proxmox_virtual_environment_vm" "talos_node" {
     mac_address = var.mac_address != "" ? var.mac_address : null
   }
 
-  # Optional second NIC for storage network (Mayastor/TrueNAS)
+  # Optional second NIC for storage network (Mayastor)
   dynamic "network_device" {
     for_each = var.enable_storage_network ? [1] : []
     content {

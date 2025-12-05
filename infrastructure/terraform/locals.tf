@@ -1,5 +1,5 @@
 # ==============================================================================
-# locals.tf - Dual NIC Architecture for Mayastor and TrueNAS
+# locals.tf - Dual NIC Architecture for Mayastor Storage
 # ==============================================================================
 
 locals {
@@ -34,7 +34,7 @@ locals {
   }
 
   # MAC addresses for storage network (10.11.0.0/24 on vmbr1)
-  # Used for Mayastor and TrueNAS traffic
+  # Used for Mayastor traffic
   storage_mac_addresses = {
     workers = {
       for idx, key in local.worker_keys : key =>

@@ -44,7 +44,7 @@ variable "network_bridge" {
 }
 
 variable "storage_bridge" {
-  description = "The name of the Proxmox network bridge for storage network (Mayastor/TrueNAS)."
+  description = "The name of the Proxmox network bridge for storage network (Mayastor)."
   type        = string
 }
 
@@ -66,11 +66,6 @@ variable "proxmox_mayastor_storage" {
   description = "The name of the high-performance storage pool dedicated to Mayastor (helford - 1TB)."
   type        = string
 }
-
-#variable "proxmox_truenas_storage" {
-#  description = "The name of the storage pool for the TrueNAS VM's data."
-#  type        = string
-#}
 
 variable "proxmox_iso_storage" {
   description = "The name of the Proxmox storage pool where ISO images are stored."
@@ -149,19 +144,6 @@ variable "storage_nodes" {
     mayastor_disk = number
   }))
   default = {}
-}
-
-variable "truenas_vm" {
-  description = "The configuration for the TrueNAS VM."
-  type = object({
-    name     = string
-    ip       = string
-    cores    = number
-    memory   = number
-    disk     = number
-    media_ip = string
-  })
-  default = null
 }
 
 # ==============================================================================

@@ -27,7 +27,7 @@ variable "management_ip" {
 }
 
 variable "media_network_ip" {
-  description = "IP address on media network (TrueNAS access)"
+  description = "IP address on media/storage network"
   type        = string
 }
 

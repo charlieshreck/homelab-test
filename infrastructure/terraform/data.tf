@@ -273,7 +273,7 @@ data "talos_machine_configuration" "worker" {
                   }
                 ]
               },
-              # Storage Interface (10.11.0.0/24 network) - Mayastor/TrueNAS
+              # Storage Interface (10.11.0.0/24 network) - Mayastor
               {
                 deviceSelector = {
                   hardwareAddr = local.storage_mac_addresses.workers[each.key]

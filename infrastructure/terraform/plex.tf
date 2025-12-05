@@ -3,7 +3,7 @@
 # ==============================================================================
 # This deploys a privileged LXC container with:
 # - AMD Radeon 680M iGPU passthrough for hardware transcoding
-# - Dual NICs (management + storage network for TrueNAS NFS)
+# - Dual NICs (management + storage network)
 # - Restic backups to MinIO
 # - Docker-based Plex with VAAPI support
 # ==============================================================================
@@ -17,7 +17,7 @@ module "plex" {
 
   # Network configuration matching existing architecture
   management_ip    = "10.10.0.60"
-  media_network_ip = "10.11.0.60" # Storage network for TrueNAS NFS
+  media_network_ip = "10.11.0.60" # Storage network
   gateway          = var.prod_gateway
 
   management_bridge = var.network_bridge # vmbr0
