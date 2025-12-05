@@ -1,6 +1,14 @@
 # Mayastor configuration for 3-node cluster with dual NICs
 # Storage network: 10.11.0.0/24
 
+# Disable observability components (loki, minio, metrics)
+# Core storage functionality doesn't require these
+obs:
+  callhome:
+    enabled: false
+loki:
+  enabled: false
+
 # IO Engine configuration (data plane)
 io_engine:
   hugepages:
