@@ -43,7 +43,7 @@ spec:
         # AWS plugin for S3/MinIO backup support (Velero server)
         initContainers:
           - name: velero-plugin-for-aws
-            image: velero/velero-plugin-for-aws:v1.11.0
+            image: velero/velero-plugin-for-aws:v1.13.1
             volumeMounts:
               - mountPath: /target
                 name: plugins
@@ -72,7 +72,7 @@ spec:
           # AWS plugin for S3/MinIO backup support
           initContainers:
             - name: velero-plugin-for-aws
-              image: velero/velero-plugin-for-aws:v1.11.0
+              image: velero/velero-plugin-for-aws:v1.13.1
               volumeMounts:
                 - mountPath: /target
                   name: plugins
