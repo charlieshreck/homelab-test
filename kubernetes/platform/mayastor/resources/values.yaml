@@ -114,9 +114,3 @@ etcd:
   pdb:
     create: true
     minAvailable: 2
-
-loki:
-  enabled: false
-
-metrics:
-  enabled: true
