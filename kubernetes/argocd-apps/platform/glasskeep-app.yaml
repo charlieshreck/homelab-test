@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/charlieshreck/homelab-test.git
     targetRevision: main
-    path: kubernetes/apps/glasskeep
+    path: kubernetes/applications/apps/glasskeep
   destination:
     server: https://kubernetes.default.svc
     namespace: apps

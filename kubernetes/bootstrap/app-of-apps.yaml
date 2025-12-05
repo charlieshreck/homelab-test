@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/charlieshreck/homelab-test.git
     targetRevision: main
-    path: kubernetes/platform
+    path: kubernetes/argocd-apps/platform
     directory:
       recurse: false        # Changed: don't recurse
       include: '*-app.yaml' # Added: only Application manifests
