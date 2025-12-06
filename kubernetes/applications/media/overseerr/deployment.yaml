@@ -30,7 +30,7 @@ spec:
           value: "5055"
         volumeMounts:
         - name: config
-          mountPath: /config
+          mountPath: /app/config
         resources:
           requests:
             cpu: 100m
