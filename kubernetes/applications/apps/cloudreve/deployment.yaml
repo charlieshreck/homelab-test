@@ -141,8 +141,8 @@ spec:
       - name: media
         nfs:
           server: 10.20.0.100
-          path: /mnt/tank/media
+          path: /mnt/Tongariro/Plexopathy
       - name: downloads
         nfs:
           server: 10.20.0.100
-          path: /mnt/tank/downloads
+          path: /mnt/Taranaki/Tarriance/hopuhopu_katoa
