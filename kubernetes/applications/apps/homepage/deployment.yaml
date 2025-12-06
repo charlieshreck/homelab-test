@@ -90,6 +90,7 @@ spec:
                 secretKeyRef:
                   name: homepage-proxmox
                   key: token
+                  optional: true
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
