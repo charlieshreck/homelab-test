@@ -89,8 +89,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: homepage-proxmox
-                  key: token
-                  optional: true
+                  key: API_TOKEN
           volumeMounts:
             - name: homepage-config
               mountPath: /app/config
