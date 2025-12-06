@@ -31,7 +31,7 @@ spec:
         image:
           registry: docker.io
           repository: traefik
-          tag: "v3.5.3"
+          tag: "v3.6.4"
           pullPolicy: IfNotPresent
         
         # Provider Configuration - ONLY Kubernetes Ingress (no CRDs)
