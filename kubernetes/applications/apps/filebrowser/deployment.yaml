@@ -15,11 +15,9 @@ spec:
       labels:
         app: filebrowser
     spec:
-      securityContext:
-        fsGroup: 3000
       containers:
       - name: filebrowser
-        image: filebrowser/filebrowser:v2.51.0
+        image: gtstef/filebrowser:stable
         ports:
         - name: http
           containerPort: 80
@@ -27,26 +25,18 @@ spec:
         - name: TZ
           value: "Europe/London"
         - name: FILEBROWSER_CONFIG
-          value: "/config/config.yaml"
+          value: "data/config.yaml"
         - name: FILEBROWSER_ADMIN_PASSWORD
           value: "admin"
-        securityContext:
-          runAsUser: 3000
-          runAsGroup: 3000
         volumeMounts:
-        - name: filebrowser-config-file
-          mountPath: /config/config.yaml
-          subPath: config.yaml
-        - name: config
-          mountPath: /config
-        - name: database
-          mountPath: /database
+        - name: data
+          mountPath: /home/filebrowser/data
         - name: downloads
-          mountPath: /srv/downloads
+          mountPath: /folder/downloads
         - name: tv
-          mountPath: /srv/tv
+          mountPath: /folder/tv
         - name: movies
-          mountPath: /srv/movies
+          mountPath: /folder/movies
         resources:
           requests:
             cpu: 100m
@@ -55,14 +45,9 @@ spec:
             cpu: 500m
             memory: 512Mi
       volumes:
-      - name: filebrowser-config-file
-        configMap:
-          name: filebrowser-config
-      - name: config
+      - name: data
         persistentVolumeClaim:
-          claimName: filebrowser-config
-      - name: database
-        emptyDir: {}
+          claimName: filebrowser-data
       - name: downloads
         nfs:
           server: 10.20.0.100
@@ -79,7 +64,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: filebrowser-config
+  name: filebrowser-data
   namespace: apps
 spec:
   accessModes:
@@ -87,7 +72,7 @@ spec:
   storageClassName: mayastor-1
   resources:
     requests:
-      storage: 1Gi
+      storage: 2Gi
 ---
 apiVersion: v1
 kind: Service
@@ -102,25 +87,3 @@ spec:
     targetPort: 80
   selector:
     app: filebrowser
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: filebrowser-config
-  namespace: apps
-data:
-  config.yaml: |
-    server:
-      port: 80
-      baseURL: "/"
-      socket: ""
-      tlsKey: ""
-      tlsCert: ""
-      database: "/config/database.db"
-      sources:
-        - path: /srv/downloads
-        - path: /srv/tv
-        - path: /srv/movies
-    auth:
-      adminUsername: "admin"
-      adminPassword: "admin"
