@@ -94,7 +94,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: homepage-homeassistant
-                  key: API_TOKEN
+                  key: API_KEY
                   optional: true
           volumeMounts:
             - name: homepage-config
