@@ -17,6 +17,20 @@ spec:
     spec:
       securityContext:
         fsGroup: 3000
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 3000:3000 /home/filebrowser/data
+          chmod -R 755 /home/filebrowser/data
+        volumeMounts:
+        - name: data
+          mountPath: /home/filebrowser/data
+        securityContext:
+          runAsUser: 0
       containers:
       - name: filebrowser
         image: gtstef/filebrowser:stable
