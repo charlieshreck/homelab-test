@@ -138,9 +138,9 @@ spec:
           claimName: cloudreve-data
       - name: media
         nfs:
-          server: 192.168.1.13
+          server: 10.20.0.100
           path: /mnt/tank/media
       - name: downloads
         nfs:
-          server: 192.168.1.13
+          server: 10.20.0.100
           path: /mnt/tank/downloads
