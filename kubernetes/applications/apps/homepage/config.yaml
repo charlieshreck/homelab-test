@@ -53,7 +53,7 @@ data:
         - Traefik:
             - abbr: TF
               icon: traefik.png
-              href: https://traefik.shreck.co.uk/
+              href: https://traefik.shreck.co.uk/dashboard/
         - Cloudflare:
             - abbr: CF
               icon: cloudflare.png
