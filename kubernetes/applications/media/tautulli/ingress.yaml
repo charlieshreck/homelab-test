@@ -12,6 +12,11 @@ metadata:
     gethomepage.dev/group: "Media"
     gethomepage.dev/icon: "tautulli.png"
     gethomepage.dev/pod-selector: "app=tautulli"
+    gethomepage.dev/widget.type: "tautulli"
+    gethomepage.dev/widget.url: "http://tautulli.media.svc.cluster.local:8181"
+    gethomepage.dev/widget.key: "{{HOMEPAGE_VAR_TAUTULLI_API_KEY}}"
+    gethomepage.dev/widget.enableUser: "true"
+    gethomepage.dev/widget.showEpisodeNumber: "true"
 spec:
   ingressClassName: traefik
   tls:
