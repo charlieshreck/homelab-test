@@ -6,4 +6,3 @@ resources:
   - homeassistant
   - mqtt
   - filebrowser
-  - cloudreve

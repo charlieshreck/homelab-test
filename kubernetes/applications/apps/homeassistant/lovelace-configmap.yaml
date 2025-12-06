@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homeassistant-lovelace
+  namespace: apps
+data:
+  ui-lovelace.yaml: |
+    title: Tamatua
+
+    views:
+      # Main Home View
+      - title: Home
+        path: default_view
+        badges:
+          - entity: sun.sun
+        cards:
+          # Bedroom
+          - type: entities
+            title: Bedroom
+            state_color: true
+            entities:
+              - entity: switch.bedroom_light
+              - entity: switch.bedside_light
+              - entity: switch.ensuite_spots
+
+          # Kitchen Diner
+          - type: entities
+            title: Kitchen Diner
+            entities:
+              - entity: switch.dining_room_pendant
+              - entity: switch.dining_room_spots
+              - entity: switch.loo_lights
+              - entity: switch.kitchen_pendants
+              - entity: switch.kitchen_spots
+
+          # Living Room
+          - type: entities
+            title: Living Room
+            entities:
+              - entity: switch.living_room_lamp_2
+              - entity: switch.living_room
+              - entity: switch.living_room_sockets_1_3
+
+          # Downstairs Lighting
+          - type: entities
+            title: Down Stairs Lighting
+            show_header_toggle: false
+            entities:
+              - entity: switch.cloakroom_spots
+              - entity: switch.garage_light
+              - entity: switch.laundry_light
+              - entity: switch.patio_lights
+              - entity: switch.door_lights
+              - entity: switch.loo_lights
+              - entity: switch.hall
+
+          # Play Room
+          - type: entities
+            title: Play Room
+            entities:
+              - entity: switch.play_room_pendants
+
+          # Kids Rooms
+          - type: entities
+            title: Kids Rooms
+            entities:
+              - entity: switch.vienna_s_pendant
+              - entity: switch.albie_s_pendant
+              - entity: switch.albie_s_night_light
+              - entity: switch.christmas_tree_kitchen
+                name: Vienna's Lava Lamp
+                icon: mdi:lava-lamp
+
+          # Upstairs Misc
+          - type: entities
+            title: Upstairs Misc
+            entities:
+              - entity: switch.stair_lights
+              - entity: switch.study_pendant
+              - entity: switch.shower_spots
+
+          # Utilities
+          - type: entities
+            title: Utilities
+            theme: Google Dark Theme
+            entities:
+              - switch.macerator
+
+      # Christmas Switches View
+      - title: Christmas Switches
+        path: christmas
+        cards:
+          - type: entities
+            title: Christmas Switches
+            state_color: true
+            entities:
+              - entity: switch.christmas_tree_hall
+              - entity: switch.christmas_tree_living_room
+              - entity: switch.christmas_tree_kitchen
+              - entity: switch.reindeer
+              - entity: switch.vienna_s_crimbo_lights
+              - entity: cover.bedroom_curtain
+
+      # Multi-Sockets View
+      - title: Multi-Sockets
+        path: multi-sockets
+        cards:
+          # Garage Sockets 1
+          - type: entities
+            title: Garage Sockets 1
+            entities:
+              - entity: switch.asus_router
+              - entity: switch.netgear_switch
+              - entity: switch.pi_tuya_convert
+              - entity: switch.pi_wire_guard
+              - entity: switch.garage_usb_1
+
+          # Garage Sockets 2
+          - type: entities
+            title: Garage Sockets 2
+            entities:
+              - entity: switch.server_monitor
+              - entity: switch.plexthora
+              - entity: switch.hd_homerun
+              - entity: switch.aerial_amplifier
+              - entity: switch.rf_sonoff
+
+          # Living Room Sockets
+          - type: entities
+            title: Living Room Sockets
+            entities:
+              - entity: switch.living_room_wifi
+              - entity: switch.living_room_home_mini
+              - entity: switch.living_room_lamp_1
+              - entity: switch.living_room_socket_1_4
+              - entity: switch.living_room_usb_1
+
+          # Study Sockets 1
+          - type: entities
+            title: Study Sockets
+            entities:
+              - switch.study_socket_1_1
+              - switch.study_socket_1_2
+              - switch.study_socket_1_3
+              - switch.study_usb_1
+
+          # Study Sockets 2
+          - type: entities
+            title: Study Sockets 2
+            entities:
+              - switch.study_socket_2_1
+              - switch.study_socket_2_2
+              - switch.study_socket_2_3
+              - switch.study_socket_2_4
+              - switch.study_usb_2
+
+          # Vienna's Sockets
+          - type: entities
+            title: Vienna's Sockets
+            entities:
+              - entity: switch.vienna_s_bedside_light
+              - entity: switch.vienna_s_electric_blanket
+              - entity: switch.vienna_socket_1_3
+              - entity: switch.vienna_socket_1_4
+              - entity: switch.vienna_usb_1
+
+      # Home Monitoring View
+      - title: Home Mon
+        path: home-mon
+        cards:
+          - type: weather-forecast
+            entity: weather.ministry
+
+      # Test View
+      - title: Test
+        path: test
+        cards:
+          - type: button
+            entity: switch.living_room
+            name: Living Room Light
+            show_name: true
+            show_icon: false
+            show_state: true
+            tap_action:
+              action: toggle
+
+          - type: button
+            entity: switch.hall
+            name: Hall Light
+            icon: mdi:ceiling-light
+            show_name: true
+            show_icon: false
+            show_state: true
+            tap_action:
+              action: toggle
+
+          - type: button
+            entity: switch.albie_s_pendant
+            name: Albie's Pendant
+            icon: mdi:ceiling-light
+            show_name: true
+            show_icon: false
+            show_state: true
+            tap_action:
+              action: toggle
