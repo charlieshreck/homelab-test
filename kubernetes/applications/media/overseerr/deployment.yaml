@@ -17,17 +17,17 @@ spec:
     spec:
       containers:
       - name: overseerr
-        image: lscr.io/linuxserver/overseerr:2021.12.12
+        image: ghcr.io/fallenbagel/jellyseerr:latest
         ports:
         - name: http
           containerPort: 5055
         env:
-        - name: PUID
-          value: "3000"
-        - name: PGID
-          value: "3000"
+        - name: LOG_LEVEL
+          value: "info"
         - name: TZ
           value: "Europe/London"
+        - name: PORT
+          value: "5055"
         volumeMounts:
         - name: config
           mountPath: /config
