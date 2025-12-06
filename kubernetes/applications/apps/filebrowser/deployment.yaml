@@ -101,9 +101,18 @@ metadata:
   namespace: apps
 data:
   config.yaml: |
-    port: 80
-    baseURL: ""
-    address: ""
-    log: "stdout"
-    database: "data/database.db"
-    root: "/folder"
+    server:
+      port: 80
+      sources:
+        - path: "/folder/downloads"
+          config:
+            defaultEnabled: true
+        - path: "/folder/tv"
+          config:
+            defaultEnabled: true
+        - path: "/folder/movies"
+          config:
+            defaultEnabled: true
+    auth:
+      adminUsername: admin
+      adminPassword: admin
