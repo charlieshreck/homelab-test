@@ -31,12 +31,19 @@
     {
       "groupName": "linuxserver images",
       "schedule": [
-        "before 6am on monday"
+        "at any time"
       ],
       "matchPackageNames": [
         "/linuxserver/*/",
         "/lscr.io/*/"
-      ]
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
     },
     {
       "matchUpdateTypes": [
@@ -46,6 +53,9 @@
         "major-update"
       ],
       "automerge": false,
+      "schedule": [
+        "at any time"
+      ],
       "matchPackageNames": [
         "*"
       ]
@@ -55,12 +65,25 @@
         "minor",
         "patch"
       ],
-      "automerge": false,
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
       "schedule": [
-        "before 6am on monday"
+        "at any time"
       ],
       "matchPackageNames": [
         "*"
+      ]
+    },
+    {
+      "matchDepTypes": [
+        "security"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "schedule": [
+        "at any time"
       ]
     }
   ],
@@ -68,8 +91,9 @@
     "enabled": true,
     "labels": [
       "security"
-    ]
+    ],
+    "automerge": true
   },
-  "prHourlyLimit": 5,
-  "prConcurrentLimit": 10
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0
 }

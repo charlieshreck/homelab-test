@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: tasmoadmin
-        image: ghcr.io/tasmoadmin/tasmoadmin:latest
+        image: ghcr.io/tasmoadmin/tasmoadmin:v4.3.2
         ports:
         - name: http
           containerPort: 80

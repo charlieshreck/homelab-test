@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: overseerr
-        image: ghcr.io/fallenbagel/jellyseerr:latest
+        image: ghcr.io/fallenbagel/jellyseerr:v2.7.3
         ports:
         - name: http
           containerPort: 5055

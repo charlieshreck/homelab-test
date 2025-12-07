@@ -24,7 +24,7 @@ spec:
         fsGroup: 1000
       initContainers:
         - name: copy-config
-          image: busybox:latest
+          image: busybox:1.37.0
           command:
             - sh
             - -c
@@ -41,7 +41,7 @@ spec:
             runAsUser: 0
       containers:
         - name: homepage
-          image: ghcr.io/gethomepage/homepage:latest
+          image: ghcr.io/gethomepage/homepage:v1.7.0
           imagePullPolicy: Always
           ports:
             - name: http

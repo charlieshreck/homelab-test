@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: glasskeep
-        image: nikunjsingh/glass-keep:latest
+        image: nikunjsingh/glass-keep:v20250817-0123
         ports:
         - containerPort: 8080
           name: http

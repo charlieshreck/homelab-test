@@ -6,7 +6,7 @@ plex_timezone: "Europe/London"
 plex_claim_token: ""
 
 # Docker image
-plex_image: "lscr.io/linuxserver/plex:latest"
+plex_image: "lscr.io/linuxserver/plex:1.42.2.10156-f737b826c-ls286"
 plex_docker_mod: "jefflessard/plex-vaapi-amdgpu-mod"
 
 # Paths

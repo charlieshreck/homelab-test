@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
       - name: config-host-whitelist
-        image: busybox:latest
+        image: busybox:1.37.0
         command:
           - sh
           - -c
@@ -43,7 +43,7 @@ spec:
           mountPath: /config
       containers:
       - name: sabnzbd
-        image: lscr.io/linuxserver/sabnzbd:latest
+        image: lscr.io/linuxserver/sabnzbd:4.5.5-ls238
         ports:
         - name: http
           containerPort: 8080

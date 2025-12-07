@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: karakeep
-        image: ghcr.io/karakeep-app/karakeep:latest
+        image: ghcr.io/karakeep-app/karakeep:v0.29.1
         ports:
         - name: http
           containerPort: 3000
