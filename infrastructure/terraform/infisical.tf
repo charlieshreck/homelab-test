@@ -38,7 +38,7 @@ resource "helm_release" "infisical" {
   name             = "infisical-operator"
   repository       = "https://dl.cloudsmith.io/public/infisical/helm-charts/helm/charts/"
   chart            = "secrets-operator"
-  version          = "0.10.13"
+  version          = "0.10.16"
   namespace        = "infisical-operator-system"
   create_namespace = false
   wait             = false
